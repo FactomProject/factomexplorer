@@ -42,6 +42,7 @@ func serve_init() {
 	server.Get(`/dblock/([^/]+)(?)`, handleDBlock)	
 	server.Get(`/dblock/?`, handleAllDBlocks)		
 	server.Get(`/eblock/([^/]+)(?)`, handleEBlock)
+	server.Get(`/eblockbypage/([^/]+)(?:/([^/]+))?`, handleEBlockByPage)	
 	server.Get(`/sentry/([^/]+)(?)`, handleSEntry)	
 	server.Get(`/search/?`, handleSearch)
 //	server.Get(`/addchain/?`, handleChain)		
@@ -635,7 +636,12 @@ func handleEBlock(ctx *web.Context, eBlockHash string) {
 		handleMessage(ctx, "Not Found", "Entry block not found for hash: " + eBlockHash)
 		return
 	}
+	lastpage := len(eBlock.EBEntries)/pagesize + 1		
 	
+	ebEntries := eBlock.EBEntries
+	if lastpage > 1 {
+		ebEntries = eBlock.EBEntries[0:pagesize]
+	}
 	defer func(){
 		tmpl = "eblock.gwp"
 		
@@ -645,7 +651,74 @@ func handleEBlock(ctx *web.Context, eBlockHash string) {
 			"eBlock": eBlock,	
 			"ebHash": eBlockHash,	
 			"ebInfo": ebInfo,	
+			"pagesize": pagesize,
+			"lastpage": lastpage,	
+			"ebEntries": ebEntries,		
 		})
+		if r != nil {
+			handleError(ctx, r)
+		}
+	}()
+	
+	
+	if err != nil  {
+		fmt.Sprintf("Bad block id: %s", err.Error())
+		title = "Entry Block not found"
+		return
+	} else {
+		title = fmt.Sprint("Entry Block ", eBlock.Header.BlockID)
+	}
+	
+}
+
+func handleEBlockByPage(ctx *web.Context, eBlockHash string, page string) {
+	var err error
+	var title, tmpl string
+	
+	currentpage, err := strconv.Atoi(page)
+	if err != nil || currentpage < 1 {
+		currentpage = 1
+	}
+	
+	hash,_ := notaryapi.HexToHash(eBlockHash)
+	eBlock, _ := db.FetchEBlockByHash(hash)
+	ebInfo, _ := db.FetchEBInfoByHash(hash)	
+	
+	if eBlock == nil || ebInfo == nil  {
+		handleMessage(ctx, "Not Found", "Entry block not found for hash: " + eBlockHash)
+		return
+	}
+	
+	prevpage := currentpage - 1
+	if prevpage < 1 { prevpage = 1 }
+	lastpage := len(eBlock.EBEntries)/pagesize + 1	
+	nextpage := currentpage + 1
+	if nextpage > lastpage { nextpage = lastpage }	
+		
+	start := (currentpage-1)*pagesize
+	if start < 0 { start = 0 }
+	end := currentpage*pagesize
+	if end >= len(eBlock.EBEntries) { end = len(eBlock.EBEntries) }
+	
+	ebEntries :=  eBlock.EBEntries[start:end]
+	
+	defer func(){
+		tmpl = "eblockbypage.gwp"
+		
+		r := safeWrite(ctx, 200, map[string]interface{} {
+			"Title": title,
+			"ContentTmpl": tmpl,
+			"eBlock": eBlock,	
+			"ebHash": eBlockHash,	
+			"ebInfo": ebInfo,
+			"currentpage":	currentpage,
+			"prevpage":	prevpage,
+			"nextpage":	nextpage,
+			"lastpage":	lastpage,
+			"pagesize": pagesize,
+			"ebEntries": ebEntries,
+		})
+		
 		if r != nil {
 			handleError(ctx, r)
 		}
@@ -920,7 +993,7 @@ func handleAllDBlocks(ctx *web.Context) {
 
 func handleSearch(ctx *web.Context) {
 	var title, error_str string	 
-
+ 
 	inputhash := ctx.Params["inputhash"]
 	hash := new (notaryapi.Hash)
 	hash.Bytes, _ = notaryapi.DecodeBinary(&inputhash)

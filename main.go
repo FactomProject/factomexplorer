@@ -31,6 +31,7 @@ var (
 	ldbpath = "/tmp/client/ldb9"	
 	dataStorePath = "/tmp/client/seed/csv"
 	refreshInSeconds int = 60
+	pagesize = 1000 	
 	
 	db database.Db // database
 	
@@ -93,6 +94,7 @@ func loadConfigurations(){
 			ServerAddr string
 			DataStorePath string
 			RefreshInSeconds int
+			PageSize int
 	    }
 		Log struct{
 	    	LogLevel string
@@ -116,6 +118,7 @@ func loadConfigurations(){
 		serverAddr = cfg.App.ServerAddr
 		dataStorePath = cfg.App.DataStorePath
 		refreshInSeconds = cfg.App.RefreshInSeconds
+		pagesize = cfg.App.PageSize
 	}
 	
 }

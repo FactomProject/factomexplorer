@@ -19,19 +19,21 @@
 		<br>
 	<hr />
 				
-	<div class="submitted">
-		<h2>Entry Block Entries:</h2> 	
+
+		<h2>Entry Block Entries:</h2> 			
+
 	{{ if gt .lastpage 1 }}
 		<h4><div align = "middle">
 			<a style="text-decoration: none" href="/eblockbypage/{{.ebHash}}/1"><<</a>
-			<a style="text-decoration: none" href="/eblockbypage/{{.ebHash}}/1"><</a>		
-			 Page 1 of {{.lastpage}}  
-			<a style="text-decoration: none" href="/eblockbypage/{{.ebHash}}/2">></a>	 
+			<a style="text-decoration: none" href="/eblockbypage/{{.ebHash}}/{{.prevpage}}"><</a>		
+			 Page {{.currentpage}} of {{.lastpage}}  
+			<a style="text-decoration: none" href="/eblockbypage/{{.ebHash}}/{{.nextpage}}">></a>	 
 			<a style="text-decoration: none" href="/eblockbypage/{{.ebHash}}/{{.lastpage}}">>></a>
 		</div></h4>
 			
 	{{ end }}
 		</br>
+	<div class="submitted">		
 		<ul>
 			{{range .ebEntries}}
 				{{with .}}<li><div><a href="/sentry/{{.Hash}}">{{.Hash}} </a></div></li>
