@@ -25,9 +25,15 @@
 					<ul>
 						{{range .dBlock.DBEntries}}
 							{{with .}}<li><div>
+							{{if eq .ChainID.String "0100000000000000000000000000000000000000000000000000000000000000"}}
+							Entry Credit Block: <br>
+								Chain:{{.ChainID}} <br>
+								Merkle Root: {{.MerkleRoot}}							
+							{{else}}
 								<a href="/eblock/{{.Hash}}">Entry Block: {{.Hash}} </a> <br>
 								Chain: <a href="/chain/{{.ChainID}}">{{.ChainID}}</a> <br>
 								Merkle Root: {{.MerkleRoot}}
+							{{end}}
 							</div></li>
 							{{end}}
 						{{end}}

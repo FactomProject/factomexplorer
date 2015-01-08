@@ -913,9 +913,14 @@ func handleDBlock(ctx *web.Context, hashStr string) {
 	dBlock, _ := db.FetchDBlockByHash(hash)
 	dbBatch, _ := db.FetchDBBatchByHash(hash)
 	
+	
 	for _, fbEntry := range dBlock.DBEntries {
-		dbHash, _ := db.FetchEBHashByMR(fbEntry.MerkleRoot)
-		fbEntry.SetHash(dbHash.Bytes)
+		ebHash, _ := db.FetchEBHashByMR(fbEntry.MerkleRoot)
+		if ebHash == nil{
+			continue
+		}else{
+			fbEntry.SetHash(ebHash.Bytes)
+		}
 	}
 	
 	if dbBatch != nil {
