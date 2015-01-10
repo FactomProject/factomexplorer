@@ -998,10 +998,12 @@ func handleAllDBlocks(ctx *web.Context) {
 
 func handleSearch(ctx *web.Context) {
 	var title, error_str string	 
+	var  goingBackToSearch bool = false
  
+ 	hashArray := make([]*notaryapi.Hash, 0, 5)
 	inputhash := ctx.Params["inputhash"]
-	hash := new (notaryapi.Hash)
-	hash.Bytes, _ = notaryapi.DecodeBinary(&inputhash)
+	inputhash = strings.ToLower(strings.TrimSpace(inputhash))
+
 
 	switch hashtype := ctx.Params["hashtype"]; hashtype {
 	case "entry":
@@ -1014,18 +1016,35 @@ func handleSearch(ctx *web.Context) {
 		handleDBlock(ctx, inputhash)
 		
 	case "extHash":
-		handleMessage(ctx, "Not implemented yet", "Sorry this feature (External ID Search) is still under construction.")	
+		for key, _ := range extIDMap {
+			if strings.Contains(key[32:], inputhash){
+				hash := new (notaryapi.Hash)
+				hash.Bytes = []byte(key[:32])
+				hashArray = append(hashArray, hash)
+			}
+			if len(hashArray) > pagesize {
+				break
+			}
+		}
+		goingBackToSearch = true		
 		
 	default:
+		goingBackToSearch = true		
+
+	}	
+	
+	if 	goingBackToSearch {
 		r := safeWrite(ctx, 200, map[string]interface{} {
 			"Title": title,
 			"Error": error_str,
 			"ContentTmpl": "search.gwp",	
+			"inputhash": inputhash,	
+			"hashArray": hashArray,			
 		})
 		if r != nil {
 			handleError(ctx, r)
-		}	
-	}		
+		}		
+	}
 	
 }
 

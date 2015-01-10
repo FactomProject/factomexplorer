@@ -10,9 +10,24 @@
 		<option value="eblock">Entry Block Hash</option>
 		<option value="dblock">Directory Block Hash</option>
 		<option value="extHash" selected>External ID</option>
-	</select> 	<input type="text" name="inputhash" size="60" MAXLENGTH="64">
+	</select> 	<input type="text" name="inputhash" size="60" MAXLENGTH="64" value={{.inputhash}}>
 <br />
 <br />	
 
 	<input type="submit" value="Search" class="button"/>
 </form>
+
+
+
+{{ if gt (len .hashArray) 0 }}
+	<div class="submitted">
+	<br>
+		<h4>Entries with an External ID that contains "{{.inputhash}}":</h4> 	
+		<ul>
+			{{range .hashArray}}
+				<li><div><a href="/sentry/{{.}}">{{.}} </a></div></li>
+			{{end}}
+		</ul>
+	</div>
+	
+{{end}}	

@@ -37,6 +37,7 @@ var (
 	
 	//Map to store imported csv files
 	clientDataFileMap map[string]string	
+	extIDMap map[string]bool	
 	
 )
 func watchError(err error) {
@@ -65,6 +66,7 @@ func init() {
 	templates_init()
 	serve_init()
 	initClientDataFileMap()	
+	extIDMap, _ = db.InitializeExternalIDMap()
 
 	// Import data related to new factom blocks created on server
 	ticker := time.NewTicker(time.Second * time.Duration(refreshInSeconds)) 
@@ -204,6 +206,20 @@ func downloadAndImportDbRecords() {
 		    var ldbMap = make(map[string]string)	
 			for _, record := range records {
 				ldbMap[record[0]] = record[1]
+				if strings.HasPrefix(record[0], "00") { // Entry records start with 00			
+			    	binaryKey, _ := notaryapi.DecodeBinary(&record[0])
+			    	banaryValue, _ := notaryapi.DecodeBinary(&record[1])	
+			    	mapKey := string(binaryKey[1:])			    	
+
+					entry := new (notaryapi.Entry)
+					entry.UnmarshalBinary(banaryValue)
+					if entry.ExtIDs != nil {
+						for i:=0; i<len(entry.ExtIDs); i++{
+							mapKey = mapKey + strings.ToLower(string(entry.ExtIDs[i]))
+							extIDMap[mapKey] = true
+						}
+					}
+				}
 			}	    	
 		 	db.InsertAllDBRecords(ldbMap)   
 		 	file.Close()
