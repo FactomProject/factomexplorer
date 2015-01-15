@@ -10,6 +10,7 @@ import (
 	"github.com/FactomProject/FactomCode/notaryapi"
 	"github.com/FactomProject/FactomCode/factomapi"	
 	"net/http"
+	"net/url"	
 	"strconv"
 	"sort"
 	"strings"
@@ -274,7 +275,18 @@ func handleEntriesPost(ctx *web.Context) {
 		serverEntry.ExtIDs = externalHashes
 		serverEntry.Data = entry.Data()
 		
-		err = factomapi.RevealEntry(1, serverEntry)
+		buf1 := new(bytes.Buffer)
+		err = factomapi.SafeMarshal(buf1, serverEntry)		
+		jsonstr := string(buf1.Bytes())		
+		
+		// Post the entry JSON to FactomClient web server	---------------------------------------
+		data := url.Values{}
+		data.Set("entry", jsonstr)
+		data.Set("password", "opensesame")
+		
+		_, err = http.PostForm("http://localhost:8088/v1/submitentry", data)			
+	
+	//	err = factomapi.RevealEntry(1, serverEntry)
 
 		if err != nil {
 			abortMessage = fmt.Sprint("An error occured while submitting the entry (entry may have been accepted by the server but was not locally flagged as such): ", err.Error())
@@ -497,6 +509,7 @@ func handleChainPost(ctx *web.Context) {
 		
 		entry.ExtIDs = externalHashes
 		entry.Data = []byte(ctx.Params["data"])
+		chain.FirstEntry = entry
 
 /*	
 		//to be improved??
@@ -522,8 +535,19 @@ func handleChainPost(ctx *web.Context) {
 		resp.Body.Close()			
 		*/
 		
+		buf := new(bytes.Buffer)
+		err := factomapi.SafeMarshal(buf, chain)
+		jsonstr := string(buf.Bytes())		
 
-		err := factomapi.RevealChain(1, chain, entry)
+		// Post the chain JSON to FactomClient web server	---------------------------------------
+		data := url.Values{}
+		data.Set("chain", jsonstr)
+		data.Set("format", "json")	
+		data.Set("password", "opensesame")
+	
+		_, err = http.PostForm("http://localhost:8088/v1/submitchain", data)			
+	
+		//err := factomapi.RevealChain(1, chain, entry)
 				
 		if err != nil {
 			abortMessage = fmt.Sprint("An error occured while submitting the entry (entry may have been accepted by the server but was not locally flagged as such): ", err.Error())
