@@ -282,6 +282,7 @@ func handleEntriesPost(ctx *web.Context) {
 		// Post the entry JSON to FactomClient web server	---------------------------------------
 		data := url.Values{}
 		data.Set("entry", jsonstr)
+		data.Set("format", "json")			
 		data.Set("password", "opensesame")
 		
 		_, err = http.PostForm("http://localhost:8088/v1/submitentry", data)			
