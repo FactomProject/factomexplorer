@@ -15,7 +15,7 @@
 				Created Time: {{ .RealTime}}		<br>
 			{{end}}		
 			{{if eq .dbBatchStatus "existing"}}					
-				BTC transaction: <a href="http://blockexplorer.com/testnet/tx/{{.dbBatch.BTCTxHash.BTCString}}"> {{.dbBatch.BTCTxHash.BTCString}}</a> <br>
+				BTC transaction: <a href="https://www.biteasy.com/testnet/transactions/{{.dbBatch.BTCTxHash.BTCString}}"> {{.dbBatch.BTCTxHash.BTCString}}</a> <br>
 			{{end}}		
 		</div>
 
