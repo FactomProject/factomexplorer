@@ -379,7 +379,7 @@ func (e *plainData) Data() []byte {
 func (e *plainData) EncodeToString() string {
 	return hex.EncodeToString(e.Data())
 }
-
+/*
 func (e *plainData) DataHash() *notaryapi.Hash {
 	if e.Data == nil{
 		return notaryapi.EmptyHash()
@@ -389,7 +389,6 @@ func (e *plainData) DataHash() *notaryapi.Hash {
 	hash, _ := notaryapi.CreateHash(sData)
 	return hash
 }
-/*
 func (e *plainData) DecodeFromString(str string) error {
 	str = whitesp.ReplaceAllString(str, "")
 	if len(str) % 2 == 1 {
