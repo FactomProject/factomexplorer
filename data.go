@@ -31,7 +31,7 @@ type Submission struct {
 }
 
 var entries map[int]*FlaggedEntry
-var keys map[int]notaryapi.Key
+var keys map[int]notaryapi.PrivateKey
 var chains map[int]notaryapi.EChain
 
 var marshaller gocoding.Marshaller
@@ -83,7 +83,7 @@ func safeUnmarshal(reader gocoding.SliceableRuneReader, obj interface{}) error {
 }
 
 func loadStore() {
-	keys = make(map[int]notaryapi.Key)
+	keys = make(map[int]notaryapi.PrivateKey)
 	
 	chains = make(map[int]notaryapi.EChain)
 
@@ -285,7 +285,7 @@ func getChainIDs() []int {
 	return ids[:i]
 }
 
-func getKey(id int) notaryapi.Key {
+func getKey(id int) notaryapi.PrivateKey {
 	return keys[id]
 }
 
@@ -293,7 +293,7 @@ func getChain(id int) notaryapi.EChain {
 	return chains[id]
 }
 
-func addKey(key notaryapi.Key) {
+func addKey(key notaryapi.PrivateKey) {
 	keys[Settings.NextKeyID] = key
 	storeKey(Settings.NextKeyID)
 	Settings.NextKeyID++

@@ -127,12 +127,12 @@ func templateGetEntry(idx int) (map[string]interface{}, error) {
 	count := len(entry.Signatures())
 	signatures := make([]map[string]interface{}, count)
 	for i := 0; i < count; i++ {
-		hash, err := notaryapi.CreateHash(entry.Signatures()[i].Key())
+		hash, err := notaryapi.NewShaHash(entry.Signatures()[i].Key())
 		if err != nil { return nil, err }
 		
 		j := -1
 		for id, key := range keys{
-			key, err := notaryapi.CreateHash(key.Public())
+			key, err := notaryapi.NewShaHash(key.Public())
 			if err != nil { return nil, err }
 			if bytes.Compare(key.Bytes, hash.Bytes) == 0 {
 				j = id
@@ -180,12 +180,12 @@ func templateGetKey(idx int) (map[string]interface{}, error) {
 		return nil, errors.New(fmt.Sprint("No key at index", idx))
 	}
 	
-	hash, err := notaryapi.CreateHash(key.Public())
+	hash, err := notaryapi.NewShaHash(key.Public())
 	if err != nil { return nil, err }
 	
 	return map[string]interface{}{
 		"ID": idx,
-		"Type": notaryapi.KeyTypeName(key.KeyType()),
+		//"Type": notaryapi.KeyTypeName(key.KeyType()),
 		"Hash": hash.Bytes,
 	}, nil
 }
@@ -243,13 +243,13 @@ func templateKeysExceptEntrySigs(entry_id int) (keyIDs []int, err error) {
 	sigs := getEntry(entry_id).Signatures()
 	sigHashes := make([]*notaryapi.Hash, len(sigs))
 	for index, sig := range sigs {
-		sigHashes[index], err = notaryapi.CreateHash(sig.Key())
+		sigHashes[index], err = notaryapi.NewShaHash(sig.Key())
 		if err != nil { return nil, err }
 	}
 	
 	keyHashes := make(map[int]*notaryapi.Hash)
 	for id, key := range keys {
-		keyHashes[id], err = notaryapi.CreateHash(key.Public())
+		keyHashes[id], err = notaryapi.NewShaHash(key.Public())
 		if err != nil { return nil, err }
 	}
 	

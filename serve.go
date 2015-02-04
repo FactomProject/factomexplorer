@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"crypto/rand"
+	//"crypto/rand"
 	"fmt"
 	"github.com/FactomProject/gobundle"
 	"github.com/FactomProject/gocoding"
@@ -14,7 +14,8 @@ import (
 	"strconv"
 	"sort"
 	"strings"
- 
+ 	"os"
+ 	"log"
 )
 
 var server = web.NewServer()
@@ -50,7 +51,23 @@ func serve_init() {
 	server.Get(`/chains/?`, handleChains)	
 	server.Get(`/chains/(?:add|\+)`, handleAddChain)
 	server.Get(`/chain/([^/]+)(?)`, handleChain)
+
+	log_init()
 } 
+
+func log_init() {
+	f, err := os.OpenFile("factomexplorer.log", os.O_CREATE | os.O_RDWR|os.O_APPEND, 0660);
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	
+	logger := log.New(f, "", log.Ldate|log.Ltime)
+	server.SetLogger(logger)
+}
+
+func Log(ctx *web.Context) {
+}
 
 func safeWrite(ctx *web.Context, code int, data map[string]interface{}) *notaryapi.Error {
 	var buf bytes.Buffer
@@ -358,14 +375,16 @@ func handleEntriesPost(ctx *web.Context) {
 			return
 		}
 		var key notaryapi.PrivateKey
-		var ok bool
-		_key := getKey(key_id)
+		//var ok bool
+		key = getKey(key_id)
+		/*
 		if key, ok = _key.(notaryapi.PrivateKey); !ok {
 			abortMessage = fmt.Sprint("Failed to sign entry: key with id ", key_id_str, " is not a private key")
 			return
 		}
+		*/
 		
-		err = entry.Sign(rand.Reader, key)
+		err = entry.Sign(key)
 		if err != nil {
 			abortMessage = fmt.Sprint("Failed to sign entry: error while signing: ", err.Error())
 			return
@@ -424,20 +443,19 @@ func handleKeysPost(ctx *web.Context) {
 	case "genKey":
 		abortReturn = fmt.Sprint("/keys/add")
 		
-		sid := ctx.Params["algorithm"]
-		id, err := strconv.Atoi(sid)
+		/*
+		//sid := ctx.Params["algorithm"]
+		//id, err := strconv.Atoi(sid)
 		if err != nil {
 			abortMessage = fmt.Sprint("Failed to generate key: error parsing algorithm id: ", err.Error())
 			return
 		}
+		*/
 		
-		key, err := notaryapi.GenerateKeyPair(int8(id), rand.Reader)
+		var key notaryapi.PrivateKey
+		err := key.GenerateKey()
 		if err != nil {
 			abortMessage = fmt.Sprint("Failed to generate key: error generating key: ", err.Error())
-			return
-		}
-		if key == nil {
-			abortMessage = fmt.Sprint("Failed to generate key: unsupported algorithm id: ", id)
 			return
 		}
 		

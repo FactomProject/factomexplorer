@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/FactomProject/gocoding"
-	"io"
+	//"io"
 	"reflect"
 	"regexp"
 	"strings"
@@ -133,21 +133,24 @@ func (e *ClientEntry) IsSigned() bool {
 	return len(e.signatures) > 0
 }
 
-func (e *ClientEntry) Sign(rand io.Reader, k notaryapi.PrivateKey) error {
-	s, err := k.Sign(rand, e.Data())
-	if err != nil { return err }
+func (e *ClientEntry) Sign(k notaryapi.PrivateKey) error {
+	s := k.Sign(e.Data())
+	//if err != nil { return err }
 	
-	e.signatures = append(e.signatures, s)
+	e.signatures = append(e.signatures,s)
 	return nil
 }
 
+/*
 func (e *ClientEntry) Verify(k notaryapi.PublicKey, s int) bool {
 	if e.signatures == nil || s < 0 || s >= len(e.signatures) {
 		return false
 	}
 	
-	return k.Verify(e.Data(), e.signatures[s])
+	return VerifySlice(k)
+	//k.Verify(e.Data(), e.signatures[s])
 }
+*/
 
 func (e *ClientEntry) Unsign(s int) bool {
 	if s < 0 || s >= len(e.signatures) {
@@ -288,9 +291,8 @@ func (e *ClientEntry) MarshalBinary() ([]byte, error) {
 	count := uint64(len(e.Signatures()))
 	binary.Write(&buf, binary.BigEndian, count)
 	for _, sig := range e.Signatures() {
-		data, err := sig.MarshalBinary()
-		if err != nil { return nil, err }
-		buf.Write(data)
+		buf.Write(sig.Pub.Key[:])
+		buf.Write(sig.Sig[:])
 	}
 	
 	return buf.Bytes(), nil
@@ -305,7 +307,7 @@ func (e *ClientEntry) MarshalledSize() uint64 {
 	size += 8 // len(Data()) uint64
 	size += uint64(len(e.Data()))
 	size += 8 // len(Signatures()) uint64
-	for _, sig := range e.Signatures() { size += sig.MarshalledSize() }
+	size += 96 * uint64(len(e.Signatures()))
 	
 	return size
 }
@@ -329,9 +331,8 @@ func (e *ClientEntry) UnmarshalBinary(data []byte) (err error) {
 	
 	e.signatures = make([]notaryapi.Signature, sigCount)
 	for i := uint64(0); i < sigCount; i++ {
-		e.signatures[i], err = notaryapi.UnmarshalBinarySignature(data)
-		if err != nil { return err }
-		data = data[e.signatures[i].MarshalledSize():]
+		e.signatures[i] = notaryapi.UnmarshalBinarySignature(data)
+		data = data[96:]
 	}
 	
 	return nil
