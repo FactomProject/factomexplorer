@@ -189,7 +189,7 @@ func RefreshEntries(){
 		hash := new (notaryapi.Hash)	
 		hash.Bytes, _ = notaryapi.DecodeBinary(&entries[id].Submitted.EntryHash)
 		entryInfoBranch, _ := db.FetchEntryInfoBranchByHash(hash)
-		if entryInfoBranch.DBBatch != nil {
+		if entryInfoBranch.DBInfo != nil {
 			entries[id].Submitted.Confirmed =2
 			storeEntry(id)
 		} else if entryInfoBranch.EBInfo != nil{
@@ -208,7 +208,7 @@ func RefreshEntries(){
 		hash := new (notaryapi.Hash)	
 		hash.Bytes, _ = notaryapi.DecodeBinary(&entries[id].Submitted.EntryHash)
 		entryInfoBranch, _ := db.FetchEntryInfoBranchByHash(hash)
-		if entryInfoBranch.DBBatch != nil {
+		if entryInfoBranch.DBInfo != nil {
 			entries[id].Submitted.Confirmed =2
 			storeEntry(id)
 		} else if entryInfoBranch.EBInfo != nil{

@@ -951,10 +951,10 @@ func handleMessage(ctx *web.Context, title string, message string) {
 }
 func handleDBlock(ctx *web.Context, hashStr string) {
 	
-	var title, error_str, dbBatchStatus string	
+	var title, error_str, dbInfoStatus string	
 	hash,_ := notaryapi.HexToHash(hashStr)
 	dBlock, _ := db.FetchDBlockByHash(hash)
-	dbBatch, _ := db.FetchDBBatchByHash(hash)
+	dbInfo, _ := db.FetchDBInfoByHash(hash)
 	
 	
 	for _, fbEntry := range dBlock.DBEntries {
@@ -966,8 +966,8 @@ func handleDBlock(ctx *web.Context, hashStr string) {
 		}
 	}
 	
-	if dbBatch != nil {
-		dbBatchStatus = "existing"
+	if dbInfo != nil {
+		dbInfoStatus = "existing"
 	}
 	
 	if dBlock == nil {
@@ -982,8 +982,8 @@ func handleDBlock(ctx *web.Context, hashStr string) {
 			"ContentTmpl": "dblock.gwp",
 			"dBlock": dBlock,	
 			"dbHash": hashStr,	
-			"dbBatch": dbBatch,	
-			"dbBatchStatus": dbBatchStatus,
+			"dbInfo": dbInfo,	
+			"dbInfoStatus": dbInfoStatus,
 		})
 		if r != nil {
 			handleError(ctx, r)
