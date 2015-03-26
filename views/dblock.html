@@ -1,0 +1,82 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "dblock"}}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="../css/main.css" rel="stylesheet" />
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+  <div class="mask"></div>
+
+  <div class="main">
+
+    <h1 class="screen-title">Directory Block {{.Header.BlockID}}</h1>
+
+    <div class="card">
+      <dl class="blockinfo">
+        <div>
+          <dt>Created:</dt>
+          <dd>{{.Time}}</dd>
+        </div>
+        <div>
+          <dt>Block Hash:</dt>
+          <dd>{{.Header.MerkleRoot}}</dd>
+        </div>
+        <div>
+          <dt>Previous Block:</dt>
+          <dd><a href='{{.Header.PrevBlockHash}}'>{{.Header.PrevBlockHash}}</a></dd>
+        </div>
+        <div>
+          <dt>Merkle Root:</dt>
+          <dd>{{.Header.MerkleRoot}}</dd>
+        </div>
+        <div>
+          <dt>BTC Transaction:</dt>
+          <dd><a href='https://www.biteasy.com/blockchain/transactions/{{/*.dbInfo.BTCTxHash.BTCString*/}}' target="_blank">{{/*.dbInfo.BTCTxHash.BTCString*/}} <span class="icon-ic_open_in_new_48px"></span></a></dd>
+        </div>
+      </dl>
+    </div>
+  <h1 class="screen-title">Entry Blocks <span class='screen-title-sub'>included in this directory block</span></h1>
+
+    <div class="card entry-block-list">
+    	{{range .DBEntries}}
+    		{{with .}}
+		      <dl class="blockinfo">
+		        <div>
+		          <dt>Entry Block:</dt>
+		          <dd>
+		            <span class="large primary"><a href="eblock/{{.MerkleRoot}}">Block ID {{.MerkleRoot}}</a></span>
+		          </dd>
+		        </div>
+		        <div>
+		          <dt>Chain:</dt>
+		          <dd>
+		            <span class="large secondary"><a href="chain/{{.ChainID}}">{{.ChainID}}</a></span>
+		          </dd>
+		        </div>
+		        <div>
+		          <dt>Merkle Root:</dt>
+		          <dd>{{.MerkleRoot}}</dd>
+		        </div>
+		      </dl>
+    		{{end}}
+    	{{end}}
+      </div>
+  </div>
+
+  </div>
+
+</div>
+<script src="../scripts/min/scripts-min.js"></script>
+
+</body>
+</html>

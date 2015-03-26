@@ -1,0 +1,177 @@
+//
+// Sidr Custom - TODO: clean this up!
+// --------------------------------------------------
+
+.sidr {
+  position: absolute;
+  position: fixed;
+  top: 0;
+  z-index: 999999;
+  display: none;
+  overflow-x: none;
+  overflow-y: auto;
+  width: 260px;
+  height: 100%;
+  background: $grey-900;
+  color: $grey-400;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: 'roboto', tahoma, verdana, arial, sans-serif;
+}
+.sidr .sidr-inner {
+  padding: 0 0 15px;
+}
+.sidr .sidr-inner> p {
+  margin-right: 15px;
+  margin-left: 15px;
+}
+.sidr.right {
+  right: -260px;
+  left: auto;
+}
+.sidr.left {
+  right: auto;
+  left: -260px;
+}
+.sidr h1,
+.sidr h2,
+.sidr h3,
+.sidr h4,
+.sidr h5,
+.sidr h6 {
+  margin: 0 0 5px;
+  padding: 0 15px;
+  background-image: -webkit-gradient(linear,  50% 0%,  50% 100%,  color-stop(0%,  #4d4d4d),  color-stop(100%,  #1a1a1a));
+  background-image: -webkit-linear-gradient(#4d4d4d, #1a1a1a);
+  background-image: -moz-linear-gradient(#4d4d4d, #1a1a1a);
+  background-image: -o-linear-gradient(#4d4d4d, #1a1a1a);
+  background-image: linear-gradient(#4d4d4d, #1a1a1a);
+  -webkit-box-shadow: 0 5px 5px 3px rgba(0, 0, 0, .2);
+  -moz-box-shadow: 0 5px 5px 3px rgba(0, 0, 0, .2);
+  box-shadow: 0 5px 5px 3px rgba(0, 0, 0, .2);
+  color: #fff;
+  font-weight: normal;
+  font-size: 11px;
+  line-height: 24px;
+}
+.sidr p {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+.sidr p a {
+  color: rgba(255, 255, 255, .9);
+}
+.sidr> p {
+  margin-right: 15px;
+  margin-left: 15px;
+}
+.sidr ul {
+  display: block;
+  margin: 0 0 15px;
+  padding: 0;
+}
+.sidr ul li {
+  display: block;
+  margin: 0;
+  line-height: 48px;
+}
+.sidr ul li:hover> a,
+.sidr ul li:hover> span,
+.sidr ul li.active> a,
+.sidr ul li.active> span,
+.sidr ul li.sidr-class-active> a,
+.sidr ul li.sidr-class-active> span {
+  color: $grey-100;
+  background: $grey-800;
+}
+.sidr ul li a,
+.sidr ul li span {
+  display: block;
+  padding: 0 16px;
+  color: $grey-400;
+  text-decoration: none;
+}
+.sidr ul li ul {
+  margin: 0;
+  border-bottom: none;
+}
+.sidr ul li ul li {
+  font-size: 13px;
+  line-height: 40px;
+}
+.sidr ul li ul li:last-child {
+  border-bottom: none;
+}
+.sidr ul li ul li:hover,
+.sidr ul li ul li.active,
+.sidr ul li ul li.sidr-class-active {
+  border-top: none;
+  line-height: 41px;
+}
+.sidr ul li ul li a,
+.sidr ul li ul li span {
+  padding-left: 30px;
+  color: rgba(255, 255, 255, .8);
+}
+.sidr form {
+  margin: 0 15px;
+}
+.sidr label {
+  font-size: 13px;
+}
+.sidr input[type='text'],
+.sidr input[type='password'],
+.sidr input[type='date'],
+.sidr input[type='datetime'],
+.sidr input[type='email'],
+.sidr input[type='number'],
+.sidr input[type='search'],
+.sidr input[type='tel'],
+.sidr input[type='time'],
+.sidr input[type='url'],
+.sidr textarea,
+.sidr select {
+  display: block;
+  clear: both;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  margin: 0 0 10px;
+  padding: 5px;
+  width: 100%;
+  border: none;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, .1);
+  color: rgba(255, 255, 255, .6);
+  font-size: 13px;
+
+  -ms-border-radius: 2px;
+  -o-border-radius: 2px;
+}
+.sidr input[type=checkbox] {
+  display: inline;
+  clear: none;
+  width: auto;
+}
+.sidr input[type=button],
+.sidr input[type=submit] {
+  background: #fff;
+  color: #333;
+}
+.sidr input[type=button]:hover,
+.sidr input[type=submit]:hover {
+  background: rgba(255, 255, 255, .9);
+}
+
+.sidr a.selected {
+    border-left: solid 2px $orange-500;
+    color: #fff;
+}
+
+.sidr .icon-ic_open_in_new_48px {
+  float: right;
+  margin-top: 14px;
+  padding: 0;
+}

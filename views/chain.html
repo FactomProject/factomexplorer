@@ -1,0 +1,53 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "chain"}}
+
+{{template "head"}}
+{{template "header"}}
+
+  <div class="mask"></div>
+
+  <div class="main">
+
+    <h1 class="screen-title">Chain</h1>
+
+    <div class="card">
+      <dl class="blockinfo">
+        <div>
+          <dt>Chain Name:</dt>
+          <dd class="chain-name">{{chainNameToString .Name}}</dd>
+        </div>
+        <div>
+          <dt>Chain ID:</dt>
+          <dd>{{.ChainID}}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <h1 class="screen-title">Entry Blocks <span class='screen-title-sub'>included in this chain</span></h1>
+
+    <div class="card entry-block-list">
+
+	{{range .eBlocks}}
+		{{with .}}
+	      <dl class="blockinfo">
+	        <div>
+	          <dt>Entry Block:</dt>
+	          <dd>
+	            <span class="large primary"><a href="eblock/{{.Hash}}">Block ID {{.Hash}}</a></span>
+	          </dd>
+	        </div>
+	        <div>
+	          <dt>Hash:</dt>
+	          <dd>{{.Hash}}</dd>
+	        </div>
+	      </dl>
+	    {{end}}
+	{{end}}
+
+    </div>
+    {{template pagination}}
+  </div>
+
+{{template foot}}
