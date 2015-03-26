@@ -1,140 +1,88 @@
 package main
 
 import (
-	//"flag"
 	"fmt"
-	"github.com/FactomProject/dynrsrc"
-	"github.com/FactomProject/gobundle"
-	"os"
+	"html/template"
 	"log"
-	"code.google.com/p/gcfg"
-	"github.com/FactomProject/FactomCode/database"	
-	"github.com/FactomProject/FactomCode/database/ldb"		
-	"github.com/FactomProject/FactomCode/factomapi"	
-	"time"		
+	"net/http"
+
+	"github.com/FactomProject/factom"
 )
 
-//var portNumber = flag.Int("p", 8087, "Set the port to listen on")
+var _ = fmt.Sprint("tmp")
+
 var (
- 	logLevel = "DEBUG"
-	portNumber int = 8087  	
-	applicationName = "factom/client"
-	serverAddr = "localhost:8083"	
-	ldbpath = "/tmp/client/ldb9"	
-	dataStorePath = "/tmp/client/seed/csv"
-	refreshInSeconds int = 60
-	pagesize = 1000 	
-	
-	db database.Db // database
-	
-	//Map to store imported csv files
-	clientDataFileMap map[string]string	
-	extIDMap map[string]bool	
-	
+	handleStatic = http.FileServer(http.Dir("./"))
+	tpl = new(template.Template)
 )
-func watchError(err error) {
-	panic(err)
-}
-
-func readError(err error) {
-	fmt.Println("error: ", err)
-}
 
 func init() {
-	
-	loadConfigurations()
-	factomapi.SetServerAddr(serverAddr)
-	
-	initDB()
-		
-	gobundle.Setup.Application.Name = applicationName
-	gobundle.Init()
-	
-	err := dynrsrc.Start(watchError, readError)
-	if err != nil { panic(err) }
-	
-	loadStore()
-	loadSettings()
-	templates_init()
-	serve_init()
-	extIDMap, _ = db.InitializeExternalIDMap()
-
-	// Import data related to new factom blocks created on server
-	ticker := time.NewTicker(time.Second * time.Duration(refreshInSeconds)) 
-	go func() {
-		for _ = range ticker.C {
-			//downloadAndImportDbRecords()
-			RefreshEntries()
-		}
-	}()		
+	tpl = template.Must(template.ParseFiles(
+		"views/index.html",
+		"views/dblock.html",
+		"views/eblock.html",
+		"views/sentry.html",
+	))
+	http.Handle("/css/", handleStatic)
+	http.Handle("/fonts/", handleStatic)
+	http.Handle("/images/", handleStatic)
+	http.Handle("/scripts/", handleStatic)
+	http.HandleFunc("/", handleDBlocks)
+	http.HandleFunc("/dblocks/", handleDBlocks)
+	http.HandleFunc("/dblock/", handleDBlock)
+	http.HandleFunc("/eblock/", handleEBlock)
+	http.HandleFunc("/sentry/", handleEntry)
 }
 
 func main() {
-	defer func() {
-		dynrsrc.Stop()
-		server.Close()
-	}()
-	
-	server.Run(fmt.Sprint(":", portNumber))
-	
+	http.ListenAndServe(":8087", nil)
 }
 
-func loadConfigurations(){
-	cfg := struct {
-		App struct{
-			PortNumber	int		
-			ApplicationName string
-			ServerAddr string
-			DataStorePath string
-			RefreshInSeconds int
-			PageSize int
-	    }
-		Log struct{
-	    	LogLevel string
-		}
-    }{}
-	
-	wd, err := os.Getwd()
-	if err != nil{
-		log.Println(err)
-	}	
-	err = gcfg.ReadFileInto(&cfg, wd+"/client.conf")
-	if err != nil{
-		log.Println(err)
-		log.Println("Client starting with default settings...")
-	} else {
-	
-		//setting the variables by the valued form the config file
-		logLevel = cfg.Log.LogLevel	
-		applicationName = cfg.App.ApplicationName
-		portNumber = cfg.App.PortNumber
-		serverAddr = cfg.App.ServerAddr
-		dataStorePath = cfg.App.DataStorePath
-		refreshInSeconds = cfg.App.RefreshInSeconds
-		pagesize = cfg.App.PageSize
+func handleDBlocks(w http.ResponseWriter, r *http.Request) {
+	height, err := factom.GetBlockHeight()
+	if err != nil {
+		log.Fatal(err)
 	}
-	
+	dBlocks, err := factom.GetDBlocks(0, height)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if dBlocks == nil {
+		log.Fatal("dBlocks is nil")
+	}
+
+	tpl.ExecuteTemplate(w, "index.html", dBlocks)
 }
 
-func initDB() {
+func handleDBlock(w http.ResponseWriter, r *http.Request) {
+	mr := r.URL.Path[len("/dblock/"):]
 	
-	//init db
-	var err error
-	db, err = ldb.OpenLevelDB(ldbpath, false)
-	
-	if err != nil{
-		log.Println("err opening db: %v", err)
+	dblock, err := factom.GetDBlock(mr)	
+	if err != nil {
+		fmt.Println(err)
 	}
 	
-	if db == nil{
-		log.Println("Creating new db ...")			
-		db, err = ldb.OpenLevelDB(ldbpath, true)
-		
-		if err!=nil{
-			panic(err)
-		}		
-	}
-	
-	log.Println("Database started from: " + ldbpath)
+	tpl.ExecuteTemplate(w, "dblock.html", dblock)
+}
 
+func handleEBlock(w http.ResponseWriter, r *http.Request) {
+	mr := r.URL.Path[len("/eblock/"):]
+	
+	eblock, err := factom.GetEBlock(mr)	
+	if err != nil {
+		fmt.Println(err)
+	}
+	
+	tpl.ExecuteTemplate(w, "eblock.html", eblock)
+}
+
+func handleEntry(w http.ResponseWriter, r *http.Request) {
+	hash := r.URL.Path[len("/entry/"):]
+	
+	entry, err := factom.GetEntry(hash)	
+	if err != nil {
+		fmt.Println(err)
+	}
+	
+	tpl.ExecuteTemplate(w, "sentry.html", entry)
 }

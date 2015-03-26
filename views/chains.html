@@ -1,0 +1,40 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "chains"}}
+
+{{template "head"}}
+{{template "header"}}
+
+  <div class="mask"></div>
+
+  <div class="main">
+
+    <h1 class="screen-title">Chains</h1>
+
+    <div class="card">
+      <table class="table table-hover standard-table clickable-rows">
+              <thead>
+                  <tr class="first" href="chain">
+                      <th class="chain-id">ID</th>
+                      <th class="date-time hidden-xs ">Created</th>
+                      <th class="chain-name">Chain Name</th>
+                  </tr>
+              </thead>
+              <tbody>
+              {{range .chains}}
+              	{{with .}}
+                  <tr class="clickableRow"href="chain/{{.ChainID}}">
+                      <td><span>{{.ChainID}}</span></td>
+                      <td class="hidden-xs">{{.RealTime}}</td>
+                      <td>{{chainNameToString .Name}}</td>
+                  </tr>
+                {{end}}
+              {{end}}
+              </tbody>
+          </table>
+    </div>
+  </div>
+    {{template pagination}}
+  </div>
+
+{{template foot}}

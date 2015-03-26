@@ -1,0 +1,75 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "entry"}}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="../css/main.css" rel="stylesheet" />
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+  <div class="mask"></div>
+
+  <div class="main">
+
+    <h1 class="screen-title">Entry Details </h1>
+
+    <div class="card">
+      <dl class="blockinfo">
+        <div>
+          <dt>Chain:</dt>
+          <dd>{{.ChainID}}</dd>
+        </div>
+        <div>
+          <dt>Entry Block: {{/*.entryInfo.EBBlockNum*/}}:</dt>
+          <dd><a href="sentry/{{/*.Hash*/}}">{{/*.Hash*/}}</a></dd>
+        </div>
+        <div>
+          <dt>Created:</dt>
+          <dd>{{/*.entryInfo.eblock.Header.RealTime*/}}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <h1 class="screen-title">Entry Data</h1>
+
+     <div class="card entry-block-list">
+      <dl class="blockinfo">
+        <div>
+          <dt>Entry Hash:</dt>
+          <dd>{{/*.entryInfo.EntryHash*/}}</dd>
+        </div>
+        {{range .ExtIDs}}
+          {{with .}}
+	        <div>
+	          <dt>External ID:</dt>
+	          <dd>
+	            <span>{{.}}</span>
+	          </dd>
+	        </div>
+	      {{end}}
+	    {{end}}
+	    
+        <div>
+          <dt>Entry Data:</dt>
+          <dd>{{.Data}}</dd>
+        </div>
+      </dl>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+<script src="../scripts/min/scripts-min.js"></script>
+
+</body>
+</html>
