@@ -19,6 +19,7 @@
       <span class="logo"></span>
       <div class="searchrow container-fluid">
         <div class="row">
+<form id="searchform" method="post" action="/search">        
           <div class="input-group search">
             <div class="input-group-addon icon-prepend"><span class="icon-ic_search_48px"></span></div>
             <div class="form-control-wrapper"><input type="text" id="searchText" placeholder="Search" class="form-control search-field empty"></div>
@@ -26,14 +27,15 @@
             <div class="input-group-btn search-type-picker">
               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">External ID <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                <li><a href="#" class="search-type withripple">External ID</a></li>
-                <li><a href="#" class="search-type withripple">Chain Name</a></li>
-                <li><a href="#" class="search-type withripple">Entry Hash</a></li>
-                <li><a href="#" class="search-type withripple">Entry Block Hash</a></li>
-                <li><a href="#" class="search-type withripple">Directory Block Hash</a></li>
+                <li><a href="#" onclick="document.searchform.submit(); return false;" class="search-type withripple">External ID</a></li>
+                <li><a href="#" onclick="document.searchform.submit(); return false;" class="search-type withripple">Chain Name</a></li>
+                <li><a href="#" onclick="document.searchform.submit(); return false;" class="search-type withripple">Entry Hash</a></li>
+                <li><a href="#" onclick="document.searchform.submit(); return false;" class="search-type withripple">Entry Block Hash</a></li>
+                <li><a href="#" onclick="document.searchform.submit(); return false;" class="search-type withripple">Directory Block Hash</a></li>
               </ul>
             </div>
           </div>
+</form>          
         </div>
         <div class="row">
           <div class="tabs">
