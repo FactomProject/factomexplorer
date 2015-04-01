@@ -16,22 +16,23 @@
   <div class="full-view-wrap">
 
   <header>
+<form id="searchform" method="post" action="/search">       
       <span class="logo"></span>
       <div class="searchrow container-fluid">
         <div class="row">
           <div class="input-group search">
             <div class="input-group-addon icon-prepend"><span class="icon-ic_search_48px"></span></div>
-            <div class="form-control-wrapper"><input type="text" id="searchText" placeholder="Search" class="form-control search-field empty"></div>
+            <div class="form-control-wrapper"><input type="text" name="searchText" placeholder="Search" class="form-control search-field empty"></div>
             <div class="input-group-addon clear-search"><a href="#"><span class="icon-ic_clear_48px"></span></a></div>
             <div class="input-group-btn search-type-picker">
               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">External ID <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                <li><a href="#" class="search-type withripple">External ID</a></li>
-                <li><a href="#" class="search-type withripple">Chain Name</a></li>
-                <li><a href="#" class="search-type withripple">Entry Hash</a></li>
-                <li><a href="#" class="search-type withripple">Entry Block Hash</a></li>
-                <li><a href="#" class="search-type withripple">Directory Block Hash</a></li>
-              </ul>
+				<input type="hidden" name="searchType" value="extid">              
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='extID'; document.forms['searchform'].submit(); return false;" class="search-type withripple">External ID</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='entry'; document.forms['searchform'].submit(); return false;">Entry Hash</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='eblock'; document.forms['searchform'].submit(); return false;" class="search-type withripple">Entry Block Hash</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='dblock'; document.forms['searchform'].submit(); return false;" class="search-type withripple">Directory Block Hash</a></li>
+              </ul>               
             </div>
           </div>
         </div>
@@ -52,7 +53,10 @@
             <li><a href="https://github.com/FactomProject/FactomDocs" target="_blank">Github <span class="icon-ic_open_in_new_48px"></span></a></li>
         </ul>
     </nav>
-</div>  </header>
+</div>  
+</form>  
+ </header>
+ 
   <span id="back-top">
     <a href="#top"><span class="icon-ic_keyboard_arrow_up_48px"></span></a>
   </span>

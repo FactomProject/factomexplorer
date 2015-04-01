@@ -1,6 +1,6 @@
 {{$pageTitle := "Factom Explorer"}}
 {{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
-{{$bodyClass := "explorer"}}
+{{$bodyClass := "eblock"}}
 
 <!DOCTYPE html>
 <html>
@@ -14,6 +14,7 @@
 
 <body class={{$bodyClass}}>
   <div class="full-view-wrap">
+
   <header>
 	<script type="text/javascript">
 	var searchTimeout; // declare variable to hold the timer
@@ -72,39 +73,32 @@
   <span id="back-top">
     <a href="#top"><span class="icon-ic_keyboard_arrow_up_48px"></span></a>
   </span>
-
   <div class="mask"></div>
 
   <div class="main">
 
-    <h1 class="screen-title">Explorer</h1>
+  	<h1 class="screen-title">Search Result - Entries</h1>
 
-    <div class="card">
+     <div class="card">
       <table class="table table-hover standard-table clickable-rows">
               <thead>
                   <tr class="first">
-                      <th class="block-id">ID</th>
-                      <th class="date-time">Block Time</th>
-                      <th class="hidden-xs ">Hash</th>
+                      <th class="hidden-xs">Entry Hash</th>
                   </tr>
               </thead>
               <tbody>
-				{{range .}}
-				{{with .}}
-					<tr class="clickableRow" href="dblock/{{.Header.MerkleRoot}}">
-						<td><span>{{.Header.BlockID}}</span></td>
-						<td>{{.Time}}</td>
-						<td class="hidden-xs">{{.Header.MerkleRoot}}</td>
-	 		    	</tr>
-				{{end}}
-				{{end}}
+			{{range .}}
+                  <tr>
+                      <td class="hidden-xs"><a href="/entry/{{.}}">{{.}}</a></td>
+                  </tr>
+              {{end}}
               </tbody>
-          </table>
+       </table>     
+
     </div>
-    {{/*template pagination*/}}
   </div>
 
-</div>
+
 <script src="../scripts/min/scripts-min.js"></script>
 
 </body>

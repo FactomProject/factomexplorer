@@ -28,9 +28,9 @@
               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">External ID <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right" role="menu">
                 <li><a href="#" onclick="document.searchform.submit(); return false;" class="search-type withripple">External ID</a></li>
-                <li><a href="#" onclick="document.searchform.submit(); return false;" class="search-type withripple">Chain Name</a></li>
-                <li><a href="#" onclick="document.searchform.submit(); return false;" class="search-type withripple">Entry Hash</a></li>
-                <li><a href="#" onclick="document.searchform.submit(); return false;" class="search-type withripple">Entry Block Hash</a></li>
+                <li><a href="#" onclick="document.forms[0].submit(); return false;" class="search-type withripple">Chain Name</a></li>
+                <li><a href="#" onclick="alert('Hello\nHow are you?');">Entry Hash</a></li>
+                <li><a href="#" onclick="alert('searchtext:' + document.forms[0].elements[0].value);" class="search-type withripple">Entry Block Hash</a></li>
                 <li><a href="#" onclick="document.searchform.submit(); return false;" class="search-type withripple">Directory Block Hash</a></li>
               </ul>
             </div>

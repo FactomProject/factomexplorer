@@ -8,7 +8,9 @@ import (
 
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/FactomCode/database"	
+	"github.com/FactomProject/FactomCode/notaryapi"		
 	"github.com/hoisie/web"	
+	"strings"	
 )
 
 var _ = fmt.Sprint("tmp")
@@ -18,11 +20,13 @@ var (
 	tpl = new(template.Template)
 	db              database.Db	
 	server = web.NewServer()	
-	
+		
+	ExtIDMap map[string]bool	
 )
 
 func init() {
 	tpl = template.Must(template.ParseFiles(
+		"views/entrylist.html",
 		"views/index.html",
 		"views/dblock.html",
 		"views/eblock.html",
@@ -31,15 +35,17 @@ func init() {
 	server.Config.StaticDir	= "/tmp/static"
 	server.Get(`/(?:home)?`, handleHome)	
 	server.Get(`/`, handleDBlocks)
-	server.Get(`/dblocks/`, handleDBlocks)
-	server.Get(`/dblock/`, handleDBlock)
-	server.Get(`/eblock/`, handleEBlock)
-	server.Get(`/sentry/`, handleEntry)
-	server.Post(`/search/`, handleSearch)	
+	server.Get(`/dblocks/?`, handleDBlocks)
+	server.Get(`/dblock/?`, handleDBlock)
+	server.Get(`/eblock/?`, handleEBlock)
+	server.Get(`/entry/?`, handleEntry)
+	server.Post(`/search/?`, handleSearch)		
+
 }
 
 func Start(dbref database.Db) {
 	db = dbref
+	ExtIDMap, _ = db.InitializeExternalIDMap() // reinitialized in restapi after a block is created	
 	fmt.Println("explorer serving at port: 8087")	
 	//http.ListenAndServe(":8087", nil)
 	go server.Run("localhost:8087")	
@@ -49,9 +55,41 @@ func Start(dbref database.Db) {
 
 func handleSearch(ctx *web.Context) {
 
-	fmt.Println("r.Form:", ctx.Params["searchText"])	
+	fmt.Println("r.Form:", ctx.Params["searchType"])	
+	fmt.Println("r.Form:", ctx.Params["searchText"])
+	
+	pagesize := 1000
+	hashArray := make([]*notaryapi.Hash, 0, 5)
+	searchText := ctx.Params["searchText"]
+	searchText = strings.ToLower(strings.TrimSpace(searchText))	
+	
+	switch searchType := ctx.Params["searchType"]; searchType {
+	case "entry":
+		handleEntry(ctx)
 
-	//tpl.ExecuteTemplate(w, "index.html", dBlocks)
+	case "eblock":
+		handleEBlock(ctx)
+			
+	case "dblock":
+		handleDBlock(ctx)
+		
+	case "extID":
+		for key, _ := range ExtIDMap {
+			if strings.Contains(key[32:], searchText){
+				hash := new (notaryapi.Hash)
+				hash.Bytes = []byte(key[:32])
+				hashArray = append(hashArray, hash)
+			}
+			if len(hashArray) > pagesize {
+				break
+			}
+		}		
+		
+	default:	
+
+	}
+		
+	tpl.ExecuteTemplate(ctx.ResponseWriter, "entrylist.html", hashArray)
 }
 
 func handleDBlocks(ctx *web.Context) {
@@ -93,14 +131,14 @@ func handleEBlock(ctx *web.Context) {
 }
 
 func handleEntry(ctx *web.Context) {
-	hash := ctx.Request.URL.Path[len("/entry/"):]
+/*	hash := ctx.Request.URL.Path[len("/entry/"):]
 	
 	entry, err := factom.GetEntry(hash)	
 	if err != nil {
 		fmt.Println(err)
 	}
-	
-	tpl.ExecuteTemplate(ctx.ResponseWriter, "sentry.html", entry)
+	*/
+	tpl.ExecuteTemplate(ctx.ResponseWriter, "sentry.html", nil)
 }
 
 func handleHome(ctx *web.Context) {
