@@ -32,7 +32,7 @@ func init() {
 		"views/eblock.html",
 		"views/sentry.html",
 	))
-	server.Config.StaticDir	= "/tmp/static"
+	server.Config.StaticDir	= "/home/mjb/work/factom/go/src/github.com/FactomProject/factomexplorer"
 	server.Get(`/(?:home)?`, handleHome)	
 	server.Get(`/`, handleDBlocks)
 	server.Get(`/dblocks/?`, handleDBlocks)
