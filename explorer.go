@@ -37,7 +37,7 @@ func init() {
 	server.Get(`/`, handleDBlocks)
 	server.Get(`/dblocks/?`, handleDBlocks)
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
-	server.Get(`/eblock/?`, handleEBlock)
+	server.Get(`/eblock/([^/]+)?`, handleEBlock)
 	server.Get(`/entry/?`, handleEntry)
 	server.Post(`/search/?`, handleSearch)		
 
@@ -67,10 +67,10 @@ func handleSearch(ctx *web.Context) {
 	case "entry":
 		handleEntry(ctx)
 
-	case "eblock":
-		handleEBlock(ctx)
-			
-	case "dblock":
+//	case "eblock":
+//		handleEBlock(ctx)
+//			
+//	case "dblock":
 //		handleDBlock(ctx)
 		
 	case "extID":
@@ -117,9 +117,7 @@ func handleDBlock(ctx *web.Context, mr string) {
 	tpl.ExecuteTemplate(ctx, "dblock.html", dblock)
 }
 
-func handleEBlock(ctx *web.Context) {
-	mr := ctx.Request.URL.Path[len("/eblock/"):]
-	
+func handleEBlock(ctx *web.Context, mr string) {
 	eblock, err := factom.GetEBlock(mr)	
 	if err != nil {
 		fmt.Println(err)
