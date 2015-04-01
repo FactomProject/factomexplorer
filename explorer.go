@@ -135,7 +135,7 @@ func handleEntry(ctx *web.Context) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	*/
+*/
 	tpl.ExecuteTemplate(ctx, "sentry.html", nil)
 }
 
