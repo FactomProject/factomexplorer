@@ -36,7 +36,7 @@ func init() {
 	server.Get(`/(?:home)?`, handleHome)	
 	server.Get(`/`, handleDBlocks)
 	server.Get(`/dblocks/?`, handleDBlocks)
-	server.Get(`/dblock/?`, handleDBlock)
+	server.Get(`/dblock/([^/]+)?`, handleDBlock)
 	server.Get(`/eblock/?`, handleEBlock)
 	server.Get(`/entry/?`, handleEntry)
 	server.Post(`/search/?`, handleSearch)		
@@ -71,7 +71,7 @@ func handleSearch(ctx *web.Context) {
 		handleEBlock(ctx)
 			
 	case "dblock":
-		handleDBlock(ctx)
+//		handleDBlock(ctx)
 		
 	case "extID":
 		for key, _ := range ExtIDMap {
@@ -89,7 +89,7 @@ func handleSearch(ctx *web.Context) {
 
 	}
 		
-	tpl.ExecuteTemplate(ctx.ResponseWriter, "entrylist.html", hashArray)
+	tpl.ExecuteTemplate(ctx, "entrylist.html", hashArray)
 }
 
 func handleDBlocks(ctx *web.Context) {
@@ -105,18 +105,16 @@ func handleDBlocks(ctx *web.Context) {
 		log.Fatal("dBlocks is nil")
 	}
 
-	tpl.ExecuteTemplate(ctx.ResponseWriter, "index.html", dBlocks)
+	tpl.ExecuteTemplate(ctx, "index.html", dBlocks)
 }
 
-func handleDBlock(ctx *web.Context) {
-	mr := ctx.Request.URL.Path[len("/dblock/"):]
-	
+func handleDBlock(ctx *web.Context, mr string) {
 	dblock, err := factom.GetDBlock(mr)	
 	if err != nil {
 		fmt.Println(err)
 	}
 	
-	tpl.ExecuteTemplate(ctx.ResponseWriter, "dblock.html", dblock)
+	tpl.ExecuteTemplate(ctx, "dblock.html", dblock)
 }
 
 func handleEBlock(ctx *web.Context) {
@@ -127,7 +125,7 @@ func handleEBlock(ctx *web.Context) {
 		fmt.Println(err)
 	}
 	
-	tpl.ExecuteTemplate(ctx.ResponseWriter, "eblock.html", eblock)
+	tpl.ExecuteTemplate(ctx, "eblock.html", eblock)
 }
 
 func handleEntry(ctx *web.Context) {
@@ -138,7 +136,7 @@ func handleEntry(ctx *web.Context) {
 		fmt.Println(err)
 	}
 	*/
-	tpl.ExecuteTemplate(ctx.ResponseWriter, "sentry.html", nil)
+	tpl.ExecuteTemplate(ctx, "sentry.html", nil)
 }
 
 func handleHome(ctx *web.Context) {
