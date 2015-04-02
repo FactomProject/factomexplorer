@@ -25,18 +25,6 @@
 
     <div class="card">
       <dl class="blockinfo">
-//        <div>
-//          <dt>Chain Name:</dt>
-//          <dd><a href="chain/{{.ebInfo.ChainID}}">{{.ebInfo.ChainID}}</a></dd>
-//        </div>
-//        <div>
-//          <dt>Chain ID:</dt>
-//          <dd>{{.eBlock.Header.ebInfo.ChainID}}</dd>
-//        </div>
-//        <div>
-//          <dt>Block Hash:</dt>
-//          <dd>{{.ebHash}}</dd>
-//        </div>
         <div>
           <dt>Previous Block:</dt>
           <dd><a href="eblock/{{.Header.PrevBlockHash}}">{{.Header.PrevBlockHash}}</a></dd>
@@ -45,10 +33,6 @@
           <dt>Created:</dt>
           <dd>{{.Time}}</dd>
         </div>
-//        <div>
-//          <dt>Directory Block:</dt>
-//          <dd><a href="dblock/{{.eBlock.Header.ebInfo.DBHash}}">{{.eBlock.Header.ebInfo.DBHash}}</a></dd>
-//        </div>
       </dl>
     </div>
   </div>
@@ -69,7 +53,7 @@
               	{{with .}}
                   <tr class="clickableRow"href="sentry/{{.Hash}}">
                       <td><span>{{.Hash}}</span></td>
-                      <td>{{/*.RealTime*/}}</td>
+                      <td>{{.Time}}</td>
                       <td class="hidden-xs">{{.Hash}}</td>
                   </tr>
                 {{end}}

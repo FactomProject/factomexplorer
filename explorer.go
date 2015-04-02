@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-//	"net/http"
+	"strings"	
 
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/FactomCode/database"	
 	"github.com/FactomProject/FactomCode/notaryapi"		
 	"github.com/hoisie/web"	
-	"strings"	
 )
 
 var _ = fmt.Sprint("tmp")
@@ -36,6 +35,7 @@ func init() {
 	server.Config.StaticDir	= "/home/mjb/work/factom/go/src/github.com/FactomProject/factomexplorer"
 	server.Get(`/(?:home)?`, handleHome)	
 	server.Get(`/`, handleDBlocks)
+	server.Get(`/index.html`, handleDBlocks)
 	server.Get(`/dblocks/?`, handleDBlocks)
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
 	server.Get(`/eblock/([^/]+)?`, handleEBlock)
@@ -119,7 +119,7 @@ func handleDBlock(ctx *web.Context, mr string) {
 }
 
 func handleEBlock(ctx *web.Context, mr string) {
-	eblock, err := factom.GetEBlock(mr)	
+	eblock, err := factom.GetEBlock(mr)
 	if err != nil {
 		fmt.Println(err)
 	}
