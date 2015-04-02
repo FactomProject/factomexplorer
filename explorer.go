@@ -26,10 +26,11 @@ var (
 
 func init() {
 	tpl = template.Must(template.ParseFiles(
-		"views/entrylist.html",
-		"views/index.html",
 		"views/dblock.html",
 		"views/eblock.html",
+		"views/entrylist.html",
+		"views/header.html",
+		"views/index.html",
 		"views/sentry.html",
 	))
 	server.Config.StaticDir	= "/home/mjb/work/factom/go/src/github.com/FactomProject/factomexplorer"

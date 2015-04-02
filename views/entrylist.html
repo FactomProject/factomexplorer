@@ -15,64 +15,7 @@
 <body class={{$bodyClass}}>
   <div class="full-view-wrap">
 
-  <header>
-	<script type="text/javascript">
-	var searchTimeout; // declare variable to hold the timer
-	 
-	function Search()  // this function gets called on KeyUp from your input text field
-	{
-	    clearTimeout(searchTimeout); // this may be a subsequent key press, so user may be still typing, reset timer if it had previously been set and is currently counting down 
-	    searchTimeout = setTimeout(function () { PostData(); }, 500); // set new timer to call function that POSTs data. If no other key is pressed within 500ms, we assume the user is done typing and we call the function. Tweak this value to suit your needs
-	}
-	 
-	function PostData()
-	{
-	    document.forms['searchform'].submit();
-	}	
-	</script>  
-<form id="searchform" method="post" action="/search">       
-      <span class="logo"></span>
-      <div class="searchrow container-fluid">
-        <div class="row">
-          <div class="input-group search">
-            <div class="input-group-addon icon-prepend"><span class="icon-ic_search_48px"></span></div>
-            <div class="form-control-wrapper"><input type="text" name="searchText" placeholder="Search" class="form-control search-field empty" onkeyup="Search()"></div>
-            <div class="input-group-addon clear-search"><a href="#" onclick="document.forms['searchform'].elements['searchText'].value=''"><span class="icon-ic_clear_48px"></span></a></div>
-            <div class="input-group-btn search-type-picker">
-              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false" name="button1"> <label id="dropdownlabel1">External ID</label> <span class="caret"></span></button>
-              <ul class="dropdown-menu dropdown-menu-right" role="menu">
-				<input type="hidden" name="searchType" value="extID">              
-                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='extID';document.getElementById('dropdownlabel1').innerHTML='External ID';" class="search-type withripple">External ID</a></li>
-                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='entry';document.getElementById('dropdownlabel1').innerHTML='Entry Hash';" class="search-type withripple">Entry Hash</a></li>
-                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='eblock';document.getElementById('dropdownlabel1').innerHTML='Entry Block Hash';" class="search-type withripple">Entry Block Hash</a></li>
-                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='dblock';document.getElementById('dropdownlabel1').innerHTML='Directory Block Hash';" class="search-type withripple">Directory Block Hash</a></li>
-              </ul>               
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="tabs">
-                <a href="index.html"class="tab withripple selected">Explorer</a><a href="chains.html"class="tab withripple">Chains</a>
-            </div>
-        </div>
-      </div>
-      <!-- Sidr - navigation & menu -->
-      <a id="sidr-toggle" href="#sidr-main" class="side-menu-toggle"><span class="icon-ic_menu_36px"></span></a>
-      <img class="bg-header" src="../images/bg-header.png">
-       <div id="side-navigation" class="side-navigation">
-    <nav class="nav">
-        <ul>
-            <li><a href="index.html" class="selected">Explorer</a></li>
-            <li><a href="chains.html">Chains</a></li>
-            <li><a href="https://github.com/FactomProject/FactomDocs" target="_blank">Github <span class="icon-ic_open_in_new_48px"></span></a></li>
-        </ul>
-    </nav>
-</div>  
-</form>  
-</header>
-  <span id="back-top">
-    <a href="#top"><span class="icon-ic_keyboard_arrow_up_48px"></span></a>
-  </span>
+	{{template "header.html"}}
   <div class="mask"></div>
 
   <div class="main">
