@@ -33,15 +33,15 @@
                   </tr>
               </thead>
               <tbody>
-				{{range .}}
-				{{with .}}
-					<tr class="clickableRow" href="dblock/{{.Header.MerkleRoot}}">
-						<td><span>{{.Header.BlockID}}</span></td>
-						<td>{{.Time}}</td>
-						<td class="hidden-xs">{{.Header.MerkleRoot}}</td>
-	 		    	</tr>
-				{{end}}
-				{{end}}
+		{{range .}}
+		{{with .}}
+			<tr class="clickableRow" href="dblock/{{.DBHash}}">
+				<td><span>{{.Header.BlockID}}</span></td>
+				<td>{{.Time}}</td>
+				<td class="hidden-xs">{{.DBHash}}</td>
+ 		    	</tr>
+		{{end}}
+		{{end}}
               </tbody>
           </table>
     </div>

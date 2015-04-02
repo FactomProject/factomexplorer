@@ -109,8 +109,8 @@ func handleDBlocks(ctx *web.Context) {
 	tpl.ExecuteTemplate(ctx, "index.html", dBlocks)
 }
 
-func handleDBlock(ctx *web.Context, mr string) {
-	dblock, err := factom.GetDBlock(mr)	
+func handleDBlock(ctx *web.Context, hash string) {
+	dblock, err := factom.GetDBlock(hash)	
 	if err != nil {
 		fmt.Println(err)
 	}

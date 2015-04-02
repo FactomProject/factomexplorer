@@ -20,8 +20,7 @@
 
   <div class="main">
 
-    <h1 class="screen-title">Directory Block {{.Header.BlockID}}</h1>
-
+    <h1 class="screen-title">Directory Block {{.DBHash}}</h1>
     <div class="card">
       <dl class="blockinfo">
         <div>
@@ -30,11 +29,11 @@
         </div>
         <div>
           <dt>Block Hash:</dt>
-          <dd>{{.Header.MerkleRoot}}</dd>
+          <dd>{{.DBHash}}</dd>
         </div>
         <div>
           <dt>Previous Block:</dt>
-          <dd><a href='{{.Header.PrevBlockHash}}'>{{.Header.PrevBlockHash}}</a></dd>
+          <dd><a href='dblock/{{.Header.PrevBlockHash}}'>{{.Header.PrevBlockHash}}</a></dd>
         </div>
         <div>
           <dt>Merkle Root:</dt>
