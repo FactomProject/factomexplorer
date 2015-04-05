@@ -20,33 +20,13 @@
 
   <div class="main">
 
-    <h1 class="screen-title">Entry Details </h1>
-
-    <div class="card">
-      <dl class="blockinfo">
-        <div>
-          <dt>Chain:</dt>
-          <dd>{{.ChainID}}</dd>
-        </div>
-        <div>
-          <dt>Entry Block: {{/*.entryInfo.EBBlockNum*/}}:</dt>
-          <dd><a href="sentry/{{/*.Hash*/}}">{{/*.Hash*/}}</a></dd>
-        </div>
-        <div>
-          <dt>Created:</dt>
-          <dd>{{/*.entryInfo.eblock.Header.RealTime*/}}</dd>
-        </div>
-      </dl>
-    </div>
-  </div>
-
   <h1 class="screen-title">Entry Data</h1>
 
      <div class="card entry-block-list">
       <dl class="blockinfo">
         <div>
-          <dt>Entry Hash:</dt>
-          <dd>{{/*.entryInfo.EntryHash*/}}</dd>
+          <dt>Chain:</dt>
+          <dd>{{.ChainID}}</dd>
         </div>
         {{range .ExtIDs}}
           {{with .}}
@@ -65,6 +45,9 @@
         </div>
       </dl>
       </div>
+
+  </div>
+
 
     </div>
   </div>

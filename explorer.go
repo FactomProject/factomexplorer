@@ -40,6 +40,7 @@ func init() {
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
 	server.Get(`/eblock/([^/]+)?`, handleEBlock)
 	server.Get(`/entry/([^/]+)?`, handleEntry)
+	server.Get(`/sentry/([^/]+)?`, handleEntry)
 	server.Post(`/search/?`, handleSearch)		
 
 }
