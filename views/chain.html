@@ -2,8 +2,20 @@
 {{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
 {{$bodyClass := "chain"}}
 
-{{template "head"}}
-{{template "header"}}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="../css/main.css" rel="stylesheet" />
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+	{{template "header.html"}}
 
   <div class="mask"></div>
 
@@ -15,7 +27,7 @@
       <dl class="blockinfo">
         <div>
           <dt>Chain Name:</dt>
-          <dd class="chain-name">{{chainNameToString .Name}}</dd>
+          <dd class="chain-name">{{.Names}}</dd>
         </div>
         <div>
           <dt>Chain ID:</dt>
@@ -29,13 +41,13 @@
 
     <div class="card entry-block-list">
 
-	{{range .eBlocks}}
+	{{range .Blocks.EBEntries}}
 		{{with .}}
 	      <dl class="blockinfo">
 	        <div>
 	          <dt>Entry Block:</dt>
 	          <dd>
-	            <span class="large primary"><a href="eblock/{{.Hash}}">Block ID {{.Hash}}</a></span>
+	            <span class="large primary"><a href="/sentry/{{.Hash}}">Block ID {{.Hash}}</a></span>
 	          </dd>
 	        </div>
 	        <div>
@@ -47,7 +59,12 @@
 	{{end}}
 
     </div>
-    {{template pagination}}
   </div>
 
-{{template foot}}
+  </div>
+
+</div>
+<script src="../scripts/min/scripts-min.js"></script>
+
+</body>
+</html>

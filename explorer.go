@@ -15,7 +15,6 @@ import (
 var _ = fmt.Sprint("tmp")
 
 var (
-	//handleStatic = http.FileServer(http.Dir("./"))
 	tpl    = new(template.Template)
 	db     database.Db
 	server = web.NewServer()
@@ -25,6 +24,7 @@ var (
 
 func init() {
 	tpl = template.Must(template.ParseFiles(
+		"views/chain.html",
 		"views/dblock.html",
 		"views/eblock.html",
 		"views/entrylist.html",
@@ -33,16 +33,17 @@ func init() {
 		"views/sentry.html",
 	))
 	server.Config.StaticDir = "/home/mjb/work/factom/go/src/github.com/FactomProject/factomexplorer"
+	
 	server.Get(`/(?:home)?`, handleHome)
 	server.Get(`/`, handleDBlocks)
 	server.Get(`/index.html`, handleDBlocks)
+	server.Get(`/chain/([^/]+)?`, handleChain)
 	server.Get(`/dblocks/?`, handleDBlocks)
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
 	server.Get(`/eblock/([^/]+)?`, handleEBlock)
 	server.Get(`/entry/([^/]+)?`, handleEntry)
 	server.Get(`/sentry/([^/]+)?`, handleEntry)
 	server.Post(`/search/?`, handleSearch)
-
 }
 
 func Start(dbref database.Db) {
@@ -88,6 +89,15 @@ func handleSearch(ctx *web.Context) {
 	}
 
 	tpl.ExecuteTemplate(ctx, "entrylist.html", hashArray)
+}
+
+func handleChain(ctx *web.Context, hash string) {
+	chain, err := factom.GetChain(hash)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	tpl.ExecuteTemplate(ctx, "chain.html", chain)
 }
 
 func handleDBlocks(ctx *web.Context) {
