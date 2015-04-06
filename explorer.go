@@ -16,7 +16,7 @@ import (
 var _ = fmt.Sprint("tmp")
 
 var (
-	db   database.Db
+	db     database.Db
 	server = web.NewServer()
 	tpl    = new(template.Template)
 
@@ -37,7 +37,7 @@ func init() {
 	))
 
 	server.Config.StaticDir = "/home/mjb/work/factom/go/src/github.com/FactomProject/factomexplorer"
-	
+
 	server.Get(`/(?:home)?`, handleHome)
 	server.Get(`/`, handleDBlocks)
 	server.Get(`/index.html`, handleDBlocks)
