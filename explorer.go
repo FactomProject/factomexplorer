@@ -1,6 +1,7 @@
 package factomexplorer
 
 import (
+	"encoding/hex"
 	"fmt"
 	"html/template"
 	"log"
@@ -15,15 +16,17 @@ import (
 var _ = fmt.Sprint("tmp")
 
 var (
-	tpl    = new(template.Template)
-	db     database.Db
+	db   database.Db
 	server = web.NewServer()
+	tpl    = new(template.Template)
 
 	ExtIDMap map[string]bool
 )
 
 func init() {
-	tpl = template.Must(template.ParseFiles(
+	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
+		"hextotext": hextotext,
+	}).ParseFiles(
 		"views/chain.html",
 		"views/dblock.html",
 		"views/eblock.html",
@@ -32,6 +35,7 @@ func init() {
 		"views/index.html",
 		"views/sentry.html",
 	))
+
 	server.Config.StaticDir = "/home/mjb/work/factom/go/src/github.com/FactomProject/factomexplorer"
 	
 	server.Get(`/(?:home)?`, handleHome)
@@ -119,7 +123,7 @@ func handleDBlocks(ctx *web.Context) {
 func handleDBlock(ctx *web.Context, hash string) {
 	dblock, err := factom.GetDBlock(hash)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	tpl.ExecuteTemplate(ctx, "dblock.html", dblock)
@@ -128,7 +132,7 @@ func handleDBlock(ctx *web.Context, hash string) {
 func handleEBlock(ctx *web.Context, mr string) {
 	eblock, err := factom.GetEBlock(mr)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	tpl.ExecuteTemplate(ctx, "eblock.html", eblock)
@@ -137,7 +141,7 @@ func handleEBlock(ctx *web.Context, mr string) {
 func handleEntry(ctx *web.Context, hash string) {
 	entry, err := factom.GetEntry(hash)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	tpl.ExecuteTemplate(ctx, "sentry.html", entry)
@@ -145,4 +149,12 @@ func handleEntry(ctx *web.Context, hash string) {
 
 func handleHome(ctx *web.Context) {
 	handleDBlocks(ctx)
+}
+
+func hextotext(h string) string {
+	p, err := hex.DecodeString(h)
+	if err != nil {
+		log.Println(err)
+	}
+	return string(p)
 }

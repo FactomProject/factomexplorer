@@ -37,6 +37,33 @@
     </div>
   </div>
 
+	{{with .FirstEntry}}
+    <h1 class="screen-title">First Entry</h1>
+     <div class="card entry-block-list">
+      <dl class="blockinfo">
+        <div>
+          <dt>Chain:</dt>
+          <dd>{{.ChainID}}</dd>
+        </div>
+        {{range .ExtIDs}}
+        {{with .}}
+        <div>
+          <dt>External ID:</dt>
+          <dd>
+            <span>{{hextotext .}}</span>
+          </dd>
+        </div>
+   	   {{end}}
+ 	   {{end}}
+    
+        <div>
+          <dt>Entry Data:</dt>
+          <dd>{{hextotext .Data}}</dd>
+        </div>
+      </dl>
+      </div>
+     {{end}}
+
   <h1 class="screen-title">Entry Blocks <span class='screen-title-sub'>included in this chain</span></h1>
 
     <div class="card entry-block-list">
