@@ -28,6 +28,7 @@ func init() {
 		"hextotext": hextotext,
 	}).ParseFiles(
 		"views/chain.html",
+		"views/chains.html",
 		"views/dblock.html",
 		"views/eblock.html",
 		"views/entrylist.html",
@@ -41,6 +42,7 @@ func init() {
 	server.Get(`/(?:home)?`, handleHome)
 	server.Get(`/`, handleDBlocks)
 	server.Get(`/index.html`, handleDBlocks)
+	server.Get(`/chains/?`, handleChains)
 	server.Get(`/chain/([^/]+)?`, handleChain)
 	server.Get(`/dblocks/?`, handleDBlocks)
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
@@ -102,6 +104,16 @@ func handleChain(ctx *web.Context, hash string) {
 	}
 
 	tpl.ExecuteTemplate(ctx, "chain.html", chain)
+}
+
+func handleChains(ctx *web.Context) {
+	chains, err := factom.GetChains()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(chains)
+	tpl.ExecuteTemplate(ctx, "chains.html", chains)
+	fmt.Println("tpl.Execute finished")
 }
 
 func handleDBlocks(ctx *web.Context) {

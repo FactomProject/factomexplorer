@@ -2,8 +2,20 @@
 {{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
 {{$bodyClass := "chains"}}
 
-{{template "head"}}
-{{template "header"}}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="../css/main.css" rel="stylesheet" />
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+	{{template "header.html"}}
 
   <div class="mask"></div>
 
@@ -14,27 +26,30 @@
     <div class="card">
       <table class="table table-hover standard-table clickable-rows">
               <thead>
-                  <tr class="first" href="chain">
-                      <th class="chain-id">ID</th>
-                      <th class="date-time hidden-xs ">Created</th>
-                      <th class="chain-name">Chain Name</th>
+                  <tr class="first">
+                      <th class="block-id">ID</th>
+                      <th class="date-time">Created</th>
+                      <th class="hidden-xs ">Chain Name</th>
                   </tr>
               </thead>
               <tbody>
-              {{range .chains}}
-              	{{with .}}
-                  <tr class="clickableRow"href="chain/{{.ChainID}}">
-                      <td><span>{{.ChainID}}</span></td>
-                      <td class="hidden-xs">{{.RealTime}}</td>
-                      <td>{{chainNameToString .Name}}</td>
-                  </tr>
-                {{end}}
-              {{end}}
+		{{range .}}
+		{{with .}}
+			<tr class="clickableRow" href="/chain/{{.ChainID}}">
+				<td><span>{{.ChainID}}</span></td>
+				<td>{{/*.Time*/}}</td>
+				<td class="hidden-xs">{{.Names}}</td>
+ 		    	</tr>
+		{{end}}
+		{{end}}
               </tbody>
           </table>
     </div>
-  </div>
-    {{template pagination}}
+    {{/*template pagination*/}}
   </div>
 
-{{template foot}}
+</div>
+<script src="../scripts/min/scripts-min.js"></script>
+
+</body>
+</html>
