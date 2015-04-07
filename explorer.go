@@ -57,7 +57,7 @@ func Start(dbref database.Db) {
 	ExtIDMap, _ = db.InitializeExternalIDMap() // reinitialized in restapi after a block is created
 	fmt.Println("explorer serving at port: 8087")
 	//http.ListenAndServe(":8087", nil)
-	go server.Run("localhost:8087")
+	go server.Run(":8087")
 
 }
 
