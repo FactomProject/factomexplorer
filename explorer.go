@@ -10,6 +10,7 @@ import (
 
 	"github.com/FactomProject/FactomCode/database"
 	"github.com/FactomProject/FactomCode/notaryapi"
+	"github.com/FactomProject/FactomCode/util"
 	"github.com/FactomProject/factom"
 	"github.com/hoisie/web"
 )
@@ -17,17 +18,22 @@ import (
 var _ = fmt.Sprint("tmp")
 
 var (
-	db     database.Db
-	server = web.NewServer()
-	tpl    = new(template.Template)
+	cfg      = util.ReadConfig().Explorer
+	db       database.Db
+	server   = web.NewServer()
+	tpl      = new(template.Template)
 	ExtIDMap map[string]bool
 )
 
 func init() {
 	var err error
+	
 	server.Config.StaticDir, err = os.Getwd()
 	if err != nil {
 		log.Fatal(err)
+	}
+	if cfg.StaticDir != "" {
+		server.Config.StaticDir = cfg.StaticDir
 	}
 
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
