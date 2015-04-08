@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/FactomProject/FactomCode/database"
@@ -19,11 +20,16 @@ var (
 	db     database.Db
 	server = web.NewServer()
 	tpl    = new(template.Template)
-
 	ExtIDMap map[string]bool
 )
 
 func init() {
+	var err error
+	server.Config.StaticDir, err = os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
 		"hextotext": hextotext,
 	}).ParseFiles(
@@ -36,8 +42,6 @@ func init() {
 		"views/index.html",
 		"views/sentry.html",
 	))
-
-	server.Config.StaticDir = "/home/mjb/work/factom/go/src/github.com/FactomProject/factomexplorer"
 
 	server.Get(`/(?:home)?`, handleHome)
 	server.Get(`/`, handleDBlocks)
