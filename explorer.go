@@ -1,3 +1,7 @@
+// Copyright 2015 Factom Foundation
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
+
 package factomexplorer
 
 import (
@@ -72,7 +76,6 @@ func Start(dbref database.Db) {
 }
 
 func handleSearch(ctx *web.Context) {
-
 	fmt.Println("r.Form:", ctx.Params["searchType"])
 	fmt.Println("r.Form:", ctx.Params["searchText"])
 
