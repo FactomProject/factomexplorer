@@ -64,28 +64,6 @@
       </div>
      {{end}}
 
-  <h1 class="screen-title">Entry Blocks <span class='screen-title-sub'>included in this chain</span></h1>
-
-    <div class="card entry-block-list">
-
-	{{range .Blocks.EBEntries}}
-		{{with .}}
-	      <dl class="blockinfo">
-	        <div>
-	          <dt>Entry Block:</dt>
-	          <dd>
-	            <span class="large primary"><a href="/sentry/{{.Hash}}">Block ID {{.Hash}}</a></span>
-	          </dd>
-	        </div>
-	        <div>
-	          <dt>Hash:</dt>
-	          <dd>{{.Hash}}</dd>
-	        </div>
-	      </dl>
-	    {{end}}
-	{{end}}
-
-    </div>
   </div>
 
   </div>

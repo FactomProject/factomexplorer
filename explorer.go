@@ -1,3 +1,7 @@
+// Copyright 2015 Factom Foundation
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
+
 package factomexplorer
 
 import (
@@ -5,10 +9,12 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/FactomProject/FactomCode/database"
 	"github.com/FactomProject/FactomCode/notaryapi"
+	"github.com/FactomProject/FactomCode/util"
 	"github.com/FactomProject/factom"
 	"github.com/hoisie/web"
 )
@@ -16,14 +22,24 @@ import (
 var _ = fmt.Sprint("tmp")
 
 var (
-	db     database.Db
-	server = web.NewServer()
-	tpl    = new(template.Template)
-
+	cfg      = util.ReadConfig().Explorer
+	db       database.Db
+	server   = web.NewServer()
+	tpl      = new(template.Template)
 	ExtIDMap map[string]bool
 )
 
 func init() {
+	var err error
+	
+	server.Config.StaticDir, err = os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if cfg.StaticDir != "" {
+		server.Config.StaticDir = cfg.StaticDir
+	}
+
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
 		"hextotext": hextotext,
 	}).ParseFiles(
@@ -36,8 +52,6 @@ func init() {
 		"views/index.html",
 		"views/sentry.html",
 	))
-
-	server.Config.StaticDir = "/home/paul/factom/go/src/github.com/FactomProject/factomexplorer"
 
 	server.Get(`/(?:home)?`, handleHome)
 	server.Get(`/`, handleDBlocks)
@@ -62,7 +76,6 @@ func Start(dbref database.Db) {
 }
 
 func handleSearch(ctx *web.Context) {
-
 	fmt.Println("r.Form:", ctx.Params["searchType"])
 	fmt.Println("r.Form:", ctx.Params["searchText"])
 
