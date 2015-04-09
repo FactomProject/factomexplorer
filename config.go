@@ -5,14 +5,14 @@
 package factomexplorer
 
 import (
-	"os"
 	"code.google.com/p/gcfg"
+	"os"
 )
 
 type ExplorerConfig struct {
 	Explorer struct {
-		PortNumber	int
-		StaticDir	string
+		PortNumber int
+		StaticDir  string
 	}
 }
 
@@ -30,7 +30,7 @@ StaticDir	= ""
 // ExplorerConfig object corresponding to the state of the conf file.
 func ReadConfig() *ExplorerConfig {
 	cfg := new(ExplorerConfig)
-	filename := os.Getenv("HOME")+"/.factom/factomexplorer.conf"
+	filename := os.Getenv("HOME") + "/.factom/factomexplorer.conf"
 	err := gcfg.ReadFileInto(cfg, filename)
 	if err != nil {
 		gcfg.ReadStringInto(cfg, defaultConfig)
