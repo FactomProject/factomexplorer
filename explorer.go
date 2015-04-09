@@ -14,7 +14,6 @@ import (
 
 	"github.com/FactomProject/FactomCode/database"
 	"github.com/FactomProject/FactomCode/notaryapi"
-	"github.com/FactomProject/FactomCode/util"
 	"github.com/FactomProject/factom"
 	"github.com/hoisie/web"
 )
@@ -22,7 +21,7 @@ import (
 var _ = fmt.Sprint("tmp")
 
 var (
-	cfg      = util.ReadConfig().Explorer
+	cfg      = ReadConfig().Explorer
 	db       database.Db
 	server   = web.NewServer()
 	tpl      = new(template.Template)
