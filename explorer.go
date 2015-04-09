@@ -12,7 +12,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/FactomProject/FactomCode/notaryapi"
 	"github.com/FactomProject/factom"
 	"github.com/hoisie/web"
 )
@@ -79,9 +78,8 @@ func handleSearch(ctx *web.Context) {
 	fmt.Println("r.Form:", ctx.Params["searchText"])
 
 //	pagesize := 1000
-	hashArray := make([]*notaryapi.Hash, 0, 5)
-	searchText := ctx.Params["searchText"]
-	searchText = strings.ToLower(strings.TrimSpace(searchText))
+//	hashArray := make([]*notaryapi.Hash, 0, 5)
+	searchText := strings.ToLower(strings.TrimSpace(ctx.Params["searchText"]))
 
 	switch searchType := ctx.Params["searchType"]; searchType {
 	case "entry":
@@ -106,7 +104,7 @@ func handleSearch(ctx *web.Context) {
 	default:
 	}
 
-	tpl.ExecuteTemplate(ctx, "entrylist.html", hashArray)
+//	tpl.ExecuteTemplate(ctx, "entrylist.html", hashArray)
 }
 
 func handleChain(ctx *web.Context, hash string) {
