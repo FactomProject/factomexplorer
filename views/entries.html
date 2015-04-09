@@ -1,0 +1,63 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "entry"}}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="../css/main.css" rel="stylesheet" />
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+	{{template "header.html"}}
+  <div class="mask"></div>
+
+  <div class="main">
+
+  <h1 class="screen-title">Entries</h1>
+
+	{{range .}}
+	{{with .}}
+	     <div class="card entry-block-list">
+	      <dl class="blockinfo">
+	        <div>
+	          <dt>Chain:</dt>
+	          <dd>{{.ChainID}}</dd>
+	        </div>
+	        {{range .ExtIDs}}
+	          {{with .}}
+		        <div>
+		          <dt>External ID:</dt>
+		          <dd>
+		            <span>{{hextotext .}}</span>
+		          </dd>
+		        </div>
+		      {{end}}
+		    {{end}}
+		    
+	        <div>
+	          <dt>Entry Data:</dt>
+	          <dd>{{hextotext .Data}}</dd>
+	        </div>
+	      </dl>
+	      </div>
+	{{end}}
+	{{end}}
+
+  </div>
+
+
+    </div>
+  </div>
+
+</div>
+<script src="../scripts/min/scripts-min.js"></script>
+
+</body>
+</html>
