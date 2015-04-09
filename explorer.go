@@ -2,7 +2,7 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-package factomexplorer
+package main
 
 import (
 	"encoding/hex"
@@ -12,7 +12,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/FactomProject/FactomCode/database"
 	"github.com/FactomProject/FactomCode/notaryapi"
 	"github.com/FactomProject/factom"
 	"github.com/hoisie/web"
@@ -22,13 +21,12 @@ var _ = fmt.Sprint("tmp")
 
 var (
 	cfg      = ReadConfig().Explorer
-	db       database.Db
 	server   = web.NewServer()
 	tpl      = new(template.Template)
 	ExtIDMap map[string]bool
 )
 
-func init() {
+func main() {
 	var err error
 	
 	server.Config.StaticDir, err = os.Getwd()
@@ -63,22 +61,24 @@ func init() {
 	server.Get(`/entry/([^/]+)?`, handleEntry)
 	server.Get(`/sentry/([^/]+)?`, handleEntry)
 	server.Post(`/search/?`, handleSearch)
+	
+	server.Run(fmt.Sprintf(":%d", cfg.PortNumber))
 }
 
-func Start(dbref database.Db) {
-	db = dbref
-	ExtIDMap, _ = db.InitializeExternalIDMap() // reinitialized in restapi after a block is created
-	fmt.Println("explorer serving at port: 8087")
-	//http.ListenAndServe(":8087", nil)
-	go server.Run(":8087")
-
-}
+//func Start(dbref database.Db) {
+//	db = dbref
+//	ExtIDMap, _ = db.InitializeExternalIDMap() // reinitialized in restapi after a block is created
+//	fmt.Println("explorer serving at port: 8087")
+//	//http.ListenAndServe(":8087", nil)
+//	go server.Run(":8087")
+//
+//}
 
 func handleSearch(ctx *web.Context) {
 	fmt.Println("r.Form:", ctx.Params["searchType"])
 	fmt.Println("r.Form:", ctx.Params["searchText"])
 
-	pagesize := 1000
+//	pagesize := 1000
 	hashArray := make([]*notaryapi.Hash, 0, 5)
 	searchText := ctx.Params["searchText"]
 	searchText = strings.ToLower(strings.TrimSpace(searchText))
@@ -93,16 +93,16 @@ func handleSearch(ctx *web.Context) {
 	case "dblock":
 		handleDBlock(ctx, searchText)
 	case "extID":
-		for key, _ := range ExtIDMap {
-			if strings.Contains(key[32:], searchText) {
-				hash := new(notaryapi.Hash)
-				hash.Bytes = []byte(key[:32])
-				hashArray = append(hashArray, hash)
-			}
-			if len(hashArray) > pagesize {
-				break
-			}
-		}
+//		for key, _ := range ExtIDMap {
+//			if strings.Contains(key[32:], searchText) {
+//				hash := new(notaryapi.Hash)
+//				hash.Bytes = []byte(key[:32])
+//				hashArray = append(hashArray, hash)
+//			}
+//			if len(hashArray) > pagesize {
+//				break
+//			}
+//		}
 	default:
 	}
 
