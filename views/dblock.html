@@ -33,7 +33,7 @@
         </div>
         <div>
           <dt>Previous Block:</dt>
-          <dd><a href='/dblock/{{.Header.PrevBlockHash}}'>{{.Header.PrevBlockHash}}</a></dd>
+          <dd><a href='/dblock/{{hashfilter .Header.PrevBlockHash}}'>{{hashfilter .Header.PrevBlockHash}}</a></dd>
         </div>
         <div>
           <dt>Merkle Root:</dt>
@@ -60,7 +60,7 @@
 		        <div>
 		          <dt>Chain:</dt>
 		          <dd>
-		            <span class="large secondary"><a href="/chain/{{.ChainID}}">{{.ChainID}}</a></span>
+		            <span class="large secondary"><a href="/chain/{{hashfilter .ChainID}}">{{hashfilter .ChainID}}</a></span>
 		          </dd>
 		        </div>
 		        <div>

@@ -39,6 +39,7 @@ func main() {
 	}
 
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
+		"hashfilter": hashfilter,
 		"hextotext": hextotext,
 	}).ParseFiles(
 		dir+"/views/404.html",
@@ -110,6 +111,7 @@ func handleChains(ctx *web.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	
 	tpl.ExecuteTemplate(ctx, "chains.html", chains)
 }
 
@@ -175,4 +177,20 @@ func hextotext(h string) string {
 		log.Println(err)
 	}
 	return string(p)
+}
+
+func hashfilter(s string) string {
+	var filter = []string{
+		"0000000000000000000000000000000000000000000000000000000000000000",
+		"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+		"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+	}
+	
+	for _, v := range filter {
+		if s == v {
+			return "None"
+		}
+	}
+	
+	return s
 }
