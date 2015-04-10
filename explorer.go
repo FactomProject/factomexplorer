@@ -16,8 +16,6 @@ import (
 	"github.com/hoisie/web"
 )
 
-var _ = fmt.Sprint("tmp")
-
 var (
 	cfg      = ReadConfig().Explorer
 	server   = web.NewServer()
@@ -43,6 +41,7 @@ func main() {
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
 		"hextotext": hextotext,
 	}).ParseFiles(
+		dir + "/views/404.html",
 		dir + "/views/chain.html",
 		dir + "/views/chains.html",
 		dir + "/views/dblock.html",
@@ -64,18 +63,15 @@ func main() {
 	server.Get(`/entry/([^/]+)?`, handleEntry)
 	server.Get(`/sentry/([^/]+)?`, handleEntry)
 	server.Post(`/search/?`, handleSearch)
+	server.Get(`/.*`, handle404)
 	
 	server.Run(fmt.Sprintf(":%d", cfg.PortNumber))
 }
 
-//func Start(dbref database.Db) {
-//	db = dbref
-//	ExtIDMap, _ = db.InitializeExternalIDMap() // reinitialized in restapi after a block is created
-//	fmt.Println("explorer serving at port: 8087")
-//	//http.ListenAndServe(":8087", nil)
-//	go server.Run(":8087")
-//
-//}
+func handle404(ctx *web.Context) {
+	var c interface{}
+	tpl.ExecuteTemplate(ctx, "404.html", c)
+}
 
 func handleSearch(ctx *web.Context) {
 	fmt.Println("r.Form:", ctx.Params["searchType"])
@@ -98,8 +94,6 @@ func handleSearch(ctx *web.Context) {
 		handleEntryEid(ctx, searchText)
 	default:
 	}
-
-//	tpl.ExecuteTemplate(ctx, "entrylist.html", hashArray)
 }
 
 func handleChain(ctx *web.Context, hash string) {
@@ -116,9 +110,7 @@ func handleChains(ctx *web.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(chains)
 	tpl.ExecuteTemplate(ctx, "chains.html", chains)
-	fmt.Println("tpl.Execute finished")
 }
 
 func handleDBlocks(ctx *web.Context) {
