@@ -28,7 +28,7 @@ func main() {
 		err error
 		dir string
 	)
-	
+
 	server.Config.StaticDir, err = os.Getwd()
 	if err != nil {
 		log.Fatal(err)
@@ -41,15 +41,15 @@ func main() {
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
 		"hextotext": hextotext,
 	}).ParseFiles(
-		dir + "/views/404.html",
-		dir + "/views/chain.html",
-		dir + "/views/chains.html",
-		dir + "/views/dblock.html",
-		dir + "/views/eblock.html",
-		dir + "/views/entries.html",
-		dir + "/views/header.html",
-		dir + "/views/index.html",
-		dir + "/views/sentry.html",
+		dir+"/views/404.html",
+		dir+"/views/chain.html",
+		dir+"/views/chains.html",
+		dir+"/views/dblock.html",
+		dir+"/views/eblock.html",
+		dir+"/views/entries.html",
+		dir+"/views/header.html",
+		dir+"/views/index.html",
+		dir+"/views/sentry.html",
 	))
 
 	server.Get(`/(?:home)?`, handleHome)
@@ -64,7 +64,7 @@ func main() {
 	server.Get(`/sentry/([^/]+)?`, handleEntry)
 	server.Post(`/search/?`, handleSearch)
 	server.Get(`/.*`, handle404)
-	
+
 	server.Run(fmt.Sprintf(":%d", cfg.PortNumber))
 }
 
@@ -77,8 +77,8 @@ func handleSearch(ctx *web.Context) {
 	fmt.Println("r.Form:", ctx.Params["searchType"])
 	fmt.Println("r.Form:", ctx.Params["searchText"])
 
-//	pagesize := 1000
-//	hashArray := make([]*notaryapi.Hash, 0, 5)
+	//	pagesize := 1000
+	//	hashArray := make([]*notaryapi.Hash, 0, 5)
 	searchText := strings.ToLower(strings.TrimSpace(ctx.Params["searchText"]))
 
 	switch searchType := ctx.Params["searchType"]; searchType {
