@@ -26,7 +26,10 @@ var (
 )
 
 func main() {
-	var err error
+	var (
+		err error
+		dir string
+	)
 	
 	server.Config.StaticDir, err = os.Getwd()
 	if err != nil {
@@ -34,19 +37,20 @@ func main() {
 	}
 	if cfg.StaticDir != "" {
 		server.Config.StaticDir = cfg.StaticDir
+		dir = cfg.StaticDir
 	}
 
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
 		"hextotext": hextotext,
 	}).ParseFiles(
-		"views/chain.html",
-		"views/chains.html",
-		"views/dblock.html",
-		"views/eblock.html",
-		"views/entries.html",
-		"views/header.html",
-		"views/index.html",
-		"views/sentry.html",
+		dir + "/views/chain.html",
+		dir + "/views/chains.html",
+		dir + "/views/dblock.html",
+		dir + "/views/eblock.html",
+		dir + "/views/entries.html",
+		dir + "/views/header.html",
+		dir + "/views/index.html",
+		dir + "/views/sentry.html",
 	))
 
 	server.Get(`/(?:home)?`, handleHome)

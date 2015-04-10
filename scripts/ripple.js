@@ -63,6 +63,7 @@
             if (isTouch() && e.type == "mousedown") {
                 return false;
             }
+
             var element = $(this);
 
             // If the ripple wrapper does not exists, create it
@@ -154,13 +155,6 @@
                     rippleOut(ripple);
                 }
             });
-
-            var target = e.currentTarget;
-            if (target.tagName == 'A' || target.parentNode.tagName == 'A') {
-                if (e.buttons == 1) {
-                    target.click();
-                }
-            }
 
         });
 
