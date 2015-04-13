@@ -45,6 +45,7 @@ func main() {
 		dir+"/views/404.html",
 		dir+"/views/chain.html",
 		dir+"/views/chains.html",
+		dir+"/views/cheader.html",
 		dir+"/views/dblock.html",
 		dir+"/views/eblock.html",
 		dir+"/views/entries.html",
