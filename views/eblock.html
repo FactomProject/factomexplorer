@@ -27,7 +27,7 @@
       <dl class="blockinfo">
         <div>
           <dt>Previous Block:</dt>
-          <dd><a href="eblock/{{.Header.PrevBlockHash}}">{{.Header.PrevBlockHash}}</a></dd>
+          <dd><a href="eblock/{{hashfilter .Header.PrevBlockHash}}">{{hashfilter .Header.PrevBlockHash}}</a></dd>
         </div>
         <div>
           <dt>Created:</dt>
@@ -51,10 +51,10 @@
               <tbody>
               {{range .EBEntries}}
               	{{with .}}
-                  <tr class="clickableRow"href="/sentry/{{.Hash}}">
-                      <td><span>{{.Hash}}</span></td>
+                  <tr class="clickableRow"href="/sentry/{{hashfilter .Hash}}">
+                      <td><span>{{hashfilter .Hash}}</span></td>
                       <td>{{.Time}}</td>
-                      <td class="hidden-xs">{{.Hash}}</td>
+                      <td class="hidden-xs">{{hashfilter .Hash}}</td>
                   </tr>
                 {{end}}
               {{end}}

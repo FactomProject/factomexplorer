@@ -109,7 +109,7 @@ func handleChain(ctx *web.Context, hash string) {
 func handleChains(ctx *web.Context) {
 	chains, err := factom.GetChains()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	
 	tpl.ExecuteTemplate(ctx, "chains.html", chains)
@@ -118,14 +118,14 @@ func handleChains(ctx *web.Context) {
 func handleDBlocks(ctx *web.Context) {
 	height, err := factom.GetBlockHeight()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	dBlocks, err := factom.GetDBlocks(0, height)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	if dBlocks == nil {
-		log.Fatal("dBlocks is nil")
+		log.Println("dBlocks is nil")
 	}
 
 	tpl.ExecuteTemplate(ctx, "index.html", dBlocks)
@@ -135,6 +135,8 @@ func handleDBlock(ctx *web.Context, hash string) {
 	dblock, err := factom.GetDBlock(hash)
 	if err != nil {
 		log.Println(err)
+		handle404(ctx)
+		return
 	}
 
 	tpl.ExecuteTemplate(ctx, "dblock.html", dblock)
@@ -144,6 +146,8 @@ func handleEBlock(ctx *web.Context, mr string) {
 	eblock, err := factom.GetEBlock(mr)
 	if err != nil {
 		log.Println(err)
+		handle404(ctx)
+		return
 	}
 
 	tpl.ExecuteTemplate(ctx, "eblock.html", eblock)
@@ -153,6 +157,8 @@ func handleEntry(ctx *web.Context, hash string) {
 	entry, err := factom.GetEntry(hash)
 	if err != nil {
 		log.Println(err)
+		handle404(ctx)
+		return
 	}
 
 	tpl.ExecuteTemplate(ctx, "sentry.html", entry)
@@ -161,7 +167,9 @@ func handleEntry(ctx *web.Context, hash string) {
 func handleEntryEid(ctx *web.Context, eid string) {
 	entries, err := factom.GetEntriesByExtID(eid)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		handle404(ctx)
+		return
 	}
 
 	tpl.ExecuteTemplate(ctx, "entries.html", entries)
