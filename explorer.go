@@ -101,7 +101,9 @@ func handleSearch(ctx *web.Context) {
 func handleChain(ctx *web.Context, hash string) {
 	chain, err := factom.GetChain(hash)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		handle404(ctx)
+		return
 	}
 
 	tpl.ExecuteTemplate(ctx, "chain.html", chain)
