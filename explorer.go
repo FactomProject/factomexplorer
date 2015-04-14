@@ -146,14 +146,26 @@ func handleDBlock(ctx *web.Context, hash string) {
 }
 
 func handleEBlock(ctx *web.Context, mr string) {
+	type eblockPlus struct {
+		EBlock *factom.EBlock
+		Hash   string
+		Count  int
+	}
+	
 	eblock, err := factom.GetEBlock(mr)
 	if err != nil {
 		log.Println(err)
 		handle404(ctx)
 		return
 	}
+	
+	e := eblockPlus{
+		EBlock: eblock,
+		Hash:   mr,
+		Count:  len(eblock.EBEntries),
+	}
 
-	tpl.ExecuteTemplate(ctx, "eblock.html", eblock)
+	tpl.ExecuteTemplate(ctx, "eblock.html", e)
 }
 
 func handleEntry(ctx *web.Context, hash string) {

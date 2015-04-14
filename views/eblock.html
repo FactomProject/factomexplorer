@@ -26,12 +26,20 @@
     <div class="card">
       <dl class="blockinfo">
         <div>
+          <dt>Entry Block Hash:</dt>
+          <dd>{{hashfilter .Hash}}</dd>
+        </div>
+        <div>
+          <dt>Entries:</dt>
+          <dd>{{.Count}}</dd>
+        </div>
+        <div>
           <dt>Previous Block:</dt>
-          <dd><a href="/eblock/{{hashfilter .Header.PrevBlockHash}}">{{hashfilter .Header.PrevBlockHash}}</a></dd>
+          <dd><a href="/eblock/{{hashfilter .EBlock.Header.PrevBlockHash}}">{{hashfilter .EBlock.Header.PrevBlockHash}}</a></dd>
         </div>
         <div>
           <dt>Created:</dt>
-          <dd>{{.Time}}</dd>
+          <dd>{{.EBlock.Time}}</dd>
         </div>
       </dl>
     </div>
@@ -48,7 +56,7 @@
                   </tr>
               </thead>
               <tbody>
-              {{range .EBEntries}}
+              {{range .EBlock.EBEntries}}
               	{{with .}}
                   <tr class="clickableRow"href="/sentry/{{hashfilter .Hash}}">
                       <td>{{.Time}}</td>

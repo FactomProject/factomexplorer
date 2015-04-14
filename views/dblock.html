@@ -20,13 +20,9 @@
 
   <div class="main">
 
-    <h1 class="screen-title">Directory Block {{.DBHash}}</h1>
+    <h1 class="screen-title">Directory Block</h1>
     <div class="card">
       <dl class="blockinfo">
-        <div>
-          <dt>Created:</dt>
-          <dd>{{.Time}}</dd>
-        </div>
         <div>
           <dt>Block Hash:</dt>
           <dd>{{.DBHash}}</dd>
@@ -38,6 +34,10 @@
         <div>
           <dt>Merkle Root:</dt>
           <dd>{{.Header.MerkleRoot}}</dd>
+        </div>
+        <div>
+          <dt>Created:</dt>
+          <dd>{{.Time}}</dd>
         </div>
         <div>
           <dt>BTC Transaction:</dt>
