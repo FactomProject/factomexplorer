@@ -43,7 +43,6 @@
       <table class="table table-hover standard-table clickable-rows">
               <thead>
                   <tr class="first">
-                      <th class="block-id">ID</th>
                       <th class="date-time">Created</th>
                       <th class="hidden-xs ">Hash</th>
                   </tr>
@@ -52,7 +51,6 @@
               {{range .EBEntries}}
               	{{with .}}
                   <tr class="clickableRow"href="/sentry/{{hashfilter .Hash}}">
-                      <td><span>{{hashfilter .Hash}}</span></td>
                       <td>{{.Time}}</td>
                       <td class="hidden-xs">{{hashfilter .Hash}}</td>
                   </tr>
