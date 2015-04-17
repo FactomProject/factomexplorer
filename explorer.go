@@ -139,7 +139,6 @@ func handleDBlock(ctx *web.Context, hash string) {
 		DBlock: dblock,
 		DBInfo: dbinfo,
 	}
-	fmt.Println(b)
 	
 	tpl.ExecuteTemplate(ctx, "dblock.html", b)
 }
