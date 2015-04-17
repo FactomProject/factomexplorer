@@ -120,23 +120,27 @@ func handleChains(ctx *web.Context) {
 
 func handleDBlock(ctx *web.Context, hash string) {
 	type fullblock struct {
-		dblock *factom.DBlock
-		dbinfo *factom.DBInfo
+		DBlock *factom.DBlock
+		DBInfo *factom.DBInfo
 	}
 	
-	var b fullblock
-	
-	b.dblock, err := factom.GetDBlock(hash)
+	dblock, err := factom.GetDBlock(hash)
 	if err != nil {
 		log.Println(err)
 		handle404(ctx)
 		return
 	}
-	b.dbinfo, err := factom.GetDBInfo(hash)
+	dbinfo, err := factom.GetDBInfo(hash)
 	if err != nil {
 		log.Println(err)
 	}
 
+	b := fullblock{
+		DBlock: dblock,
+		DBInfo: dbinfo,
+	}
+	fmt.Println(b)
+	
 	tpl.ExecuteTemplate(ctx, "dblock.html", b)
 }
 

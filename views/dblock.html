@@ -25,30 +25,30 @@
       <dl class="blockinfo">
         <div>
           <dt>Block Hash:</dt>
-          <dd>{{.dblock.DBHash}}</dd>
+          <dd>{{.DBlock.DBHash}}</dd>
         </div>
         <div>
           <dt>Previous Block:</dt>
-          <dd><a href='/dblock/{{hashfilter .dblock.Header.PrevBlockHash}}'>{{hashfilter .dblock.Header.PrevBlockHash}}</a></dd>
+          <dd><a href='/dblock/{{hashfilter .DBlock.Header.PrevBlockHash}}'>{{hashfilter .DBlock.Header.PrevBlockHash}}</a></dd>
         </div>
         <div>
           <dt>Merkle Root:</dt>
-          <dd>{{.dblock.Header.MerkleRoot}}</dd>
+          <dd>{{.DBlock.Header.MerkleRoot}}</dd>
         </div>
         <div>
           <dt>Created:</dt>
-          <dd>{{.dblock.Time}}</dd>
+          <dd>{{.DBlock.Time}}</dd>
         </div>
         <div>
           <dt>BTC Transaction:</dt>
-          <dd><a href='https://www.biteasy.com/blockchain/transactions/{{.dbInfo.BTCTxHash}}' target="_blank">{{.dbInfo.BTCTxHash}} <span class="icon-ic_open_in_new_48px"></span></a></dd>
+          <dd><a href='https://www.biteasy.com/blockchain/transactions/{{.DBInfo.BTCTxHash}}' target="_blank">{{.DBInfo.BTCTxHash}} <span class="icon-ic_open_in_new_48px"></span></a></dd>
         </div>
       </dl>
     </div>
   <h1 class="screen-title">Entry Blocks <span class='screen-title-sub'>included in this directory block</span></h1>
 
     <div class="card entry-block-list">
-    	{{range .dblock.DBEntries}}
+    	{{range .DBlock.DBEntries}}
     		{{with .}}
 		      <dl class="blockinfo">
 		        <div>
