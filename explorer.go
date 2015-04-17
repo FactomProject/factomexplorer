@@ -118,6 +118,28 @@ func handleChains(ctx *web.Context) {
 	tpl.ExecuteTemplate(ctx, "chains.html", chains)
 }
 
+func handleDBlock(ctx *web.Context, hash string) {
+	type fullblock struct {
+		dblock *factom.DBlock
+		dbinfo *factom.DBInfo
+	}
+	
+	var b fullblock
+	
+	b.dblock, err := factom.GetDBlock(hash)
+	if err != nil {
+		log.Println(err)
+		handle404(ctx)
+		return
+	}
+	b.dbinfo, err := factom.GetDBInfo(hash)
+	if err != nil {
+		log.Println(err)
+	}
+
+	tpl.ExecuteTemplate(ctx, "dblock.html", b)
+}
+
 func handleDBlocks(ctx *web.Context) {
 	height, err := factom.GetBlockHeight()
 	if err != nil {
@@ -132,17 +154,6 @@ func handleDBlocks(ctx *web.Context) {
 	}
 
 	tpl.ExecuteTemplate(ctx, "index.html", dBlocks)
-}
-
-func handleDBlock(ctx *web.Context, hash string) {
-	dblock, err := factom.GetDBlock(hash)
-	if err != nil {
-		log.Println(err)
-		handle404(ctx)
-		return
-	}
-
-	tpl.ExecuteTemplate(ctx, "dblock.html", dblock)
 }
 
 func handleEBlock(ctx *web.Context, mr string) {
