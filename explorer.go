@@ -52,6 +52,7 @@ func main() {
 		dir+"/views/entries.html",
 		dir+"/views/header.html",
 		dir+"/views/index.html",
+		dir+"/views/pagination.html",
 		dir+"/views/sentry.html",
 	))
 
@@ -162,9 +163,10 @@ func handleDBlocks(ctx *web.Context) {
 
 func handleEBlock(ctx *web.Context, mr string) {
 	type eblockPlus struct {
-		EBlock *factom.EBlock
-		Hash   string
-		Count  int
+		EBlock   *factom.EBlock
+		Hash     string
+		Count    int
+		PageInfo *PageState
 	}
 
 	eblock, err := factom.GetEBlock(mr)
@@ -178,19 +180,29 @@ func handleEBlock(ctx *web.Context, mr string) {
 		EBlock: eblock,
 		Hash:   mr,
 		Count:  len(eblock.EBEntries),
+		PageInfo: &PageState{
+			Current: 1,
+			Max: (len(eblock.EBEntries) / 50) + 1,
+		},
 	}
 	
 	page := 1
 	if p := ctx.Params["page"]; p != "" {
-		fmt.Println(p)
 		page, err = strconv.Atoi(p)
 		if err != nil {
 			log.Println(err)
 			handle404(ctx)
 			return
 		}
+		e.PageInfo.Current = page
 	}
-	if i, j := 50 * (page - 1), 50 * page; len(e.EBlock.EBEntries) > j {	
+	
+	if page > e.PageInfo.Max {
+		handle404(ctx)
+		return
+	}
+	
+	if i, j := 50 * (page - 1), 50 * page; len(eblock.EBEntries) > j {	
 		e.EBlock.EBEntries = e.EBlock.EBEntries[i:j]
 	} else {
 		e.EBlock.EBEntries = e.EBlock.EBEntries[i:]
@@ -247,4 +259,25 @@ func hashfilter(s string) string {
 	}
 	
 	return s
+}
+
+type PageState struct {
+	Current int
+	Max     int
+}
+
+func (p *PageState) Next() int {
+	return p.Current + 1
+}
+
+func (p *PageState) Next1() int {
+	return p.Current + 2
+}
+
+func (p *PageState) Next2() int {
+	return p.Current + 3
+}
+
+func (p *PageState) Prev() int {
+	return p.Current - 1
 }
