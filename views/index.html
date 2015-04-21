@@ -23,6 +23,7 @@
 
     <h1 class="screen-title">Directory Blocks</h1>
 
+    {{template "pagination.html" .PageInfo}}
     <div class="card">
       <table class="table table-hover standard-table clickable-rows">
               <thead>
@@ -33,7 +34,7 @@
                   </tr>
               </thead>
               <tbody>
-		{{range .}}
+		{{range .DBlocks}}
 		{{with .}}
 			<tr class="clickableRow" href="/dblock/{{.DBHash}}">
 				<td><span>{{.Header.BlockID}}</span></td>
@@ -45,7 +46,7 @@
               </tbody>
           </table>
     </div>
-    {{/*template pagination*/}}
+    {{template "pagination.html" .PageInfo}}
   </div>
 
 </div>

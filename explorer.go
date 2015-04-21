@@ -146,6 +146,11 @@ func handleDBlock(ctx *web.Context, hash string) {
 }
 
 func handleDBlocks(ctx *web.Context) {
+	type dblockPlus struct {
+		DBlocks []factom.DBlock
+		PageInfo *PageState
+	}
+	
 	height, err := factom.GetBlockHeight()
 	if err != nil {
 		log.Println(err)
@@ -154,11 +159,36 @@ func handleDBlocks(ctx *web.Context) {
 	if err != nil {
 		log.Println(err)
 	}
-	if dBlocks == nil {
-		log.Println("dBlocks is nil")
+	
+	d := dblockPlus{
+		DBlocks: dBlocks,
+		PageInfo: &PageState{
+			Current: 1,
+			Max: (len(dBlocks) / 50) + 1,
+		},
 	}
 
-	tpl.ExecuteTemplate(ctx, "index.html", dBlocks)
+	page := 1
+	if p := ctx.Params["page"]; p != "" {
+		page, err = strconv.Atoi(p)
+		if err != nil {
+			log.Println(err)
+			handle404(ctx)
+			return
+		}
+		d.PageInfo.Current = page
+	}
+	if page > d.PageInfo.Max {
+		handle404(ctx)
+		return
+	}
+	if i, j := 50 * (page - 1), 50 * page; len(dBlocks) > j {	
+		dBlocks = dBlocks[i:j]
+	} else {
+		dBlocks = dBlocks[i:]
+	}
+	
+	tpl.ExecuteTemplate(ctx, "index.html", d)
 }
 
 func handleEBlock(ctx *web.Context, mr string) {
@@ -196,12 +226,10 @@ func handleEBlock(ctx *web.Context, mr string) {
 		}
 		e.PageInfo.Current = page
 	}
-	
 	if page > e.PageInfo.Max {
 		handle404(ctx)
 		return
 	}
-	
 	if i, j := 50 * (page - 1), 50 * page; len(eblock.EBEntries) > j {	
 		e.EBlock.EBEntries = e.EBlock.EBEntries[i:j]
 	} else {
