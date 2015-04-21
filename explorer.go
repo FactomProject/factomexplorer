@@ -41,7 +41,7 @@ func main() {
 
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
 		"hashfilter": hashfilter,
-		"hextotext": hextotext,
+		"hextotext":  hextotext,
 	}).ParseFiles(
 		dir+"/views/404.html",
 		dir+"/views/chain.html",
@@ -88,10 +88,8 @@ func handleSearch(ctx *web.Context) {
 	switch searchType := ctx.Params["searchType"]; searchType {
 	case "entry":
 		handleEntry(ctx, searchText)
-
 	case "eblock":
 		handleEBlock(ctx, searchText)
-
 	case "dblock":
 		handleDBlock(ctx, searchText)
 	case "extID":
@@ -116,7 +114,7 @@ func handleChains(ctx *web.Context) {
 	if err != nil {
 		log.Println(err)
 	}
-	
+
 	tpl.ExecuteTemplate(ctx, "chains.html", chains)
 }
 
@@ -125,7 +123,7 @@ func handleDBlock(ctx *web.Context, hash string) {
 		DBlock *factom.DBlock
 		DBInfo *factom.DBInfo
 	}
-	
+
 	dblock, err := factom.GetDBlock(hash)
 	if err != nil {
 		log.Println(err)
@@ -141,16 +139,16 @@ func handleDBlock(ctx *web.Context, hash string) {
 		DBlock: dblock,
 		DBInfo: dbinfo,
 	}
-	
+
 	tpl.ExecuteTemplate(ctx, "dblock.html", b)
 }
 
 func handleDBlocks(ctx *web.Context) {
 	type dblockPlus struct {
-		DBlocks []factom.DBlock
+		DBlocks  []factom.DBlock
 		PageInfo *PageState
 	}
-	
+
 	height, err := factom.GetBlockHeight()
 	if err != nil {
 		log.Println(err)
@@ -159,12 +157,12 @@ func handleDBlocks(ctx *web.Context) {
 	if err != nil {
 		log.Println(err)
 	}
-	
+
 	d := dblockPlus{
 		DBlocks: dBlocks,
 		PageInfo: &PageState{
 			Current: 1,
-			Max: (len(dBlocks) / 50) + 1,
+			Max:     (len(dBlocks) / 50) + 1,
 		},
 	}
 
@@ -182,12 +180,12 @@ func handleDBlocks(ctx *web.Context) {
 		handle404(ctx)
 		return
 	}
-	if i, j := 50 * (page - 1), 50 * page; len(dBlocks) > j {	
+	if i, j := 50*(page-1), 50*page; len(dBlocks) > j {
 		dBlocks = dBlocks[i:j]
 	} else {
 		dBlocks = dBlocks[i:]
 	}
-	
+
 	tpl.ExecuteTemplate(ctx, "index.html", d)
 }
 
@@ -205,17 +203,17 @@ func handleEBlock(ctx *web.Context, mr string) {
 		handle404(ctx)
 		return
 	}
-	
+
 	e := eblockPlus{
 		EBlock: eblock,
 		Hash:   mr,
 		Count:  len(eblock.EBEntries),
 		PageInfo: &PageState{
 			Current: 1,
-			Max: (len(eblock.EBEntries) / 50) + 1,
+			Max:     (len(eblock.EBEntries) / 50) + 1,
 		},
 	}
-	
+
 	page := 1
 	if p := ctx.Params["page"]; p != "" {
 		page, err = strconv.Atoi(p)
@@ -230,12 +228,12 @@ func handleEBlock(ctx *web.Context, mr string) {
 		handle404(ctx)
 		return
 	}
-	if i, j := 50 * (page - 1), 50 * page; len(eblock.EBEntries) > j {	
+	if i, j := 50*(page-1), 50*page; len(eblock.EBEntries) > j {
 		e.EBlock.EBEntries = e.EBlock.EBEntries[i:j]
 	} else {
 		e.EBlock.EBEntries = e.EBlock.EBEntries[i:]
 	}
-	
+
 	tpl.ExecuteTemplate(ctx, "eblock.html", e)
 }
 
@@ -279,13 +277,13 @@ func hashfilter(s string) string {
 		"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
 		"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
 	}
-	
+
 	for _, v := range filter {
 		if s == v {
 			return "None"
 		}
 	}
-	
+
 	return s
 }
 
