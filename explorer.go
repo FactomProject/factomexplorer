@@ -21,7 +21,6 @@ var (
 	cfg      = ReadConfig().Explorer
 	server   = web.NewServer()
 	tpl      = new(template.Template)
-	ExtIDMap map[string]bool
 )
 
 func main() {
