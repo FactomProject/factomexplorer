@@ -62,7 +62,7 @@ func main() {
 	server.Get(`/chain/([^/]+)?`, handleChain)
 	server.Get(`/dblocks/?`, handleDBlocks)
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
-	server.Get(`/eblock/([^/]+)/([^/]*)?`, handleEBlock)
+	server.Get(`/eblock/([^/]+)?`, handleEBlock)
 	server.Get(`/entry/([^/]+)?`, handleEntry)
 	server.Get(`/sentry/([^/]+)?`, handleEntry)
 	server.Post(`/search/?`, handleSearch)
@@ -89,7 +89,7 @@ func handleSearch(ctx *web.Context) {
 		handleEntry(ctx, searchText)
 
 	case "eblock":
-		handleEBlock(ctx, searchText, "1")
+		handleEBlock(ctx, searchText)
 
 	case "dblock":
 		handleDBlock(ctx, searchText)
@@ -160,13 +160,7 @@ func handleDBlocks(ctx *web.Context) {
 	tpl.ExecuteTemplate(ctx, "index.html", dBlocks)
 }
 
-func handleEBlock(ctx *web.Context, mr string, pageStr string) {
-	if pageStr == "" {
-		fmt.Println("empty")
-	} else {
-		fmt.Println(pageStr)
-	}
-
+func handleEBlock(ctx *web.Context, mr string) {
 	type eblockPlus struct {
 		EBlock *factom.EBlock
 		Hash   string
@@ -187,8 +181,9 @@ func handleEBlock(ctx *web.Context, mr string, pageStr string) {
 	}
 	
 	page := 1
-	if pageStr != "" {
-		page, err = strconv.Atoi(pageStr)
+	if p := ctx.Params["page"]; p != "" {
+		fmt.Println(p)
+		page, err = strconv.Atoi(p)
 		if err != nil {
 			log.Println(err)
 			handle404(ctx)
