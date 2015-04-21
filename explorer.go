@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/FactomProject/factom"
@@ -61,7 +62,7 @@ func main() {
 	server.Get(`/chain/([^/]+)?`, handleChain)
 	server.Get(`/dblocks/?`, handleDBlocks)
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
-	server.Get(`/eblock/([^/]+)?`, handleEBlock)
+	server.Get(`/eblock/([^/]+)/([^/]*)?`, handleEBlock)
 	server.Get(`/entry/([^/]+)?`, handleEntry)
 	server.Get(`/sentry/([^/]+)?`, handleEntry)
 	server.Post(`/search/?`, handleSearch)
@@ -88,7 +89,7 @@ func handleSearch(ctx *web.Context) {
 		handleEntry(ctx, searchText)
 
 	case "eblock":
-		handleEBlock(ctx, searchText)
+		handleEBlock(ctx, searchText, "1")
 
 	case "dblock":
 		handleDBlock(ctx, searchText)
@@ -159,13 +160,19 @@ func handleDBlocks(ctx *web.Context) {
 	tpl.ExecuteTemplate(ctx, "index.html", dBlocks)
 }
 
-func handleEBlock(ctx *web.Context, mr string) {
+func handleEBlock(ctx *web.Context, mr string, pageStr string) {
+	if pageStr == "" {
+		fmt.Println("empty")
+	} else {
+		fmt.Println(pageStr)
+	}
+
 	type eblockPlus struct {
 		EBlock *factom.EBlock
 		Hash   string
 		Count  int
 	}
-	
+
 	eblock, err := factom.GetEBlock(mr)
 	if err != nil {
 		log.Println(err)
@@ -178,7 +185,22 @@ func handleEBlock(ctx *web.Context, mr string) {
 		Hash:   mr,
 		Count:  len(eblock.EBEntries),
 	}
-
+	
+	page := 1
+	if pageStr != "" {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil {
+			log.Println(err)
+			handle404(ctx)
+			return
+		}
+	}
+	if i, j := 50 * (page - 1), 50 * page; len(e.EBlock.EBEntries) > j {	
+		e.EBlock.EBEntries = e.EBlock.EBEntries[i:j]
+	} else {
+		e.EBlock.EBEntries = e.EBlock.EBEntries[i:]
+	}
+	
 	tpl.ExecuteTemplate(ctx, "eblock.html", e)
 }
 
