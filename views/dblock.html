@@ -50,24 +50,30 @@
     <div class="card entry-block-list">
     	{{range .DBlock.DBEntries}}
     		{{with .}}
-		      <dl class="blockinfo">
-		        <div>
-		          <dt>Entry Block:</dt>
-		          <dd>
-		            <span class="large primary"><a href="/eblock/{{.MerkleRoot}}">{{.MerkleRoot}}</a></span>
-		          </dd>
-		        </div>
-		        <div>
-		          <dt>Chain:</dt>
-		          <dd>
-		            <span class="large secondary"><a href="/chain/{{hashfilter .ChainID}}">{{hashfilter .ChainID}}</a></span>
-		          </dd>
-		        </div>
-		        <div>
-		          <dt>Merkle Root:</dt>
-		          <dd>{{.MerkleRoot}}</dd>
-		        </div>
-		      </dl>
+    			{{if ne .ChainID "0000000000000000000000000000000000000000000000000000000000000000"}}
+    			{{if ne .ChainID "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}}
+    			{{if ne .ChainID "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}}
+			      <dl class="blockinfo">
+			        <div>
+			          <dt>Entry Block:</dt>
+			          <dd>
+			            <span class="large primary"><a href="/eblock/{{.MerkleRoot}}">{{.MerkleRoot}}</a></span>
+			          </dd>
+			        </div>
+			        <div>
+			          <dt>Chain:</dt>
+			          <dd>
+			            <span class="large secondary"><a href="/chain/{{hashfilter .ChainID}}">{{hashfilter .ChainID}}</a></span>
+			          </dd>
+			        </div>
+			        <div>
+			          <dt>Merkle Root:</dt>
+			          <dd>{{.MerkleRoot}}</dd>
+			        </div>
+			      </dl>
+			  {{end}}
+			  {{end}}
+			  {{end}}
     		{{end}}
     	{{end}}
       </div>
