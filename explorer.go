@@ -133,6 +133,8 @@ func handleDBlock(ctx *web.Context, hash string) {
 	if err != nil {
 		log.Println(err)
 	}
+	
+	dbinfo.BTCTxHash
 
 	b := fullblock{
 		DBlock: dblock,
@@ -262,6 +264,27 @@ func handleHome(ctx *web.Context) {
 	handleDBlocks(ctx)
 }
 
+type PageState struct {
+	Current int
+	Max     int
+}
+
+func (p *PageState) Next() int {
+	return p.Current + 1
+}
+
+func (p *PageState) Next1() int {
+	return p.Current + 2
+}
+
+func (p *PageState) Next2() int {
+	return p.Current + 3
+}
+
+func (p *PageState) Prev() int {
+	return p.Current - 1
+}
+
 func hextotext(h string) string {
 	p, err := hex.DecodeString(h)
 	if err != nil {
@@ -284,25 +307,4 @@ func hashfilter(s string) string {
 	}
 
 	return s
-}
-
-type PageState struct {
-	Current int
-	Max     int
-}
-
-func (p *PageState) Next() int {
-	return p.Current + 1
-}
-
-func (p *PageState) Next1() int {
-	return p.Current + 2
-}
-
-func (p *PageState) Next2() int {
-	return p.Current + 3
-}
-
-func (p *PageState) Prev() int {
-	return p.Current - 1
 }
