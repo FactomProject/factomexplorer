@@ -134,8 +134,6 @@ func handleDBlock(ctx *web.Context, hash string) {
 		log.Println(err)
 	}
 	
-	dbinfo.BTCTxHash
-
 	b := fullblock{
 		DBlock: dblock,
 		DBInfo: dbinfo,
@@ -182,9 +180,9 @@ func handleDBlocks(ctx *web.Context) {
 		return
 	}
 	if i, j := 50*(page-1), 50*page; len(dBlocks) > j {
-		dBlocks = dBlocks[i:j]
+		d.DBlocks = d.DBlocks[i:j]
 	} else {
-		dBlocks = dBlocks[i:]
+		d.DBlocks = d.DBlocks[i:]
 	}
 
 	tpl.ExecuteTemplate(ctx, "index.html", d)
