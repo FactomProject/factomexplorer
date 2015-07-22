@@ -29,16 +29,16 @@
                   <tr class="first">
                       <th class="block-id">ID</th>
                       <th class="date-time">Block Time</th>
-                      <th class="hidden-xs ">Hash</th>
+                      <th class="hidden-xs ">KeyMR</th>
                   </tr>
               </thead>
               <tbody>
 		{{range .DBlocks}}
 		{{with .}}
 			<tr class="clickableRow" href="/dblock/{{.DBHash}}">
-				<td><span>{{.Header.BlockID}}</span></td>
-				<td>{{.Time}}</td>
-				<td class="hidden-xs">{{.DBHash}}</td>
+				<td><span>{{.Header.SequenceNumber}}</span></td>
+				<td>{{.BlockTimeStr}}</td>
+				<td class="hidden-xs">{{.KeyMR}}</td>
  		    	</tr>
 		{{end}}
 		{{end}}

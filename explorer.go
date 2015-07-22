@@ -11,16 +11,17 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
+	//"strings"
 
+	"encoding/json"
 	"github.com/FactomProject/factom"
 	"github.com/hoisie/web"
 )
 
 var (
-	cfg      = ReadConfig().Explorer
-	server   = web.NewServer()
-	tpl      = new(template.Template)
+	cfg    = ReadConfig().Explorer
+	server = web.NewServer()
+	tpl    = new(template.Template)
 )
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 		server.Config.StaticDir = cfg.StaticDir
 		dir = cfg.StaticDir
 	}
+	dir = "."
 
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
 		"hashfilter": hashfilter,
@@ -56,19 +58,37 @@ func main() {
 	))
 
 	server.Get(`/(?:home)?`, handleHome)
-	server.Get(`/`, handleDBlocks)
+	/*server.Get(`/`, handleDBlocks)
 	server.Get(`/index.html`, handleDBlocks)
-	server.Get(`/chains/?`, handleChains)
-	server.Get(`/chain/([^/]+)?`, handleChain)
+	//server.Get(`/chains/?`, handleChains)
+	//server.Get(`/chain/([^/]+)?`, handleChain)
 	server.Get(`/dblocks/?`, handleDBlocks)
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
 	server.Get(`/eblock/([^/]+)?`, handleEBlock)
 	server.Get(`/entry/([^/]+)?`, handleEntry)
 	server.Get(`/sentry/([^/]+)?`, handleEntry)
-	server.Post(`/search/?`, handleSearch)
+	server.Post(`/search/?`, handleSearch)*/
+	server.Get(`/test`, test)
 	server.Get(`/.*`, handle404)
 
 	server.Run(fmt.Sprintf(":%d", cfg.PortNumber))
+}
+
+func test(ctx *web.Context) {
+	head, err := factom.GetDBlockHead()
+	log.Printf("test - %v, %v", head.KeyMR, err)
+	body, err := factom.GetDBlock(head.KeyMR)
+	str, _ := EncodeJSONString(body)
+	log.Printf("test - %v, %v", str, err)
+	Synchronize()
+}
+
+func EncodeJSONString(data interface{}) (string, error) {
+	encoded, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(encoded), err
 }
 
 func handle404(ctx *web.Context) {
@@ -76,6 +96,7 @@ func handle404(ctx *web.Context) {
 	tpl.ExecuteTemplate(ctx, "404.html", c)
 }
 
+/*
 func handleSearch(ctx *web.Context) {
 	fmt.Println("r.Form:", ctx.Params["searchType"])
 	fmt.Println("r.Form:", ctx.Params["searchText"])
@@ -96,7 +117,8 @@ func handleSearch(ctx *web.Context) {
 	default:
 	}
 }
-
+*/
+/*
 func handleChain(ctx *web.Context, hash string) {
 	chain, err := factom.GetChain(hash)
 	if err != nil {
@@ -106,8 +128,8 @@ func handleChain(ctx *web.Context, hash string) {
 	}
 
 	tpl.ExecuteTemplate(ctx, "chain.html", chain)
-}
-
+}*/
+/*
 func handleChains(ctx *web.Context) {
 	chains, err := factom.GetChains()
 	if err != nil {
@@ -115,8 +137,8 @@ func handleChains(ctx *web.Context) {
 	}
 
 	tpl.ExecuteTemplate(ctx, "chains.html", chains)
-}
-
+}*/
+/*
 func handleDBlock(ctx *web.Context, hash string) {
 	type fullblock struct {
 		DBlock *factom.DBlock
@@ -133,29 +155,23 @@ func handleDBlock(ctx *web.Context, hash string) {
 	if err != nil {
 		log.Println(err)
 	}
-	
+
 	b := fullblock{
 		DBlock: dblock,
 		DBInfo: dbinfo,
 	}
 
 	tpl.ExecuteTemplate(ctx, "dblock.html", b)
-}
+}*/
 
 func handleDBlocks(ctx *web.Context) {
 	type dblockPlus struct {
-		DBlocks  []factom.DBlock
+		DBlocks  []DBlock
 		PageInfo *PageState
 	}
 
-	height, err := factom.GetBlockHeight()
-	if err != nil {
-		log.Println(err)
-	}
-	dBlocks, err := factom.GetDBlocks(0, height)
-	if err != nil {
-		log.Println(err)
-	}
+	height := GetBlockHeight()
+	dBlocks := GetDBlocks(0, height)
 
 	d := dblockPlus{
 		DBlocks: dBlocks,
@@ -166,6 +182,7 @@ func handleDBlocks(ctx *web.Context) {
 	}
 
 	page := 1
+	var err error
 	if p := ctx.Params["page"]; p != "" {
 		page, err = strconv.Atoi(p)
 		if err != nil {
@@ -188,6 +205,7 @@ func handleDBlocks(ctx *web.Context) {
 	tpl.ExecuteTemplate(ctx, "index.html", d)
 }
 
+/*
 func handleEBlock(ctx *web.Context, mr string) {
 	type eblockPlus struct {
 		EBlock   *factom.EBlock
@@ -256,9 +274,10 @@ func handleEntryEid(ctx *web.Context, eid string) {
 	}
 
 	tpl.ExecuteTemplate(ctx, "entries.html", entries)
-}
+}*/
 
 func handleHome(ctx *web.Context) {
+	Synchronize()
 	handleDBlocks(ctx)
 }
 
