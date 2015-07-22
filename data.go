@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"github.com/FactomProject/factom"
 	"log"
 	"time"
@@ -9,6 +10,7 @@ import (
 var DBlocks map[string]DBlock
 var DBlockKeyMRsBySequence map[int]string
 var DBlockHeight int
+var FullySynchronized bool
 
 func init() {
 	DBlocks = map[string]DBlock{}
@@ -22,7 +24,7 @@ type DBlock struct {
 	KeyMR        string
 }
 
-func GetDBlock(keyMR string) (DBlock, error) {
+func GetDBlockFromFactom(keyMR string) (DBlock, error) {
 	var answer DBlock
 
 	body, err := factom.GetDBlock(keyMR)
@@ -45,7 +47,7 @@ func Synchronize() error {
 	}
 	previousKeyMR := head.KeyMR
 	for {
-		body, err := GetDBlock(previousKeyMR)
+		body, err := GetDBlockFromFactom(previousKeyMR)
 		if err != nil {
 			return err
 		}
@@ -54,6 +56,14 @@ func Synchronize() error {
 			return err
 		}
 		log.Printf("%v\n", str)
+
+		for _, v := range body.EntryBlockList {
+			err = FetchEntryBlock(v.ChainID, v.KeyMR)
+			if err != nil {
+				return err
+			}
+		}
+
 		DBlocks[previousKeyMR] = body
 		DBlockKeyMRsBySequence[body.Header.SequenceNumber] = previousKeyMR
 		if DBlockHeight < body.Header.SequenceNumber {
@@ -72,6 +82,16 @@ func Synchronize() error {
 	return nil
 }
 
+func FetchEntryBlock(chainID, keyMR string) error {
+	_, err := factom.GetEBlock(keyMR)
+	if err != nil {
+		log.Printf("FetchEntryBlock error - %v", err)
+		return err
+	}
+
+	return nil
+}
+
 func GetBlockHeight() int {
 	return DBlockHeight
 }
@@ -86,4 +106,25 @@ func GetDBlocks(start, max int) []DBlock {
 		answer = append(answer, DBlocks[keyMR])
 	}
 	return answer
+}
+
+func GetDBlock(keyMR string) (DBlock, error) {
+	block, ok := DBlocks[keyMR]
+	if ok != true {
+		return block, errors.New("DBlock not found")
+	}
+	return block, nil
+}
+
+type DBInfo struct {
+	BTCTxHash string
+}
+
+func GetDBInfo(keyMR string) (DBInfo, error) {
+	//TODO: gather DBInfo
+	return DBInfo{}, nil
+}
+
+type EBlock struct {
+	factom.EBlock
 }

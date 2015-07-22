@@ -62,25 +62,27 @@ func main() {
 	server.Get(`/index.html`, handleDBlocks)
 	//server.Get(`/chains/?`, handleChains)
 	//server.Get(`/chain/([^/]+)?`, handleChain)
-	server.Get(`/dblocks/?`, handleDBlocks)
+	server.Get(`/dblocks/?`, handleDBlocks)*/
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
 	server.Get(`/eblock/([^/]+)?`, handleEBlock)
-	server.Get(`/entry/([^/]+)?`, handleEntry)
+	/*server.Get(`/entry/([^/]+)?`, handleEntry)
 	server.Get(`/sentry/([^/]+)?`, handleEntry)
 	server.Post(`/search/?`, handleSearch)*/
 	server.Get(`/test`, test)
 	server.Get(`/.*`, handle404)
 
+	Synchronize()
+
 	server.Run(fmt.Sprintf(":%d", cfg.PortNumber))
 }
 
 func test(ctx *web.Context) {
-	head, err := factom.GetDBlockHead()
-	log.Printf("test - %v, %v", head.KeyMR, err)
-	body, err := factom.GetDBlock(head.KeyMR)
+	head, err := factom.GetChainHead("000000000000000000000000000000000000000000000000000000000000000a")
+	log.Printf("test - %v, %v", head.EntryBlockKeyMR, err)
+	/*body, err := factom.GetDBlock(head.KeyMR)
 	str, _ := EncodeJSONString(body)
 	log.Printf("test - %v, %v", str, err)
-	Synchronize()
+	Synchronize()*/
 }
 
 func EncodeJSONString(data interface{}) (string, error) {
@@ -138,20 +140,21 @@ func handleChains(ctx *web.Context) {
 
 	tpl.ExecuteTemplate(ctx, "chains.html", chains)
 }*/
-/*
-func handleDBlock(ctx *web.Context, hash string) {
+
+func handleDBlock(ctx *web.Context, keyMR string) {
+	Synchronize()
 	type fullblock struct {
-		DBlock *factom.DBlock
-		DBInfo *factom.DBInfo
+		DBlock DBlock
+		DBInfo DBInfo
 	}
 
-	dblock, err := factom.GetDBlock(hash)
+	dblock, err := GetDBlock(keyMR)
 	if err != nil {
 		log.Println(err)
 		handle404(ctx)
 		return
 	}
-	dbinfo, err := factom.GetDBInfo(hash)
+	dbinfo, err := GetDBInfo(keyMR)
 	if err != nil {
 		log.Println(err)
 	}
@@ -162,9 +165,10 @@ func handleDBlock(ctx *web.Context, hash string) {
 	}
 
 	tpl.ExecuteTemplate(ctx, "dblock.html", b)
-}*/
+}
 
 func handleDBlocks(ctx *web.Context) {
+	Synchronize()
 	type dblockPlus struct {
 		DBlocks  []DBlock
 		PageInfo *PageState
@@ -205,8 +209,8 @@ func handleDBlocks(ctx *web.Context) {
 	tpl.ExecuteTemplate(ctx, "index.html", d)
 }
 
-/*
 func handleEBlock(ctx *web.Context, mr string) {
+	log.Printf("handleEBlock - %v\n", mr)
 	type eblockPlus struct {
 		EBlock   *factom.EBlock
 		Hash     string
@@ -216,6 +220,7 @@ func handleEBlock(ctx *web.Context, mr string) {
 
 	eblock, err := factom.GetEBlock(mr)
 	if err != nil {
+		log.Printf("handleEBlock - factom.GetEBlock\n")
 		log.Println(err)
 		handle404(ctx)
 		return
@@ -224,10 +229,10 @@ func handleEBlock(ctx *web.Context, mr string) {
 	e := eblockPlus{
 		EBlock: eblock,
 		Hash:   mr,
-		Count:  len(eblock.EBEntries),
+		Count:  len(eblock.EntryList),
 		PageInfo: &PageState{
 			Current: 1,
-			Max:     (len(eblock.EBEntries) / 50) + 1,
+			Max:     (len(eblock.EntryList) / 50) + 1,
 		},
 	}
 
@@ -235,6 +240,7 @@ func handleEBlock(ctx *web.Context, mr string) {
 	if p := ctx.Params["page"]; p != "" {
 		page, err = strconv.Atoi(p)
 		if err != nil {
+			log.Printf("handleEBlock - strconv\n")
 			log.Println(err)
 			handle404(ctx)
 			return
@@ -242,18 +248,20 @@ func handleEBlock(ctx *web.Context, mr string) {
 		e.PageInfo.Current = page
 	}
 	if page > e.PageInfo.Max {
+		log.Printf("handleEBlock - e.PageInfo.Max\n")
 		handle404(ctx)
 		return
 	}
-	if i, j := 50*(page-1), 50*page; len(eblock.EBEntries) > j {
-		e.EBlock.EBEntries = e.EBlock.EBEntries[i:j]
+	if i, j := 50*(page-1), 50*page; len(eblock.EntryList) > j {
+		e.EBlock.EntryList = e.EBlock.EntryList[i:j]
 	} else {
-		e.EBlock.EBEntries = e.EBlock.EBEntries[i:]
+		e.EBlock.EntryList = e.EBlock.EntryList[i:]
 	}
 
 	tpl.ExecuteTemplate(ctx, "eblock.html", e)
 }
 
+/*
 func handleEntry(ctx *web.Context, hash string) {
 	entry, err := factom.GetEntry(hash)
 	if err != nil {

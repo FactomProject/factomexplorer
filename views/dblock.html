@@ -24,20 +24,16 @@
     <div class="card">
       <dl class="blockinfo">
         <div>
-          <dt>Block Hash:</dt>
-          <dd>{{.DBlock.DBHash}}</dd>
+          <dt>Block KeyMR:</dt>
+          <dd>{{.DBlock.KeyMR}}</dd>
         </div>
         <div>
-          <dt>Previous Block:</dt>
-          <dd><a href='/dblock/{{hashfilter .DBlock.Header.PrevBlockHash}}'>{{hashfilter .DBlock.Header.PrevBlockHash}}</a></dd>
-        </div>
-        <div>
-          <dt>Merkle Root:</dt>
-          <dd>{{.DBlock.Header.MerkleRoot}}</dd>
+          <dt>Previous Block KeyMR:</dt>
+          <dd><a href='/dblock/{{hashfilter .DBlock.Header.PrevBlockKeyMR}}'>{{hashfilter .DBlock.Header.PrevBlockKeyMR}}</a></dd>
         </div>
         <div>
           <dt>Created:</dt>
-          <dd>{{.DBlock.Time}}</dd>
+          <dd>{{.DBlock.BlockTimeStr}}</dd>
         </div>
         <div>
           <dt>BTC Transaction:</dt>
@@ -48,7 +44,7 @@
   <h1 class="screen-title">Entry Blocks <span class='screen-title-sub'>included in this directory block</span></h1>
 
     <div class="card entry-block-list">
-    	{{range .DBlock.DBEntries}}
+    	{{range .DBlock.EntryBlockList}}
     		{{with .}}
     			{{if ne .ChainID "0000000000000000000000000000000000000000000000000000000000000000"}}
     			{{if ne .ChainID "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}}
@@ -57,7 +53,7 @@
 			        <div>
 			          <dt>Entry Block:</dt>
 			          <dd>
-			            <span class="large primary"><a href="/eblock/{{.MerkleRoot}}">{{.MerkleRoot}}</a></span>
+			            <span class="large primary"><a href="/eblock/{{.KeyMR}}">{{.KeyMR}}</a></span>
 			          </dd>
 			        </div>
 			        <div>
@@ -65,10 +61,6 @@
 			          <dd>
 			            <span class="large secondary"><a href="/chain/{{hashfilter .ChainID}}">{{hashfilter .ChainID}}</a></span>
 			          </dd>
-			        </div>
-			        <div>
-			          <dt>Merkle Root:</dt>
-			          <dd>{{.MerkleRoot}}</dd>
 			        </div>
 			      </dl>
 			  {{end}}
