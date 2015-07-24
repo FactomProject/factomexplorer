@@ -9,8 +9,13 @@ import (
 
 var DBlocks map[string]DBlock
 var DBlockKeyMRsBySequence map[int]string
-var DBlockHeight int
-var FullySynchronized bool
+
+type DataStatusStruct struct {
+	DBlockHeight      int
+	FullySynchronized bool
+}
+
+var DataStatus DataStatusStruct
 
 func init() {
 	DBlocks = map[string]DBlock{}
@@ -47,6 +52,15 @@ func Synchronize() error {
 	}
 	previousKeyMR := head.KeyMR
 	for {
+		block, exists := DBlocks[previousKeyMR]
+		if exists {
+			if DataStatus.FullySynchronized == true {
+				break
+			} else {
+				previousKeyMR = block.Header.PrevBlockKeyMR
+				continue
+			}
+		}
 		body, err := GetDBlockFromFactom(previousKeyMR)
 		if err != nil {
 			return err
@@ -66,18 +80,15 @@ func Synchronize() error {
 
 		DBlocks[previousKeyMR] = body
 		DBlockKeyMRsBySequence[body.Header.SequenceNumber] = previousKeyMR
-		if DBlockHeight < body.Header.SequenceNumber {
-			DBlockHeight = body.Header.SequenceNumber
+		if DataStatus.DBlockHeight < body.Header.SequenceNumber {
+			DataStatus.DBlockHeight = body.Header.SequenceNumber
 		}
 		previousKeyMR = body.Header.PrevBlockKeyMR
 		if previousKeyMR == "0000000000000000000000000000000000000000000000000000000000000000" {
+			DataStatus.FullySynchronized = true
 			break
 		}
 
-		_, exists := DBlocks[previousKeyMR]
-		if exists {
-			break
-		}
 	}
 	return nil
 }
@@ -93,7 +104,7 @@ func FetchEntryBlock(chainID, keyMR string) error {
 }
 
 func GetBlockHeight() int {
-	return DBlockHeight
+	return DataStatus.DBlockHeight
 }
 
 func GetDBlocks(start, max int) []DBlock {

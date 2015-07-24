@@ -78,7 +78,7 @@ func main() {
 
 func test(ctx *web.Context) {
 	head, err := factom.GetChainHead("000000000000000000000000000000000000000000000000000000000000000a")
-	log.Printf("test - %v, %v", head.EntryBlockKeyMR, err)
+	log.Printf("test - %v, %v", head.ChainHead, err)
 	/*body, err := factom.GetDBlock(head.KeyMR)
 	str, _ := EncodeJSONString(body)
 	log.Printf("test - %v, %v", str, err)
