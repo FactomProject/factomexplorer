@@ -43,7 +43,12 @@ type Block struct {
 }
 
 type Entry struct {
+	//Marshallable blocks
 	BinaryString string
+
+	//EBEntry
+	TimeStamp int64
+	EntryHash string
 }
 
 func GetDBlockFromFactom(keyMR string) (DBlock, error) {
@@ -128,22 +133,83 @@ func FetchBlock(chainID, hash string) error {
 			}
 			break
 		case "000000000000000000000000000000000000000000000000000000000000000c":
-
+			block, err = ParseEntryCreditBlock(chainID, hash, raw)
+			if err != nil {
+				return err
+			}
 			break
 		case "000000000000000000000000000000000000000000000000000000000000000f":
-
+			block, err = ParseFactoidBlock(chainID, hash, raw)
+			if err != nil {
+				return err
+			}
 			break
 		}
 		Blocks[hash] = block
 
 	} else {
-		_, err := factom.GetEBlock(hash)
+		eBlock, err := factom.GetEBlock(hash)
 		if err != nil {
 			return err
 		}
+		block, err := ParseEBlock(chainID, hash, eBlock)
+		if err != nil {
+			return err
+		}
+		Blocks[hash] = block
 	}
 
 	return nil
+}
+
+func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte) (Block, error) {
+	var answer Block
+
+	ecBlock := common.NewECBlock()
+	_, err := ecBlock.UnmarshalBinaryData(rawBlock)
+	if err != nil {
+		return answer, err
+	}
+
+	answer.ChainID = chainID
+	answer.Hash = hash
+	answer.EntryCount = len(ecBlock.Body.Entries)
+	answer.PrevBlockHash = fmt.Sprintf("%X", ecBlock.Header.PrevFullHash.GetBytes())
+	answer.EntryList = make([]Entry, answer.EntryCount)
+
+	for i, v := range ecBlock.Body.Entries {
+		marshalled, err := v.MarshalBinary()
+		if err != nil {
+			return answer, err
+		}
+		answer.EntryList[i].BinaryString = fmt.Sprintf("%X", marshalled)
+	}
+
+	return answer, nil
+}
+
+func ParseFactoidBlock(chainID, hash string, rawBlock []byte) (Block, error) {
+	var answer Block
+
+	return answer, nil
+}
+
+func ParseEBlock(chainID, hash string, eBlock *factom.EBlock) (Block, error) {
+	var answer Block
+
+	answer.ChainID = chainID
+	answer.Hash = hash
+	answer.PrevBlockHash = eBlock.Header.PrevKeyMR
+
+	answer.EntryCount = len(eBlock.EntryList)
+	answer.EntryList = make([]Entry, answer.EntryCount)
+
+	for i, v := range eBlock.EntryList {
+		answer.EntryList[i].TimeStamp = v.TimeStamp
+		answer.EntryList[i].EntryHash = v.EntryHash
+	}
+
+	return answer, nil
 }
 
 func ParseAdminBlock(chainID, hash string, rawBlock []byte) (Block, error) {
@@ -159,14 +225,14 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte) (Block, error) {
 	answer.Hash = hash
 	answer.EntryCount = len(aBlock.ABEntries)
 	answer.PrevBlockHash = fmt.Sprintf("%X", aBlock.Header.PrevFullHash.GetBytes())
-	/*answer.EntryList = make([]Entry, answer.EntryCount)
+	answer.EntryList = make([]Entry, answer.EntryCount)
 	for i, v := range aBlock.ABEntries {
 		marshalled, err := v.MarshalBinary()
 		if err != nil {
 			return answer, err
 		}
 		answer.EntryList[i].BinaryString = fmt.Sprintf("%X", marshalled)
-	}*/
+	}
 
 	return answer, nil
 }
