@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"github.com/FactomProject/FactomCode/common"
 	"github.com/FactomProject/factom"
 	"log"
 	"time"
@@ -9,6 +11,7 @@ import (
 
 var DBlocks map[string]DBlock
 var DBlockKeyMRsBySequence map[int]string
+var Blocks map[string]Block
 
 type DataStatusStruct struct {
 	DBlockHeight      int
@@ -20,6 +23,7 @@ var DataStatus DataStatusStruct
 func init() {
 	DBlocks = map[string]DBlock{}
 	DBlockKeyMRsBySequence = map[int]string{}
+	Blocks = map[string]Block{}
 }
 
 type DBlock struct {
@@ -27,6 +31,19 @@ type DBlock struct {
 
 	BlockTimeStr string
 	KeyMR        string
+}
+
+type Block struct {
+	ChainID       string
+	Hash          string
+	PrevBlockHash string
+
+	EntryCount int
+	EntryList  []Entry
+}
+
+type Entry struct {
+	BinaryString string
 }
 
 func GetDBlockFromFactom(keyMR string) (DBlock, error) {
@@ -69,10 +86,10 @@ func Synchronize() error {
 		if err != nil {
 			return err
 		}
-		log.Printf("%v\n", str)
+		log.Printf("%v", str)
 
 		for _, v := range body.EntryBlockList {
-			err = FetchEntryBlock(v.ChainID, v.KeyMR)
+			err = FetchBlock(v.ChainID, v.KeyMR)
 			if err != nil {
 				return err
 			}
@@ -93,14 +110,65 @@ func Synchronize() error {
 	return nil
 }
 
-func FetchEntryBlock(chainID, keyMR string) error {
-	_, err := factom.GetEBlock(keyMR)
-	if err != nil {
-		log.Printf("FetchEntryBlock error - %v", err)
-		return err
+func FetchBlock(chainID, hash string) error {
+	if chainID == "000000000000000000000000000000000000000000000000000000000000000a" ||
+		chainID == "000000000000000000000000000000000000000000000000000000000000000c" ||
+		chainID == "000000000000000000000000000000000000000000000000000000000000000f" {
+
+		raw, err := factom.GetRaw(hash)
+		if err != nil {
+			return err
+		}
+		var block Block
+		switch chainID {
+		case "000000000000000000000000000000000000000000000000000000000000000a":
+			block, err = ParseAdminBlock(chainID, hash, raw)
+			if err != nil {
+				return err
+			}
+			break
+		case "000000000000000000000000000000000000000000000000000000000000000c":
+
+			break
+		case "000000000000000000000000000000000000000000000000000000000000000f":
+
+			break
+		}
+		Blocks[hash] = block
+
+	} else {
+		_, err := factom.GetEBlock(hash)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+func ParseAdminBlock(chainID, hash string, rawBlock []byte) (Block, error) {
+	var answer Block
+
+	aBlock := new(common.AdminBlock)
+	_, err := aBlock.UnmarshalBinaryData(rawBlock)
+	if err != nil {
+		return answer, err
+	}
+
+	answer.ChainID = chainID
+	answer.Hash = hash
+	answer.EntryCount = len(aBlock.ABEntries)
+	answer.PrevBlockHash = fmt.Sprintf("%X", aBlock.Header.PrevFullHash.GetBytes())
+	/*answer.EntryList = make([]Entry, answer.EntryCount)
+	for i, v := range aBlock.ABEntries {
+		marshalled, err := v.MarshalBinary()
+		if err != nil {
+			return answer, err
+		}
+		answer.EntryList[i].BinaryString = fmt.Sprintf("%X", marshalled)
+	}*/
+
+	return answer, nil
 }
 
 func GetBlockHeight() int {
