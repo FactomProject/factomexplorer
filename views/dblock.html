@@ -44,6 +44,30 @@
   <h1 class="screen-title">Entry Blocks <span class='screen-title-sub'>included in this directory block</span></h1>
 
     <div class="card entry-block-list">
+            <dl class="blockinfo">
+              <div>
+                <dt>Admin Block:</dt>
+                <dd>
+                  <span class="large primary"><a href="/ablock/{{.DBlock.AdminBlock.Hash}}">{{.DBlock.AdminBlock.Hash}}</a></span>
+                </dd>
+              </div>
+            </dl>
+            <dl class="blockinfo">
+              <div>
+                <dt>Entry Credit Block:</dt>
+                <dd>
+                  <span class="large primary"><a href="/ecblock/{{.DBlock.EntryCreditBlock.Hash}}">{{.DBlock.EntryCreditBlock.Hash}}</a></span>
+                </dd>
+              </div>
+            </dl>
+            <dl class="blockinfo">
+              <div>
+                <dt>Factoid Block:</dt>
+                <dd>
+                  <span class="large primary"><a href="/fblock/{{.DBlock.FactoidBlock.Hash}}">{{.DBlock.FactoidBlock.Hash}}</a></span>
+                </dd>
+              </div>
+            </dl>
     	{{range .DBlock.EntryBlockList}}
     		{{with .}}
     			{{if ne .ChainID "0000000000000000000000000000000000000000000000000000000000000000"}}

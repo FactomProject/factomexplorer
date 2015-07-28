@@ -17,6 +17,7 @@ var Blocks map[string]Block
 type DataStatusStruct struct {
 	DBlockHeight      int
 	FullySynchronized bool
+	LastKnownBlock    string
 }
 
 var DataStatus DataStatusStruct
@@ -25,6 +26,8 @@ func init() {
 	DBlocks = map[string]DBlock{}
 	DBlockKeyMRsBySequence = map[int]string{}
 	Blocks = map[string]Block{}
+
+	DataStatus.LastKnownBlock = "0000000000000000000000000000000000000000000000000000000000000000"
 }
 
 type DBlock struct {
@@ -39,27 +42,33 @@ type DBlock struct {
 	EntryCreditEntries int
 	FactoidEntries     int
 	EntryEntries       int
+
+	AdminBlock       Block
+	FactoidBlock     Block
+	EntryCreditBlock Block
 }
 
 type Block struct {
 	ChainID       string
 	Hash          string
 	PrevBlockHash string
-	Time          string
+	Timestamp     string
 
 	EntryCount int
-	EntryList  []Entry
+
+	EntryList []Entry
+
+	IsAdminBlock       bool
+	IsFactoidBlock     bool
+	IsEntryCreditBlock bool
+	IsEntryBlock       bool
 }
 
 type Entry struct {
 	//Marshallable blocks
 	BinaryString string
-	Time         string
+	Timestamp    string
 	Hash         string
-
-	//EBEntry
-	Timestamp int64
-	EntryHash string
 }
 
 func GetDBlockFromFactom(keyMR string) (DBlock, error) {
@@ -116,18 +125,22 @@ func Synchronize() error {
 			switch v.ChainID {
 			case "000000000000000000000000000000000000000000000000000000000000000a":
 				body.AdminEntries += fetchedBlock.EntryCount
+				body.AdminBlock = fetchedBlock
 				break
 			case "000000000000000000000000000000000000000000000000000000000000000c":
 				body.EntryCreditEntries += fetchedBlock.EntryCount
+				body.EntryCreditBlock = fetchedBlock
 				break
 			case "000000000000000000000000000000000000000000000000000000000000000f":
 				body.FactoidEntries += fetchedBlock.EntryCount
+				body.FactoidBlock = fetchedBlock
 				break
 			default:
 				body.EntryEntries += fetchedBlock.EntryCount
 				break
 			}
 		}
+		body.EntryBlockList = body.EntryBlockList[3:]
 
 		DBlocks[previousKeyMR] = body
 		DBlockKeyMRsBySequence[body.Header.SequenceNumber] = previousKeyMR
@@ -203,8 +216,10 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 			return answer, err
 		}
 		answer.EntryList[i].BinaryString = fmt.Sprintf("%x", marshalled)
-		answer.EntryList[i].Time = blockTime
+		answer.EntryList[i].Timestamp = blockTime
 	}
+
+	answer.IsEntryCreditBlock = true
 
 	return answer, nil
 }
@@ -226,8 +241,11 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 	answer.EntryList = make([]Entry, answer.EntryCount)
 	for i, v := range transactions {
 		answer.EntryList[i].BinaryString = v.String()
-		answer.EntryList[i].Time = TimestampToString(v.GetMilliTimestamp() / 1000)
+		answer.EntryList[i].Timestamp = TimestampToString(v.GetMilliTimestamp() / 1000)
+		answer.EntryList[i].Hash = v.GetHash().String()
 	}
+
+	answer.IsFactoidBlock = true
 
 	return answer, nil
 }
@@ -251,8 +269,11 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 
 	for i, v := range eBlock.Body.EBEntries {
 		answer.EntryList[i].BinaryString = v.ByteString()
-		answer.EntryList[i].Time = blockTime
+		answer.EntryList[i].Timestamp = blockTime
+		answer.EntryList[i].Hash = v.ByteString()
 	}
+
+	answer.IsEntryBlock = true
 
 	return answer, nil
 }
@@ -277,8 +298,10 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 			return answer, err
 		}
 		answer.EntryList[i].BinaryString = fmt.Sprintf("%x", marshalled)
-		answer.EntryList[i].Time = blockTime
+		answer.EntryList[i].Timestamp = blockTime
 	}
+
+	answer.IsAdminBlock = true
 
 	return answer, nil
 }

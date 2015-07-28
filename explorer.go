@@ -41,8 +41,9 @@ func main() {
 	dir = "."
 
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
-		"hashfilter": hashfilter,
-		"hextotext":  hextotext,
+		"hashfilter":        hashfilter,
+		"hextotext":         hextotext,
+		"blockPrefixFilter": blockPrefixFilter,
 	}).ParseFiles(
 		dir+"/views/404.html",
 		dir+"/views/chain.html",
@@ -50,6 +51,7 @@ func main() {
 		dir+"/views/cheader.html",
 		dir+"/views/dblock.html",
 		dir+"/views/eblock.html",
+		dir+"/views/block.html",
 		dir+"/views/entries.html",
 		dir+"/views/header.html",
 		dir+"/views/index.html",
@@ -64,7 +66,10 @@ func main() {
 	//server.Get(`/chain/([^/]+)?`, handleChain)
 	server.Get(`/dblocks/?`, handleDBlocks)*/
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
-	server.Get(`/eblock/([^/]+)?`, handleEBlock)
+	server.Get(`/eblock/([^/]+)?`, handleBlock)
+	server.Get(`/ablock/([^/]+)?`, handleBlock)
+	server.Get(`/cblock/([^/]+)?`, handleBlock)
+	server.Get(`/fblock/([^/]+)?`, handleBlock)
 	/*server.Get(`/entry/([^/]+)?`, handleEntry)
 	server.Get(`/sentry/([^/]+)?`, handleEntry)
 	server.Post(`/search/?`, handleSearch)*/
@@ -209,8 +214,8 @@ func handleDBlocks(ctx *web.Context) {
 	tpl.ExecuteTemplate(ctx, "index.html", d)
 }
 
-func handleEBlock(ctx *web.Context, mr string) {
-	log.Printf("handleEBlock - %v\n", mr)
+func handleBlock(ctx *web.Context, mr string) {
+	log.Printf("handleBlock - %v\n", mr)
 	type blockPlus struct {
 		Block    Block
 		Hash     string
@@ -258,7 +263,7 @@ func handleEBlock(ctx *web.Context, mr string) {
 		e.Block.EntryList = e.Block.EntryList[i:]
 	}
 
-	tpl.ExecuteTemplate(ctx, "eblock.html", e)
+	tpl.ExecuteTemplate(ctx, "block.html", e)
 }
 
 /*
@@ -332,4 +337,17 @@ func hashfilter(s string) string {
 	}
 
 	return s
+}
+
+func blockPrefixFilter(s string) string {
+	log.Println("blockPrefixFilter - " + s)
+	switch s {
+	case "000000000000000000000000000000000000000000000000000000000000000a":
+		return "ablock"
+	case "000000000000000000000000000000000000000000000000000000000000000c":
+		return "cblock"
+	case "000000000000000000000000000000000000000000000000000000000000000f":
+		return "fblock"
+	}
+	return "eblock"
 }

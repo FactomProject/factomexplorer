@@ -1,6 +1,6 @@
 {{$pageTitle := "Factom Explorer"}}
 {{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
-{{$bodyClass := "eblock"}}
+{{$bodyClass := "block"}}
 
 <!DOCTYPE html>
 <html>
@@ -26,7 +26,18 @@
     <div class="card">
       <dl class="blockinfo">
         <div>
+          {{if .Block.IsEntryBlock}}
           <dt>Entry Block Hash:</dt>
+          {{end}}
+          {{if .Block.IsAdminBlock}}
+          <dt>Admin Block Hash:</dt>
+          {{end}}
+          {{if .Block.IsEntryCreditBlock}}
+          <dt>Entry Credit Block Hash:</dt>
+          {{end}}
+          {{if .Block.IsFactoidBlock}}
+          <dt>Factoid Block Hash:</dt>
+          {{end}}
           <dd>{{hashfilter .Hash}}</dd>
         </div>
         <div>
@@ -35,7 +46,7 @@
         </div>
         <div>
           <dt>Previous Block:</dt>
-          <dd><a href="/eblock/{{hashfilter .Block.PrevBlockHash}}">{{hashfilter .Block.PrevBlockHash}}</a></dd>
+          <dd><a href="/{{blockPrefixFilter .Block.ChainID}}/{{hashfilter .Block.PrevBlockHash}}">{{hashfilter .Block.PrevBlockHash}}</a></dd>
         </div>
         <div>
           <dt>Created:</dt>
