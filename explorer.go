@@ -211,14 +211,14 @@ func handleDBlocks(ctx *web.Context) {
 
 func handleEBlock(ctx *web.Context, mr string) {
 	log.Printf("handleEBlock - %v\n", mr)
-	type eblockPlus struct {
-		EBlock   *factom.EBlock
+	type blockPlus struct {
+		Block    Block
 		Hash     string
 		Count    int
 		PageInfo *PageState
 	}
 
-	eblock, err := factom.GetEBlock(mr)
+	block, err := GetBlock(mr)
 	if err != nil {
 		log.Printf("handleEBlock - factom.GetEBlock\n")
 		log.Println(err)
@@ -226,13 +226,13 @@ func handleEBlock(ctx *web.Context, mr string) {
 		return
 	}
 
-	e := eblockPlus{
-		EBlock: eblock,
-		Hash:   mr,
-		Count:  len(eblock.EntryList),
+	e := blockPlus{
+		Block: block,
+		Hash:  mr,
+		Count: len(block.EntryList),
 		PageInfo: &PageState{
 			Current: 1,
-			Max:     (len(eblock.EntryList) / 50) + 1,
+			Max:     (len(block.EntryList) / 50) + 1,
 		},
 	}
 
@@ -252,10 +252,10 @@ func handleEBlock(ctx *web.Context, mr string) {
 		handle404(ctx)
 		return
 	}
-	if i, j := 50*(page-1), 50*page; len(eblock.EntryList) > j {
-		e.EBlock.EntryList = e.EBlock.EntryList[i:j]
+	if i, j := 50*(page-1), 50*page; len(block.EntryList) > j {
+		e.Block.EntryList = e.Block.EntryList[i:j]
 	} else {
-		e.EBlock.EntryList = e.EBlock.EntryList[i:]
+		e.Block.EntryList = e.Block.EntryList[i:]
 	}
 
 	tpl.ExecuteTemplate(ctx, "eblock.html", e)

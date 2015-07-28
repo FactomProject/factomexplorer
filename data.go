@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/FactomProject/FactomCode/common"
+	"github.com/FactomProject/factoid/block"
 	"github.com/FactomProject/factom"
 	"log"
 	"time"
@@ -31,12 +32,20 @@ type DBlock struct {
 
 	BlockTimeStr string
 	KeyMR        string
+
+	Blocks int
+
+	AdminEntries       int
+	EntryCreditEntries int
+	FactoidEntries     int
+	EntryEntries       int
 }
 
 type Block struct {
 	ChainID       string
 	Hash          string
 	PrevBlockHash string
+	Time          string
 
 	EntryCount int
 	EntryList  []Entry
@@ -45,9 +54,11 @@ type Block struct {
 type Entry struct {
 	//Marshallable blocks
 	BinaryString string
+	Time         string
+	Hash         string
 
 	//EBEntry
-	TimeStamp int64
+	Timestamp int64
 	EntryHash string
 }
 
@@ -60,11 +71,15 @@ func GetDBlockFromFactom(keyMR string) (DBlock, error) {
 	}
 
 	answer = DBlock{DBlock: *body}
-	blockTime := time.Unix(int64(body.Header.TimeStamp), 0)
-	answer.BlockTimeStr = blockTime.Format("2006-01-02 15:04:05")
+	answer.BlockTimeStr = TimestampToString(body.Header.TimeStamp)
 	answer.KeyMR = keyMR
 
 	return answer, nil
+}
+
+func TimestampToString(timestamp uint64) string {
+	blockTime := time.Unix(int64(timestamp), 0)
+	return blockTime.Format("2006-01-02 15:04:05")
 }
 
 func Synchronize() error {
@@ -94,9 +109,23 @@ func Synchronize() error {
 		log.Printf("%v", str)
 
 		for _, v := range body.EntryBlockList {
-			err = FetchBlock(v.ChainID, v.KeyMR)
+			fetchedBlock, err := FetchBlock(v.ChainID, v.KeyMR, body.BlockTimeStr)
 			if err != nil {
 				return err
+			}
+			switch v.ChainID {
+			case "000000000000000000000000000000000000000000000000000000000000000a":
+				body.AdminEntries += fetchedBlock.EntryCount
+				break
+			case "000000000000000000000000000000000000000000000000000000000000000c":
+				body.EntryCreditEntries += fetchedBlock.EntryCount
+				break
+			case "000000000000000000000000000000000000000000000000000000000000000f":
+				body.FactoidEntries += fetchedBlock.EntryCount
+				break
+			default:
+				body.EntryEntries += fetchedBlock.EntryCount
+				break
 			}
 		}
 
@@ -115,54 +144,45 @@ func Synchronize() error {
 	return nil
 }
 
-func FetchBlock(chainID, hash string) error {
-	if chainID == "000000000000000000000000000000000000000000000000000000000000000a" ||
-		chainID == "000000000000000000000000000000000000000000000000000000000000000c" ||
-		chainID == "000000000000000000000000000000000000000000000000000000000000000f" {
+func FetchBlock(chainID, hash, blockTime string) (Block, error) {
+	var block Block
 
-		raw, err := factom.GetRaw(hash)
-		if err != nil {
-			return err
-		}
-		var block Block
-		switch chainID {
-		case "000000000000000000000000000000000000000000000000000000000000000a":
-			block, err = ParseAdminBlock(chainID, hash, raw)
-			if err != nil {
-				return err
-			}
-			break
-		case "000000000000000000000000000000000000000000000000000000000000000c":
-			block, err = ParseEntryCreditBlock(chainID, hash, raw)
-			if err != nil {
-				return err
-			}
-			break
-		case "000000000000000000000000000000000000000000000000000000000000000f":
-			block, err = ParseFactoidBlock(chainID, hash, raw)
-			if err != nil {
-				return err
-			}
-			break
-		}
-		Blocks[hash] = block
-
-	} else {
-		eBlock, err := factom.GetEBlock(hash)
-		if err != nil {
-			return err
-		}
-		block, err := ParseEBlock(chainID, hash, eBlock)
-		if err != nil {
-			return err
-		}
-		Blocks[hash] = block
+	raw, err := factom.GetRaw(hash)
+	if err != nil {
+		return block, err
 	}
+	switch chainID {
+	case "000000000000000000000000000000000000000000000000000000000000000a":
+		block, err = ParseAdminBlock(chainID, hash, raw, blockTime)
+		if err != nil {
+			return block, err
+		}
+		break
+	case "000000000000000000000000000000000000000000000000000000000000000c":
+		block, err = ParseEntryCreditBlock(chainID, hash, raw, blockTime)
+		if err != nil {
+			return block, err
+		}
+		break
+	case "000000000000000000000000000000000000000000000000000000000000000f":
+		block, err = ParseFactoidBlock(chainID, hash, raw, blockTime)
+		if err != nil {
+			return block, err
+		}
+		break
+	default:
+		block, err = ParseEntryBlock(chainID, hash, raw, blockTime)
+		if err != nil {
+			return block, err
+		}
+		break
+	}
+	Blocks[hash] = block
 
-	return nil
+	return block, nil
 }
 
-func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte) (Block, error) {
+func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime string) (Block, error) {
 	var answer Block
 
 	ecBlock := common.NewECBlock()
@@ -174,7 +194,7 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte) (Block, error)
 	answer.ChainID = chainID
 	answer.Hash = hash
 	answer.EntryCount = len(ecBlock.Body.Entries)
-	answer.PrevBlockHash = fmt.Sprintf("%X", ecBlock.Header.PrevFullHash.GetBytes())
+	answer.PrevBlockHash = fmt.Sprintf("%x", ecBlock.Header.PrevFullHash.GetBytes())
 	answer.EntryList = make([]Entry, answer.EntryCount)
 
 	for i, v := range ecBlock.Body.Entries {
@@ -182,37 +202,62 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte) (Block, error)
 		if err != nil {
 			return answer, err
 		}
-		answer.EntryList[i].BinaryString = fmt.Sprintf("%X", marshalled)
+		answer.EntryList[i].BinaryString = fmt.Sprintf("%x", marshalled)
+		answer.EntryList[i].Time = blockTime
 	}
 
 	return answer, nil
 }
 
-func ParseFactoidBlock(chainID, hash string, rawBlock []byte) (Block, error) {
+func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) (Block, error) {
 	var answer Block
 
-	return answer, nil
-}
-
-func ParseEBlock(chainID, hash string, eBlock *factom.EBlock) (Block, error) {
-	var answer Block
+	fBlock := new(block.FBlock)
+	_, err := fBlock.UnmarshalBinaryData(rawBlock)
+	if err != nil {
+		return answer, nil
+	}
 
 	answer.ChainID = chainID
 	answer.Hash = hash
-	answer.PrevBlockHash = eBlock.Header.PrevKeyMR
-
-	answer.EntryCount = len(eBlock.EntryList)
+	answer.PrevBlockHash = fmt.Sprintf("%x", fBlock.PrevKeyMR.Bytes())
+	transactions := fBlock.GetTransactions()
+	answer.EntryCount = len(transactions)
 	answer.EntryList = make([]Entry, answer.EntryCount)
-
-	for i, v := range eBlock.EntryList {
-		answer.EntryList[i].TimeStamp = v.TimeStamp
-		answer.EntryList[i].EntryHash = v.EntryHash
+	for i, v := range transactions {
+		answer.EntryList[i].BinaryString = v.String()
+		answer.EntryList[i].Time = TimestampToString(v.GetMilliTimestamp() / 1000)
 	}
 
 	return answer, nil
 }
 
-func ParseAdminBlock(chainID, hash string, rawBlock []byte) (Block, error) {
+func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (Block, error) {
+	var answer Block
+
+	eBlock := common.NewEBlock()
+	_, err := eBlock.UnmarshalBinaryData(rawBlock)
+	if err != nil {
+		return answer, err
+	}
+
+	answer.ChainID = chainID
+	answer.Hash = hash
+
+	answer.PrevBlockHash = eBlock.Header.PrevKeyMR.ByteString()
+
+	answer.EntryCount = len(eBlock.Body.EBEntries)
+	answer.EntryList = make([]Entry, answer.EntryCount)
+
+	for i, v := range eBlock.Body.EBEntries {
+		answer.EntryList[i].BinaryString = v.ByteString()
+		answer.EntryList[i].Time = blockTime
+	}
+
+	return answer, nil
+}
+
+func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (Block, error) {
 	var answer Block
 
 	aBlock := new(common.AdminBlock)
@@ -224,17 +269,26 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte) (Block, error) {
 	answer.ChainID = chainID
 	answer.Hash = hash
 	answer.EntryCount = len(aBlock.ABEntries)
-	answer.PrevBlockHash = fmt.Sprintf("%X", aBlock.Header.PrevFullHash.GetBytes())
+	answer.PrevBlockHash = fmt.Sprintf("%x", aBlock.Header.PrevFullHash.GetBytes())
 	answer.EntryList = make([]Entry, answer.EntryCount)
 	for i, v := range aBlock.ABEntries {
 		marshalled, err := v.MarshalBinary()
 		if err != nil {
 			return answer, err
 		}
-		answer.EntryList[i].BinaryString = fmt.Sprintf("%X", marshalled)
+		answer.EntryList[i].BinaryString = fmt.Sprintf("%x", marshalled)
+		answer.EntryList[i].Time = blockTime
 	}
 
 	return answer, nil
+}
+
+func GetBlock(keyMR string) (Block, error) {
+	block, ok := Blocks[keyMR]
+	if ok == false {
+		return block, fmt.Errorf("Block %v not found", keyMR)
+	}
+	return block, nil
 }
 
 func GetBlockHeight() int {

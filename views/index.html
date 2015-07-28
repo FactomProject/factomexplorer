@@ -30,6 +30,10 @@
                       <th class="block-id">ID</th>
                       <th class="date-time">Block Time</th>
                       <th class="hidden-xs ">KeyMR</th>
+                      <th>Admin Entries</th>
+                      <th>EC Entries</th>
+                      <th>Factoid Entries</th>
+                      <th>Entries</th>
                   </tr>
               </thead>
               <tbody>
@@ -39,7 +43,11 @@
 				<td><span>{{.Header.SequenceNumber}}</span></td>
 				<td>{{.BlockTimeStr}}</td>
 				<td class="hidden-xs">{{.KeyMR}}</td>
- 		    	</tr>
+        <td>{{.AdminEntries}}</td>
+        <td>{{.EntryCreditEntries}}</td>
+        <td>{{.FactoidEntries}}</td>
+        <td>{{.EntryEntries}}</td>
+ 		   </tr>
 		{{end}}
 		{{end}}
               </tbody>

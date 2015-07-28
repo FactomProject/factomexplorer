@@ -35,11 +35,11 @@
         </div>
         <div>
           <dt>Previous Block:</dt>
-          <dd><a href="/eblock/{{hashfilter .EBlock.Header.PrevBlockHash}}">{{hashfilter .EBlock.Header.PrevBlockHash}}</a></dd>
+          <dd><a href="/eblock/{{hashfilter .Block.PrevBlockHash}}">{{hashfilter .Block.PrevBlockHash}}</a></dd>
         </div>
         <div>
           <dt>Created:</dt>
-          <dd>{{.EBlock.Time}}</dd>
+          <dd>{{.Block.Time}}</dd>
         </div>
       </dl>
     </div>
@@ -56,13 +56,11 @@
                   </tr>
               </thead>
               <tbody>
-              {{range .EBlock.EBEntries}}
-              	{{with .}}
-                  <tr class="clickableRow"href="/sentry/{{hashfilter .Hash}}">
+              {{range .Block.EntryList}}
+                  <tr class="clickableRow"href="/sentry/{{hashfilter .BinaryString}}">
                       <td>{{.Time}}</td>
-                      <td class="hidden-xs">{{hashfilter .Hash}}</td>
+                      <td class="hidden-xs">{{hashfilter .BinaryString}}</td>
                   </tr>
-                {{end}}
               {{end}}
 
               </tbody>
