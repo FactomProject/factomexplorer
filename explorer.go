@@ -68,7 +68,7 @@ func main() {
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
 	server.Get(`/eblock/([^/]+)?`, handleBlock)
 	server.Get(`/ablock/([^/]+)?`, handleBlock)
-	server.Get(`/cblock/([^/]+)?`, handleBlock)
+	server.Get(`/ecblock/([^/]+)?`, handleBlock)
 	server.Get(`/fblock/([^/]+)?`, handleBlock)
 	/*server.Get(`/entry/([^/]+)?`, handleEntry)
 	server.Get(`/sentry/([^/]+)?`, handleEntry)
@@ -345,7 +345,7 @@ func blockPrefixFilter(s string) string {
 	case "000000000000000000000000000000000000000000000000000000000000000a":
 		return "ablock"
 	case "000000000000000000000000000000000000000000000000000000000000000c":
-		return "cblock"
+		return "ecblock"
 	case "000000000000000000000000000000000000000000000000000000000000000f":
 		return "fblock"
 	}

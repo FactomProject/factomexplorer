@@ -21,24 +21,28 @@
 
   <div class="main">
 
-    <h1 class="screen-title">Entry Block</h1>
+    {{if .Block.IsEntryBlock}}
+      <h1 class="screen-title">Entry Block</h1>
+    {{end}}
+    {{if .Block.IsAdminBlock}}
+      <h1 class="screen-title">Admin Block</h1>
+    {{end}}
+    {{if .Block.IsEntryCreditBlock}}
+      <h1 class="screen-title">Entry Credit Block</h1>
+    {{end}}
+    {{if .Block.IsFactoidBlock}}
+      <h1 class="screen-title">Factoid Block</h1>
+    {{end}}
 
     <div class="card">
       <dl class="blockinfo">
         <div>
-          {{if .Block.IsEntryBlock}}
-          <dt>Entry Block Hash:</dt>
-          {{end}}
-          {{if .Block.IsAdminBlock}}
-          <dt>Admin Block Hash:</dt>
-          {{end}}
-          {{if .Block.IsEntryCreditBlock}}
-          <dt>Entry Credit Block Hash:</dt>
-          {{end}}
-          {{if .Block.IsFactoidBlock}}
-          <dt>Factoid Block Hash:</dt>
-          {{end}}
-          <dd>{{hashfilter .Hash}}</dd>
+          <dt>Partial Hash:</dt>
+          <dd>{{hashfilter .Block.PartialHash}}</dd>
+        </div>
+        <div>
+          <dt>Full Hash:</dt>
+          <dd>{{.Block.FullHash}}</dd>
         </div>
         <div>
           <dt>Entries:</dt>
@@ -51,6 +55,10 @@
         <div>
           <dt>Created:</dt>
           <dd>{{.Block.Timestamp}}</dd>
+        </div>
+        <div>
+          <dt>Raw binary:</dt>
+          <dd>{{.Block.Binary}}</dd>
         </div>
       </dl>
     </div>
