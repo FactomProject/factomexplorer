@@ -20,19 +20,7 @@
   <div class="mask"></div>
 
   <div class="main">
-
-    {{if .Block.IsEntryBlock}}
-      <h1 class="screen-title">Entry Block</h1>
-    {{end}}
-    {{if .Block.IsAdminBlock}}
-      <h1 class="screen-title">Admin Block</h1>
-    {{end}}
-    {{if .Block.IsEntryCreditBlock}}
-      <h1 class="screen-title">Entry Credit Block</h1>
-    {{end}}
-    {{if .Block.IsFactoidBlock}}
-      <h1 class="screen-title">Factoid Block</h1>
-    {{end}}
+      <h1 class="screen-title">{{chainNamePrefixFilter .Block.ChainID}} Block</h1>
 
     <div class="card">
       <dl class="blockinfo">
@@ -76,9 +64,9 @@
               </thead>
               <tbody>
               {{range .Block.EntryList}}
-                  <tr class="clickableRow"href="/sentry/{{hashfilter .Hash}}">
+                  <tr class="clickableRow"href="/entry/{{hashfilter .Hash}}">
                       <td>{{.Timestamp}}</td>
-                      <td class="hidden-xs">{{hashfilter .BinaryString}}</td>
+                      <td class="hidden-xs">{{hashfilter .Hash}}</td>
                   </tr>
               {{end}}
 

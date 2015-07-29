@@ -20,28 +20,26 @@
 
   <div class="main">
 
-  <h1 class="screen-title">Entry Data</h1>
+  <h1 class="screen-title">{{chainNamePrefixFilter .ChainID}} Data</h1>
 
      <div class="card entry-block-list">
       <dl class="blockinfo">
         <div>
+          <dt>Hash:</dt>
+          <dd>{{.Hash}}</dd>
+        </div>
+        <div>
           <dt>Chain:</dt>
           <dd>{{.ChainID}}</dd>
         </div>
-        {{range .ExtIDs}}
-          {{with .}}
-	        <div>
-	          <dt>External ID:</dt>
-	          <dd>
-	            <span>{{hextotext .}}</span>
-	          </dd>
-	        </div>
-	      {{end}}
-	    {{end}}
+        <div>
+          <dt>Timestamp:</dt>
+          <dd>{{.Timestamp}}</dd>
+        </div>
 	    
         <div>
           <dt>Entry Data:</dt>
-          <dd>{{hextotext .Data}}</dd>
+          <dd>{{.BinaryString}}</dd>
         </div>
       </dl>
       </div>

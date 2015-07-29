@@ -41,9 +41,10 @@ func main() {
 	dir = "."
 
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
-		"hashfilter":        hashfilter,
-		"hextotext":         hextotext,
-		"blockPrefixFilter": blockPrefixFilter,
+		"hashfilter":            hashfilter,
+		"hextotext":             hextotext,
+		"blockPrefixFilter":     blockPrefixFilter,
+		"chainNamePrefixFilter": chainNamePrefixFilter,
 	}).ParseFiles(
 		dir+"/views/404.html",
 		dir+"/views/chain.html",
@@ -56,7 +57,7 @@ func main() {
 		dir+"/views/header.html",
 		dir+"/views/index.html",
 		dir+"/views/pagination.html",
-		dir+"/views/sentry.html",
+		dir+"/views/entry.html",
 	))
 
 	server.Get(`/(?:home)?`, handleHome)
@@ -70,9 +71,9 @@ func main() {
 	server.Get(`/ablock/([^/]+)?`, handleBlock)
 	server.Get(`/ecblock/([^/]+)?`, handleBlock)
 	server.Get(`/fblock/([^/]+)?`, handleBlock)
-	/*server.Get(`/entry/([^/]+)?`, handleEntry)
-	server.Get(`/sentry/([^/]+)?`, handleEntry)
-	server.Post(`/search/?`, handleSearch)*/
+	server.Get(`/entry/([^/]+)?`, handleEntry)
+	server.Get(`/entry/([^/]+)?`, handleEntry)
+	/*server.Post(`/search/?`, handleSearch)*/
 	server.Get(`/test`, test)
 	server.Get(`/.*`, handle404)
 
@@ -266,18 +267,18 @@ func handleBlock(ctx *web.Context, mr string) {
 	tpl.ExecuteTemplate(ctx, "block.html", e)
 }
 
-/*
 func handleEntry(ctx *web.Context, hash string) {
-	entry, err := factom.GetEntry(hash)
+	entry, err := GetEntry(hash)
 	if err != nil {
 		log.Println(err)
 		handle404(ctx)
 		return
 	}
 
-	tpl.ExecuteTemplate(ctx, "sentry.html", entry)
+	tpl.ExecuteTemplate(ctx, "entry.html", entry)
 }
 
+/*
 func handleEntryEid(ctx *web.Context, eid string) {
 	entries, err := factom.GetEntriesByExtID(eid)
 	if err != nil {
@@ -340,7 +341,6 @@ func hashfilter(s string) string {
 }
 
 func blockPrefixFilter(s string) string {
-	log.Println("blockPrefixFilter - " + s)
 	switch s {
 	case "000000000000000000000000000000000000000000000000000000000000000a":
 		return "ablock"
@@ -350,4 +350,16 @@ func blockPrefixFilter(s string) string {
 		return "fblock"
 	}
 	return "eblock"
+}
+
+func chainNamePrefixFilter(s string) string {
+	switch s {
+	case "000000000000000000000000000000000000000000000000000000000000000a":
+		return "Admin"
+	case "000000000000000000000000000000000000000000000000000000000000000c":
+		return "Entry Credit"
+	case "000000000000000000000000000000000000000000000000000000000000000f":
+		return "Factoid"
+	}
+	return "Entry"
 }
