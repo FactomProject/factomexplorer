@@ -53,15 +53,22 @@ type DBlock struct {
 	EntryCreditBlock Block
 }
 
+type Common struct {
+	ChainID   string
+	Timestamp string
+
+	JSONString   string
+	SpewString   string
+	BinaryString string
+}
+
 type Block struct {
-	ChainID     string
+	Common
+
 	FullHash    string //KeyMR
 	PartialHash string
 
 	PrevBlockHash string
-	Timestamp     string
-
-	Binary string
 
 	EntryCount int
 
@@ -74,12 +81,10 @@ type Block struct {
 }
 
 type Entry struct {
-	//Marshallable blocks
-	BinaryString string
-	Timestamp    string
-	Hash         string
+	Common
 
-	ChainID string
+	//Marshallable blocks
+	Hash string
 }
 
 func GetDBlockFromFactom(keyMR string) (DBlock, error) {
@@ -334,10 +339,20 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 		if err != nil {
 			return answer, err
 		}
-		answer.EntryList[i].BinaryString = fmt.Sprintf("%x", marshalled)
-		answer.EntryList[i].Hash = fmt.Sprintf("%x", marshalled)
-		answer.EntryList[i].Timestamp = blockTime
-		answer.EntryList[i].ChainID = chainID
+		var entry Entry
+
+		entry.BinaryString = fmt.Sprintf("%x", marshalled)
+		entry.Hash = fmt.Sprintf("%x", marshalled)
+		entry.Timestamp = blockTime
+		entry.ChainID = chainID
+
+		entry.JSONString, err = v.JSONString()
+		if err != nil {
+			return answer, err
+		}
+		entry.SpewString = v.Spew()
+
+		answer.EntryList[i] = entry
 	}
 
 	answer.Binary = fmt.Sprintf("%x", rawBlock)
