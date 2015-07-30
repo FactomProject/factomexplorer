@@ -77,7 +77,10 @@ func main() {
 	server.Get(`/test`, test)
 	server.Get(`/.*`, handle404)
 
-	Synchronize()
+	err = Synchronize()
+	if err != nil {
+		panic(err)
+	}
 
 	server.Run(fmt.Sprintf(":%d", cfg.PortNumber))
 }

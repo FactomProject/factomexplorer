@@ -108,12 +108,14 @@ func TimestampToString(timestamp uint64) string {
 }
 
 func Synchronize() error {
+
 	head, err := factom.GetDBlockHead()
 	if err != nil {
 		return err
 	}
 	previousKeyMR := head.KeyMR
 	for {
+
 		block, exists := DBlocks[previousKeyMR]
 		if exists {
 			if DataStatus.FullySynchronized == true {
@@ -127,6 +129,9 @@ func Synchronize() error {
 		if err != nil {
 			return err
 		}
+
+		log.Printf("\n\nProcessing block number %v\n\n", body.Header.SequenceNumber)
+
 		str, err := EncodeJSONString(body)
 		if err != nil {
 			return err
@@ -206,6 +211,7 @@ func FetchBlock(chainID, hash, blockTime string) (Block, error) {
 		}
 		break
 	}
+
 	StoreEntriesFromBlock(block)
 	Blocks[hash] = block
 
@@ -238,6 +244,8 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 	answer.EntryCount = len(ecBlock.Body.Entries)
 	answer.EntryList = make([]Entry, answer.EntryCount)
 
+	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
+
 	for i, v := range ecBlock.Body.Entries {
 		var entry Entry
 
@@ -257,6 +265,12 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 
 		answer.EntryList[i] = entry
 	}
+
+	answer.JSONString, err = ecBlock.JSONString()
+	if err != nil {
+		return answer, err
+	}
+	answer.SpewString = ecBlock.Spew()
 
 	answer.IsEntryCreditBlock = true
 
@@ -279,6 +293,7 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 	transactions := fBlock.GetTransactions()
 	answer.EntryCount = len(transactions)
 	answer.EntryList = make([]Entry, answer.EntryCount)
+	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 	for i, v := range transactions {
 		var entry Entry
 
@@ -287,14 +302,19 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 		entry.Hash = v.GetHash().String()
 		entry.ChainID = chainID
 
-		/*entry.JSONString, err = v.JSONString()
+		entry.JSONString, err = v.JSONString()
 		if err != nil {
 			return answer, err
 		}
-		entry.SpewString = v.Spew()*/
+		entry.SpewString = v.Spew()
 
 		answer.EntryList[i] = entry
 	}
+	answer.JSONString, err = fBlock.JSONString()
+	if err != nil {
+		return answer, err
+	}
+	answer.SpewString = fBlock.Spew()
 
 	answer.IsFactoidBlock = true
 
@@ -318,6 +338,7 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 
 	answer.EntryCount = len(eBlock.Body.EBEntries)
 	answer.EntryList = make([]Entry, answer.EntryCount)
+	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 
 	for i, v := range eBlock.Body.EBEntries {
 		var entry Entry
@@ -334,6 +355,11 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 
 		answer.EntryList[i] = entry
 	}
+	answer.JSONString, err = eBlock.JSONString()
+	if err != nil {
+		return answer, err
+	}
+	answer.SpewString = eBlock.Spew()
 
 	answer.IsEntryBlock = true
 
@@ -363,6 +389,7 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 	answer.EntryCount = len(aBlock.ABEntries)
 	answer.PrevBlockHash = fmt.Sprintf("%x", aBlock.Header.PrevFullHash.GetBytes())
 	answer.EntryList = make([]Entry, answer.EntryCount)
+	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 	for i, v := range aBlock.ABEntries {
 		marshalled, err := v.MarshalBinary()
 		if err != nil {
@@ -383,6 +410,11 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 
 		answer.EntryList[i] = entry
 	}
+	answer.JSONString, err = aBlock.JSONString()
+	if err != nil {
+		return answer, err
+	}
+	answer.SpewString = aBlock.Spew()
 
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 
