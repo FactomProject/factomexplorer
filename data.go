@@ -232,20 +232,30 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 
 	answer.ChainID = chainID
 	answer.FullHash = ecBlock.Hash().String()
-	answer.PartialHash = ecBlock.Header.Hash().String()
+	answer.PartialHash = ecBlock.HeaderHash().String()
 	answer.PrevBlockHash = ecBlock.Header.PrevFullHash.String()
 
 	answer.EntryCount = len(ecBlock.Body.Entries)
 	answer.EntryList = make([]Entry, answer.EntryCount)
 
 	for i, v := range ecBlock.Body.Entries {
+		var entry Entry
+
 		marshalled, err := v.MarshalBinary()
 		if err != nil {
 			return answer, err
 		}
-		answer.EntryList[i].BinaryString = fmt.Sprintf("%x", marshalled)
-		answer.EntryList[i].Timestamp = blockTime
-		answer.EntryList[i].ChainID = chainID
+		entry.BinaryString = fmt.Sprintf("%x", marshalled)
+		entry.Timestamp = blockTime
+		entry.ChainID = chainID
+
+		entry.JSONString, err = v.JSONString()
+		if err != nil {
+			return answer, err
+		}
+		entry.SpewString = v.Spew()
+
+		answer.EntryList[i] = entry
 	}
 
 	answer.IsEntryCreditBlock = true
@@ -270,10 +280,20 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 	answer.EntryCount = len(transactions)
 	answer.EntryList = make([]Entry, answer.EntryCount)
 	for i, v := range transactions {
-		answer.EntryList[i].BinaryString = v.String()
-		answer.EntryList[i].Timestamp = TimestampToString(v.GetMilliTimestamp() / 1000)
-		answer.EntryList[i].Hash = v.GetHash().String()
-		answer.EntryList[i].ChainID = chainID
+		var entry Entry
+
+		entry.BinaryString = v.String()
+		entry.Timestamp = TimestampToString(v.GetMilliTimestamp() / 1000)
+		entry.Hash = v.GetHash().String()
+		entry.ChainID = chainID
+
+		/*entry.JSONString, err = v.JSONString()
+		if err != nil {
+			return answer, err
+		}
+		entry.SpewString = v.Spew()*/
+
+		answer.EntryList[i] = entry
 	}
 
 	answer.IsFactoidBlock = true
@@ -300,10 +320,19 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 	answer.EntryList = make([]Entry, answer.EntryCount)
 
 	for i, v := range eBlock.Body.EBEntries {
-		answer.EntryList[i].BinaryString = v.ByteString()
-		answer.EntryList[i].Timestamp = blockTime
-		answer.EntryList[i].Hash = v.ByteString()
-		answer.EntryList[i].ChainID = chainID
+		var entry Entry
+		entry.BinaryString = v.ByteString()
+		entry.Timestamp = blockTime
+		entry.Hash = v.ByteString()
+		entry.ChainID = chainID
+
+		entry.JSONString, err = v.JSONString()
+		if err != nil {
+			return answer, err
+		}
+		entry.SpewString = v.Spew()
+
+		answer.EntryList[i] = entry
 	}
 
 	answer.IsEntryBlock = true
@@ -355,7 +384,7 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 		answer.EntryList[i] = entry
 	}
 
-	answer.Binary = fmt.Sprintf("%x", rawBlock)
+	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 
 	answer.IsAdminBlock = true
 
@@ -382,7 +411,7 @@ func GetBlockHeight() int {
 
 func GetDBlocks(start, max int) []DBlock {
 	answer := []DBlock{}
-	for i := start; i < max; i++ {
+	for i := start; i <= max; i++ {
 		keyMR := DBlockKeyMRsBySequence[i]
 		if keyMR == "" {
 			continue
