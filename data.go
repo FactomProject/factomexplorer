@@ -239,7 +239,7 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 	answer.ChainID = chainID
 	answer.FullHash = ecBlock.Hash().String()
 	answer.PartialHash = ecBlock.HeaderHash().String()
-	answer.PrevBlockHash = ecBlock.Header.PrevFullHash.String()
+	answer.PrevBlockHash = ecBlock.Header.PrevLedgerKeyMR.String()
 
 	answer.EntryCount = len(ecBlock.Body.Entries)
 	answer.EntryList = make([]Entry, answer.EntryCount)
@@ -376,7 +376,7 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 	}
 
 	answer.ChainID = chainID
-	fullHash, err := aBlock.FullHash()
+	fullHash, err := aBlock.LedgerKeyMR()
 	if err != nil {
 		return answer, err
 	}
@@ -387,7 +387,7 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 	}
 	answer.PartialHash = partialHash.String()
 	answer.EntryCount = len(aBlock.ABEntries)
-	answer.PrevBlockHash = fmt.Sprintf("%x", aBlock.Header.PrevFullHash.GetBytes())
+	answer.PrevBlockHash = fmt.Sprintf("%x", aBlock.Header.PrevLedgerKeyMR.GetBytes())
 	answer.EntryList = make([]Entry, answer.EntryCount)
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 	for i, v := range aBlock.ABEntries {
