@@ -27,7 +27,7 @@
       <dl class="blockinfo">
         <div>
           <dt>Chain Name:</dt>
-          <dd class="chain-name">{{.Names}}</dd>
+          <dd class="chain-name">{{.Name.Encoded}}, {{.Name.Decoded}}</dd>
         </div>
         <div>
           <dt>Chain ID:</dt>
@@ -45,20 +45,20 @@
           <dt>Chain:</dt>
           <dd>{{.ChainID}}</dd>
         </div>
-        {{range .ExtIDs}}
+        {{range .ExternalIDs}}
         {{with .}}
         <div>
           <dt>External ID:</dt>
           <dd>
-            <span>{{hextotext .}}</span>
+            <span>{{.Encoded}}, {{.Decoded}}</span>
           </dd>
         </div>
    	   {{end}}
  	   {{end}}
     
         <div>
-          <dt>Entry Data:</dt>
-          <dd>{{hextotext .Data}}</dd>
+          <dt>Content:</dt>
+          <dd>{{.Content.Encoded}}, {{.Content.Decoded}}</dd>
         </div>
       </dl>
       </div>

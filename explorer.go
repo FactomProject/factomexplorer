@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"log"
 	"os"
+	//"io"
 	"strconv"
 	//"strings"
 
@@ -61,11 +62,11 @@ func main() {
 	))
 
 	server.Get(`/(?:home)?`, handleHome)
-	/*server.Get(`/`, handleDBlocks)
+	server.Get(`/`, handleDBlocks)
 	server.Get(`/index.html`, handleDBlocks)
-	//server.Get(`/chains/?`, handleChains)
-	//server.Get(`/chain/([^/]+)?`, handleChain)
-	server.Get(`/dblocks/?`, handleDBlocks)*/
+	server.Get(`/chains/?`, handleChains)
+	server.Get(`/chain/([^/]+)?`, handleChain)
+	server.Get(`/dblocks/?`, handleDBlocks)
 	server.Get(`/dblock/([^/]+)?`, handleDBlock)
 	server.Get(`/eblock/([^/]+)?`, handleBlock)
 	server.Get(`/ablock/([^/]+)?`, handleBlock)
@@ -79,7 +80,9 @@ func main() {
 
 	err = Synchronize()
 	if err != nil {
-		panic(err)
+		//if err != io.EOF {
+			panic(err)
+		//}
 	}
 
 	server.Run(fmt.Sprintf(":%d", cfg.PortNumber))
@@ -129,9 +132,9 @@ func handleSearch(ctx *web.Context) {
 	}
 }
 */
-/*
+
 func handleChain(ctx *web.Context, hash string) {
-	chain, err := factom.GetChain(hash)
+	chain, err := GetChain(hash)
 	if err != nil {
 		log.Println(err)
 		handle404(ctx)
@@ -139,16 +142,18 @@ func handleChain(ctx *web.Context, hash string) {
 	}
 
 	tpl.ExecuteTemplate(ctx, "chain.html", chain)
-}*/
-/*
+}
+
 func handleChains(ctx *web.Context) {
-	chains, err := factom.GetChains()
+	chains, err := GetChains()
 	if err != nil {
 		log.Println(err)
+		handle404(ctx)
+		return
 	}
 
 	tpl.ExecuteTemplate(ctx, "chains.html", chains)
-}*/
+}
 
 func handleDBlock(ctx *web.Context, keyMR string) {
 	Synchronize()
@@ -219,6 +224,7 @@ func handleDBlocks(ctx *web.Context) {
 }
 
 func handleBlock(ctx *web.Context, mr string) {
+	Synchronize()
 	log.Printf("handleBlock - %v\n", mr)
 	type blockPlus struct {
 		Block    Block
@@ -271,6 +277,7 @@ func handleBlock(ctx *web.Context, mr string) {
 }
 
 func handleEntry(ctx *web.Context, hash string) {
+	Synchronize()
 	entry, err := GetEntry(hash)
 	if err != nil {
 		log.Println(err)

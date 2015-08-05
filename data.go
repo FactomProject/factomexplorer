@@ -14,6 +14,7 @@ var DBlocks map[string]DBlock
 var DBlockKeyMRsBySequence map[int]string
 var Blocks map[string]Block
 var Entries map[string]Entry
+var Chains map[string]Chain
 
 var BlockIndexes map[string]string //used to index blocks by both their full and partial hash
 
@@ -31,6 +32,7 @@ func init() {
 	Blocks = map[string]Block{}
 	Entries = map[string]Entry{}
 	BlockIndexes = map[string]string{}
+	Chains = map[string]Chain{}
 
 	DataStatus.LastKnownBlock = "0000000000000000000000000000000000000000000000000000000000000000"
 }
@@ -83,8 +85,25 @@ type Block struct {
 type Entry struct {
 	Common
 
+	ExternalIDs []DecodedString
+	Content DecodedString
+
 	//Marshallable blocks
 	Hash string
+}
+
+type Chain struct {
+	ChainID string
+	Name DecodedString
+	FirstEntryID string
+
+	//Not saved
+	FirstEntry Entry
+}
+
+type DecodedString struct {
+	Encoded string
+	Decoded string
 }
 
 func GetDBlockFromFactom(keyMR string) (DBlock, error) {
@@ -108,7 +127,7 @@ func TimestampToString(timestamp uint64) string {
 }
 
 func Synchronize() error {
-
+	log.Println("Synchronize()")
 	head, err := factom.GetDBlockHead()
 	if err != nil {
 		return err
@@ -218,7 +237,26 @@ func FetchBlock(chainID, hash, blockTime string) (Block, error) {
 	BlockIndexes[block.FullHash] = hash
 	BlockIndexes[block.PartialHash] = hash
 
+	if block.IsEntryBlock {
+		RecordChain(block)
+	}
+
 	return block, nil
+}
+
+func RecordChain(block Block) {
+	if block.PrevBlockHash != "0000000000000000000000000000000000000000000000000000000000000000" {
+		return
+	}
+
+	var c Chain
+	c.ChainID = block.ChainID
+	c.FirstEntryID = block.EntryList[0].Hash
+	c.Name = block.EntryList[0].ExternalIDs[0]
+
+	Chains[c.ChainID] = c
+
+	log.Printf("\n\nChain - %v\n\n", c)
 }
 
 func StoreEntriesFromBlock(block Block) {
@@ -296,8 +334,14 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 	for i, v := range transactions {
 		var entry Entry
+		bin, err:=v.MarshalBinary()
 
-		entry.BinaryString = v.String()
+		if err != nil {
+			return answer, nil
+		}
+
+
+		entry.BinaryString = fmt.Sprintf("%x", bin)
 		entry.Timestamp = TimestampToString(v.GetMilliTimestamp() / 1000)
 		entry.Hash = v.GetHash().String()
 		entry.ChainID = chainID
@@ -334,24 +378,17 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 	answer.PartialHash = eBlock.KeyMR().String()
 	answer.FullHash = eBlock.Hash().String()
 
-	answer.PrevBlockHash = eBlock.Header.PrevKeyMR.ByteString()
+	answer.PrevBlockHash = eBlock.Header.PrevKeyMR.String()
 
 	answer.EntryCount = len(eBlock.Body.EBEntries)
 	answer.EntryList = make([]Entry, answer.EntryCount)
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 
 	for i, v := range eBlock.Body.EBEntries {
-		var entry Entry
-		entry.BinaryString = v.ByteString()
-		entry.Timestamp = blockTime
-		entry.Hash = v.ByteString()
-		entry.ChainID = chainID
-
-		entry.JSONString, err = v.JSONString()
+		entry, err:=FetchAndParseEntry(v.String(), blockTime)
 		if err != nil {
 			return answer, err
 		}
-		entry.SpewString = v.Spew()
 
 		answer.EntryList[i] = entry
 	}
@@ -364,6 +401,51 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 	answer.IsEntryBlock = true
 
 	return answer, nil
+}
+
+func FetchAndParseEntry(hash, blockTime string) (Entry, error) {
+	var e Entry
+	raw, err:=factom.GetRaw(hash)
+	if err!=nil {
+		return e, err
+	}
+
+	entry:=new(common.Entry)
+	_, err = entry.UnmarshalBinaryData(raw)
+	if err!=nil {
+		return e, err
+	}
+
+
+	e.ChainID = entry.ChainID.String()
+	e.Hash = hash
+	str, err:=entry.JSONString()
+	if err!=nil {
+		return e, err
+	}
+	e.JSONString = str 
+	e.SpewString = entry.Spew()
+	e.BinaryString = fmt.Sprintf("%x", raw)
+	e.Timestamp = blockTime
+
+	e.Content = ByteSliceToDecodedString(entry.Content)
+	e.ExternalIDs = make([]DecodedString, len(entry.ExtIDs))
+	for i, v:=range(entry.ExtIDs) {
+		e.ExternalIDs[i] = ByteSliceToDecodedString(v)
+	}
+
+	log.Printf("\n\n Entry - %v\n\n", e)
+
+	Entries[hash] = e
+
+	return e, nil
+}
+
+func ByteSliceToDecodedString(b []byte) (DecodedString) {
+	var ds DecodedString
+	ds.Encoded = fmt.Sprintf("%x", b)
+	ds.Decoded = string(b)
+	return ds
 }
 
 func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (Block, error) {
@@ -478,6 +560,27 @@ func GetEntry(hash string) (Entry, error) {
 func GetDBInfo(keyMR string) (DBInfo, error) {
 	//TODO: gather DBInfo
 	return DBInfo{}, nil
+}
+
+func GetChains()([]Chain, error) {
+	answer:=[]Chain{}
+	for _, v:=range(Chains) {
+		answer = append(answer, v)
+	}
+	return answer, nil
+}
+
+func GetChain(hash string) (Chain, error) {
+	chain, found := Chains[hash]
+	if found == false {
+		return chain, errors.New("Chain not found")
+	}
+	entry, found := Entries[chain.FirstEntryID]
+	if found == false {
+		return chain, errors.New("First entry not found")
+	}
+	chain.FirstEntry = entry
+	return chain, nil
 }
 
 type EBlock struct {

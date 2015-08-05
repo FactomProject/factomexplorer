@@ -36,7 +36,7 @@
 		{{with .}}
 			<tr class="clickableRow" href="/chain/{{.ChainID}}">
 				<td><span>{{.ChainID}}</span></td>
-				<td class="hidden-xs">{{.Names}}</td>
+				<td class="hidden-xs">{{.Name.Encoded}}, {{.Name.Decoded}}</td>
  		    	</tr>
 		{{end}}
 		{{end}}
