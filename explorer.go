@@ -12,7 +12,7 @@ import (
 	"os"
 	//"io"
 	"strconv"
-	//"strings"
+	"strings"
 
 	"encoding/json"
 	"github.com/FactomProject/factom"
@@ -74,7 +74,7 @@ func main() {
 	server.Get(`/fblock/([^/]+)?`, handleBlock)
 	server.Get(`/entry/([^/]+)?`, handleEntry)
 	server.Get(`/entry/([^/]+)?`, handleEntry)
-	/*server.Post(`/search/?`, handleSearch)*/
+	server.Post(`/search/?`, handleSearch)
 	server.Get(`/test`, test)
 	server.Get(`/.*`, handle404)
 
@@ -110,31 +110,34 @@ func handle404(ctx *web.Context) {
 	tpl.ExecuteTemplate(ctx, "404.html", c)
 }
 
-/*
+
 func handleSearch(ctx *web.Context) {
 	fmt.Println("r.Form:", ctx.Params["searchType"])
 	fmt.Println("r.Form:", ctx.Params["searchText"])
 
 	//	pagesize := 1000
 	//	hashArray := make([]*notaryapi.Hash, 0, 5)
-	searchText := strings.ToLower(strings.TrimSpace(ctx.Params["searchText"]))
+	searchText := strings.TrimSpace(ctx.Params["searchText"])
 
 	switch searchType := ctx.Params["searchType"]; searchType {
 	case "entry":
 		handleEntry(ctx, searchText)
 	case "eblock":
-		handleEBlock(ctx, searchText)
+		handleBlock(ctx, searchText)
+	case "block":
+		handleBlock(ctx, searchText)
 	case "dblock":
 		handleDBlock(ctx, searchText)
-	case "extID":
-		handleEntryEid(ctx, searchText)
+/*	case "extID":
+		handleEntryEid(ctx, searchText)*/
 	default:
+		handle404(ctx)
 	}
 }
-*/
+
 
 func handleChain(ctx *web.Context, hash string) {
-	chain, err := GetChain(hash)
+	chain, err := GetChainByName(hash)
 	if err != nil {
 		log.Println(err)
 		handle404(ctx)

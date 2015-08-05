@@ -32,6 +32,12 @@
           <dt>Full Hash:</dt>
           <dd>{{.Block.FullHash}}</dd>
         </div>
+        {{if .Block.IsEntryBlock}}
+          <div>
+            <dt>ChainID:</dt>
+            <dd><a href="/chain/{{.Block.ChainID}}">{{.Block.ChainID}}</a></dd>
+          </div>
+        {{end}}
         <div>
           <dt>Entries:</dt>
           <dd>{{.Count}}</dd>

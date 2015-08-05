@@ -28,7 +28,7 @@
               <thead>
                   <tr class="first">
                       <th class="hidden-xs ">ChainID</th>
-                     <th class="hidden-xs ">Chain Name</th>
+                     <th class="hidden-xs ">Chain Names</th>
                   </tr>
               </thead>
               <tbody>
@@ -36,7 +36,9 @@
 		{{with .}}
 			<tr class="clickableRow" href="/chain/{{.ChainID}}">
 				<td><span>{{.ChainID}}</span></td>
-				<td class="hidden-xs">{{.Name.Encoded}}, {{.Name.Decoded}}</td>
+        <td class="hidden-xs">[{{range .Names}}
+				  { {{.Encoded}}, {{.Decoded}} }
+        {{end}}]</td>
  		    	</tr>
 		{{end}}
 		{{end}}

@@ -26,8 +26,8 @@
     <div class="card">
       <dl class="blockinfo">
         <div>
-          <dt>Chain Name:</dt>
-          <dd class="chain-name">{{.Name.Encoded}}, {{.Name.Decoded}}</dd>
+          <dt>Chain Names:</dt>
+          <dd class="chain-name">[{{range .Names}} { {{.Encoded}}, {{.Decoded}} } {{end}}]</dd>
         </div>
         <div>
           <dt>Chain ID:</dt>

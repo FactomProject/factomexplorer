@@ -25,10 +25,16 @@
               <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false" name="button1"> <label id="dropdownlabel1">Entry External ID</label> <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right" role="menu">
 				<input type="hidden" name="searchType" value="extID">              
-                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='extID';document.getElementById('dropdownlabel1').innerHTML='External ID';" class="search-type withripple">Entry External ID</a></li>
-                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='entry';document.getElementById('dropdownlabel1').innerHTML='Entry Hash';" class="search-type withripple">Entry Hash</a></li>
-                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='eblock';document.getElementById('dropdownlabel1').innerHTML='Entry Block Hash';" class="search-type withripple">Entry Block Hash</a></li>
-                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='dblock';document.getElementById('dropdownlabel1').innerHTML='Directory Block Hash';" class="search-type withripple">Directory Block Hash</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='extID';document.getElementById('dropdownlabel1').innerHTML='External ID';"
+                  class="search-type withripple">Entry External ID</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='entry';document.getElementById('dropdownlabel1').innerHTML='Entry Hash';"
+                  class="search-type withripple">Entry Hash</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='block';document.getElementById('dropdownlabel1').innerHTML='Block Hash';"
+                  class="search-type withripple">Block Hash</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='eblock';document.getElementById('dropdownlabel1').innerHTML='Entry Block Hash';"
+                  class="search-type withripple">Entry Block Hash</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='dblock';document.getElementById('dropdownlabel1').innerHTML='Directory Block Hash';"
+                  class="search-type withripple">Directory Block Hash</a></li>
               </ul>               
             </div>
           </div>

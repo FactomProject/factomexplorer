@@ -7,6 +7,7 @@ import (
 	"github.com/FactomProject/factoid/block"
 	"github.com/FactomProject/factom"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -15,6 +16,8 @@ var DBlockKeyMRsBySequence map[int]string
 var Blocks map[string]Block
 var Entries map[string]Entry
 var Chains map[string]Chain
+var ChainIDsByEncodedName map[string]string
+var ChainIDsByDecodedName map[string]string
 
 var BlockIndexes map[string]string //used to index blocks by both their full and partial hash
 
@@ -33,6 +36,8 @@ func init() {
 	Entries = map[string]Entry{}
 	BlockIndexes = map[string]string{}
 	Chains = map[string]Chain{}
+	ChainIDsByEncodedName = map[string]string{}
+	ChainIDsByDecodedName = map[string]string{}
 
 	DataStatus.LastKnownBlock = "0000000000000000000000000000000000000000000000000000000000000000"
 }
@@ -94,7 +99,7 @@ type Entry struct {
 
 type Chain struct {
 	ChainID string
-	Name DecodedString
+	Names []DecodedString
 	FirstEntryID string
 
 	//Not saved
@@ -252,9 +257,13 @@ func RecordChain(block Block) {
 	var c Chain
 	c.ChainID = block.ChainID
 	c.FirstEntryID = block.EntryList[0].Hash
-	c.Name = block.EntryList[0].ExternalIDs[0]
+	c.Names = block.EntryList[0].ExternalIDs[:]
 
 	Chains[c.ChainID] = c
+	for _, v:=range(c.Names) {
+		ChainIDsByDecodedName[v.Decoded] = c.ChainID
+		ChainIDsByEncodedName[v.Encoded] = c.ChainID
+	}
 
 	log.Printf("\n\nChain - %v\n\n", c)
 }
@@ -505,7 +514,10 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (B
 	return answer, nil
 }
 
+//Getters
+
 func GetBlock(hash string) (Block, error) {
+	hash = strings.ToLower(hash)
 	var block Block
 	key, ok := BlockIndexes[hash]
 	if ok == false {
@@ -536,6 +548,7 @@ func GetDBlocks(start, max int) []DBlock {
 }
 
 func GetDBlock(keyMR string) (DBlock, error) {
+	keyMR = strings.ToLower(keyMR)
 	block, ok := DBlocks[keyMR]
 	if ok != true {
 		return block, errors.New("DBlock not found")
@@ -548,6 +561,7 @@ type DBInfo struct {
 }
 
 func GetEntry(hash string) (Entry, error) {
+	hash = strings.ToLower(hash)
 	entry, ok := Entries[hash]
 	if ok != true {
 		str, _ := EncodeJSONString(Entries)
@@ -571,6 +585,7 @@ func GetChains()([]Chain, error) {
 }
 
 func GetChain(hash string) (Chain, error) {
+	hash = strings.ToLower(hash)
 	chain, found := Chains[hash]
 	if found == false {
 		return chain, errors.New("Chain not found")
@@ -581,6 +596,17 @@ func GetChain(hash string) (Chain, error) {
 	}
 	chain.FirstEntry = entry
 	return chain, nil
+}
+
+func GetChainByName(name string) (Chain, error) {
+	id, found:=ChainIDsByEncodedName[name]
+	if found == false {
+		id, found = ChainIDsByDecodedName[name]
+		if found == false {
+			return GetChain(name)
+		}
+	}
+	return GetChain(id)
 }
 
 type EBlock struct {
