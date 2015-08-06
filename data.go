@@ -109,9 +109,9 @@ type DecodedString struct {
 
 
 
-func RecordChain(block *Block) {
+func RecordChain(block *Block) error {
 	if block.PrevBlockHash != "0000000000000000000000000000000000000000000000000000000000000000" {
-		return
+		return nil
 	}
 
 	c:=new(Chain)
@@ -119,59 +119,88 @@ func RecordChain(block *Block) {
 	c.FirstEntryID = block.EntryList[0].Hash
 	c.Names = block.EntryList[0].ExternalIDs[:]
 
-	Chains[c.ChainID] = c
-	for _, v:=range(c.Names) {
-		ChainIDsByDecodedName[v.Decoded] = c.ChainID
-		ChainIDsByEncodedName[v.Encoded] = c.ChainID
+	err:=SaveChain(c)
+	if err!=nil {
+		return err
 	}
 
 	log.Printf("\n\nChain - %v\n\n", c)
+	return nil
 }
 
-func StoreEntriesFromBlock(block *Block) {
+func StoreEntriesFromBlock(block *Block) error {
 	for _, v := range block.EntryList {
-		Entries[v.Hash] = v
+		err:=SaveEntry(v)
+		if err!=nil {
+			return err
+		}
 	}
+	return nil
 }
 
 //Savers and Loaders
 func SaveDBlock(b *DBlock) error {
-
+	DBlocks[b.KeyMR] = b
+	DBlockKeyMRsBySequence[b.DBlock.Header.SequenceNumber] = b.KeyMR
 	return nil
 }
 
 func LoadDBlock(hash string) (*DBlock, error) {
-
+	return DBlocks[hash], nil
 	return nil, nil
 }
 
 func SaveBlock(b *Block) error {
+
+	StoreEntriesFromBlock(b)
+	Blocks[b.PartialHash] = b
+
+	BlockIndexes[b.FullHash] = b.PartialHash
+	BlockIndexes[b.PartialHash] = b.PartialHash
+
+	if b.IsEntryBlock {
+		RecordChain(b)
+	}
 
 	return nil
 }
 
 func LoadBlock(hash string) (*Block, error) {
 
-	return nil, nil
+	key, ok := BlockIndexes[hash]
+	if ok == false {
+		return nil, nil
+	}
+
+	block, ok := Blocks[key]
+	if ok == false {
+		return nil, nil
+	}
+
+	return block, nil
 }
 
-func SaveEntry(b *Entry) error {
-
+func SaveEntry(e *Entry) error {
+	Entries[e.Hash] = e
 	return nil
 }
 
 func LoadEntry(hash string) (*Entry, error) {
-
+	return Entries[hash], nil
 	return nil, nil
 }
 
-func SaveChain(b *Chain) error {
-
+func SaveChain(c *Chain) error {
+	Chains[c.ChainID] = c
+	for _, v:=range(c.Names) {
+		ChainIDsByDecodedName[v.Decoded] = c.ChainID
+		ChainIDsByEncodedName[v.Encoded] = c.ChainID
+	}
 	return nil
 }
 
 func LoadChain(hash string) (*Chain, error) {
-
+	return Chains[hash], nil
 	return nil, nil
 }
 
@@ -191,13 +220,11 @@ func LoadDataStatus(hash string) (*DataStatusStruct, error) {
 func GetBlock(hash string) (*Block, error) {
 	hash = strings.ToLower(hash)
 
-	key, ok := BlockIndexes[hash]
-	if ok == false {
-		return nil, fmt.Errorf("Block %v not found", hash)
+	block, err:=LoadBlock(hash)
+	if err!=nil {
+		return nil, err
 	}
-
-	block, ok := Blocks[key]
-	if ok == false {
+	if block == nil {
 		return nil, fmt.Errorf("Block %v not found", hash)
 	}
 	return block, nil
@@ -238,11 +265,14 @@ type DBInfo struct {
 
 func GetEntry(hash string) (*Entry, error) {
 	hash = strings.ToLower(hash)
-	entry, ok := Entries[hash]
-	if ok != true {
-		str, _ := EncodeJSONString(Entries)
-		log.Printf("%v not found in %v", hash, str)
-		return entry, errors.New("Entry not found")
+	entry, err:=LoadEntry(hash)
+	if err!=nil {
+		return nil, err
+	}
+	if entry == nil {
+		//str, _ := EncodeJSONString(Entries)
+		//log.Printf("%v not found in %v", hash, str)
+		return nil, errors.New("Entry not found")
 	}
 	return entry, nil
 }
@@ -262,12 +292,18 @@ func GetChains()([]*Chain, error) {
 
 func GetChain(hash string) (*Chain, error) {
 	hash = strings.ToLower(hash)
-	chain, found := Chains[hash]
-	if found == false {
+	chain, err := LoadChain(hash)
+	if err!=nil {
+		return nil, err
+	}
+	if chain == nil {
 		return chain, errors.New("Chain not found")
 	}
-	entry, found := Entries[chain.FirstEntryID]
-	if found == false {
+	entry, err := LoadEntry(chain.FirstEntryID)
+	if err!=nil {
+		return nil, err
+	}
+	if entry == nil {
 		return chain, errors.New("First entry not found")
 	}
 	chain.FirstEntry = entry

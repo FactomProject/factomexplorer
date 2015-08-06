@@ -40,8 +40,11 @@ func Synchronize() error {
 	maxHeight:=DataStatus.DBlockHeight
 	for {
 
-		block, exists := DBlocks[previousKeyMR]
-		if exists {
+		block, err := LoadDBlock(previousKeyMR)
+		if err!=nil {
+			return err
+		}
+		if block!=nil {
 			if previousKeyMR == DataStatus.LastKnownBlock {
 				DataStatus.LastKnownBlock = head.KeyMR
 				DataStatus.DBlockHeight = maxHeight
@@ -89,8 +92,11 @@ func Synchronize() error {
 		}
 		body.EntryBlockList = body.EntryBlockList[3:]
 
-		DBlocks[previousKeyMR] = body
-		DBlockKeyMRsBySequence[body.Header.SequenceNumber] = previousKeyMR
+		err = SaveDBlock(body)
+		if err != nil {
+			return err
+		}
+
 		if DataStatus.DBlockHeight < body.Header.SequenceNumber {
 			maxHeight = body.Header.SequenceNumber
 		}
@@ -111,44 +117,40 @@ func FetchBlock(chainID, hash, blockTime string) (*Block, error) {
 
 	raw, err := factom.GetRaw(hash)
 	if err != nil {
-		return block, err
+		return nil, err
 	}
 	switch chainID {
 	case "000000000000000000000000000000000000000000000000000000000000000a":
 		block, err = ParseAdminBlock(chainID, hash, raw, blockTime)
 		if err != nil {
-			return block, err
+		return nil, err
 		}
 		break
 	case "000000000000000000000000000000000000000000000000000000000000000c":
 		block, err = ParseEntryCreditBlock(chainID, hash, raw, blockTime)
 		if err != nil {
-			return block, err
+		return nil, err
 		}
 		break
 	case "000000000000000000000000000000000000000000000000000000000000000f":
 		block, err = ParseFactoidBlock(chainID, hash, raw, blockTime)
 		if err != nil {
-			return block, err
+		return nil, err
 		}
 		break
 	default:
 		block, err = ParseEntryBlock(chainID, hash, raw, blockTime)
 		if err != nil {
-			return block, err
+		return nil, err
 		}
 		break
 	}
 
-	StoreEntriesFromBlock(block)
-	Blocks[hash] = block
-
-	BlockIndexes[block.FullHash] = hash
-	BlockIndexes[block.PartialHash] = hash
-
-	if block.IsEntryBlock {
-		RecordChain(block)
+	err = SaveBlock(block)
+	if err != nil {
+		return nil, err
 	}
+
 
 	return block, nil
 }
@@ -206,7 +208,6 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 			return nil, err
 	}
 	answer.SpewString = ecBlock.Spew()
-
 	answer.IsEntryCreditBlock = true
 
 	return answer, nil
@@ -256,7 +257,6 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 			return nil, err
 	}
 	answer.SpewString = fBlock.Spew()
-
 	answer.IsFactoidBlock = true
 
 	return answer, nil
@@ -268,19 +268,22 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 	eBlock := common.NewEBlock()
 	_, err := eBlock.UnmarshalBinaryData(rawBlock)
 	if err != nil {
-		return answer, err
+		return nil, err
 	}
 
 	answer.ChainID = chainID
 	h, err:=eBlock.KeyMR()
 	if err != nil {
-		return answer, err
+		return nil, err
 	}
 	answer.PartialHash = h.String()
 	if err != nil {
-		return answer, err
+		return nil, err
 	}
 	h, err=eBlock.Hash()
+	if err != nil {
+		return nil, err
+	}
 	answer.FullHash = h.String()
 
 	answer.PrevBlockHash = eBlock.Header.PrevKeyMR.String()
@@ -292,14 +295,14 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 	for i, v := range eBlock.Body.EBEntries {
 		entry, err:=FetchAndParseEntry(v.String(), blockTime)
 		if err != nil {
-			return answer, err
+			return nil, err
 		}
 
 		answer.EntryList[i] = entry
 	}
 	answer.JSONString, err = eBlock.JSONString()
 	if err != nil {
-		return answer, err
+		return nil, err
 	}
 	answer.SpewString = eBlock.Spew()
 
@@ -312,13 +315,13 @@ func FetchAndParseEntry(hash, blockTime string) (*Entry, error) {
 	e:=new(Entry)
 	raw, err:=factom.GetRaw(hash)
 	if err!=nil {
-		return e, err
+		return nil, err
 	}
 
 	entry:=new(common.Entry)
 	_, err = entry.UnmarshalBinaryData(raw)
 	if err!=nil {
-		return e, err
+		return nil, err
 	}
 
 
@@ -326,7 +329,7 @@ func FetchAndParseEntry(hash, blockTime string) (*Entry, error) {
 	e.Hash = hash
 	str, err:=entry.JSONString()
 	if err!=nil {
-		return e, err
+		return nil, err
 	}
 	e.JSONString = str 
 	e.SpewString = entry.Spew()
@@ -339,9 +342,10 @@ func FetchAndParseEntry(hash, blockTime string) (*Entry, error) {
 		e.ExternalIDs[i] = ByteSliceToDecodedString(v)
 	}
 
-	log.Printf("\n\n Entry - %v\n\n", e)
-
-	Entries[hash] = e
+	err = SaveEntry(e)
+	if err!=nil {
+		return nil, err
+	}
 
 	return e, nil
 }
@@ -401,10 +405,9 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 	if err != nil {
 			return nil, err
 	}
+
 	answer.SpewString = aBlock.Spew()
-
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
-
 	answer.IsAdminBlock = true
 
 	return answer, nil
