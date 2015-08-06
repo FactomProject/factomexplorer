@@ -161,7 +161,7 @@ func handleChains(ctx *web.Context) {
 func handleDBlock(ctx *web.Context, keyMR string) {
 	Synchronize()
 	type fullblock struct {
-		DBlock DBlock
+		DBlock *DBlock
 		DBInfo DBInfo
 	}
 
@@ -187,7 +187,7 @@ func handleDBlock(ctx *web.Context, keyMR string) {
 func handleDBlocks(ctx *web.Context) {
 	Synchronize()
 	type dblockPlus struct {
-		DBlocks  []DBlock
+		DBlocks  []*DBlock
 		PageInfo *PageState
 	}
 
@@ -230,7 +230,7 @@ func handleBlock(ctx *web.Context, mr string) {
 	Synchronize()
 	log.Printf("handleBlock - %v\n", mr)
 	type blockPlus struct {
-		Block    Block
+		Block    *Block
 		Hash     string
 		Count    int
 		PageInfo *PageState
