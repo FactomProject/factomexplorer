@@ -37,17 +37,22 @@ func Synchronize() error {
 		return err
 	}
 	previousKeyMR := head.KeyMR
-	maxHeight:=DataStatus.DBlockHeight
+	dataStatus:=LoadDataStatus()
+	maxHeight:=dataStatus.DBlockHeight
 	for {
 
 		block, err := LoadDBlock(previousKeyMR)
 		if err!=nil {
 			return err
 		}
+
 		if block!=nil {
-			if previousKeyMR == DataStatus.LastKnownBlock {
-				DataStatus.LastKnownBlock = head.KeyMR
-				DataStatus.DBlockHeight = maxHeight
+			if maxHeight < body.Header.SequenceNumber {
+				maxHeight = body.Header.SequenceNumber
+			}
+			if previousKeyMR == dataStatus.LastKnownBlock {
+				dataStatus.LastKnownBlock = head.KeyMR
+				dataStatus.DBlockHeight = maxHeight
 				break
 			} else {
 				previousKeyMR = block.Header.PrevBlockKeyMR
@@ -97,16 +102,17 @@ func Synchronize() error {
 			return err
 		}
 
-		if DataStatus.DBlockHeight < body.Header.SequenceNumber {
-			maxHeight = body.Header.SequenceNumber
-		}
 		previousKeyMR = body.Header.PrevBlockKeyMR
 		if previousKeyMR == "0000000000000000000000000000000000000000000000000000000000000000" {
-			DataStatus.LastKnownBlock = head.KeyMR
-			DataStatus.DBlockHeight = maxHeight
+			dataStatus.LastKnownBlock = head.KeyMR
+			dataStatus.DBlockHeight = maxHeight
 			break
 		}
 
+	}
+	err=SaveDataStatus(dataStatus)
+	if err!=nil {
+		return err
 	}
 	return nil
 }
@@ -171,11 +177,13 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 			return nil, err
 	}
 	answer.FullHash = h.String()
+
 	h, err = ecBlock.HeaderHash()
 	if err != nil {
 			return nil, err
 	}
 	answer.PartialHash = h.String()
+
 	answer.PrevBlockHash = ecBlock.Header.PrevLedgerKeyMR.String()
 
 	answer.EntryCount = len(ecBlock.Body.Entries)
@@ -193,6 +201,8 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 		entry.BinaryString = fmt.Sprintf("%x", marshalled)
 		entry.Timestamp = blockTime
 		entry.ChainID = chainID
+
+		entry.Hash = fmt.Sprintf("%x", v.ECID())
 
 		entry.JSONString, err = v.JSONString()
 		if err != nil {
@@ -223,7 +233,8 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 	}
 
 	answer.ChainID = chainID
-	answer.PartialHash = hash
+	answer.PartialHash = fBlock.GetHash().String()
+	answer.FullHash = fBlock.GetLedgerKeyMR().String()
 	answer.PrevBlockHash = fmt.Sprintf("%x", fBlock.PrevKeyMR.Bytes())
 
 	transactions := fBlock.GetTransactions()

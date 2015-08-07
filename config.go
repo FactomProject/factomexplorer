@@ -13,6 +13,7 @@ type ExplorerConfig struct {
 	Explorer struct {
 		PortNumber int
 		StaticDir  string
+		UseDatabase bool
 	}
 }
 
@@ -24,6 +25,7 @@ const defaultConfig = `
 [explorer]
 PortNumber	= 8087
 StaticDir	= ""
+UseDatabase	= true
 `
 
 // ReadConfig reads the default factomexplorer.conf file and returns the

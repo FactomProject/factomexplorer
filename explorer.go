@@ -31,6 +31,8 @@ func main() {
 		dir string
 	)
 
+	Init(cfg.StaticDir)
+
 	server.Config.StaticDir, err = os.Getwd()
 	if err != nil {
 		log.Fatal(err)
