@@ -47,8 +47,8 @@ func Synchronize() error {
 		}
 
 		if block!=nil {
-			if maxHeight < body.Header.SequenceNumber {
-				maxHeight = body.Header.SequenceNumber
+			if maxHeight < block.DBlock.Header.SequenceNumber {
+				maxHeight = block.DBlock.Header.SequenceNumber
 			}
 			if previousKeyMR == dataStatus.LastKnownBlock {
 				dataStatus.LastKnownBlock = head.KeyMR
@@ -248,7 +248,6 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 		if err != nil {
 			return nil, err
 		}
-
 
 		entry.BinaryString = fmt.Sprintf("%x", bin)
 		entry.Timestamp = TimestampToString(v.GetMilliTimestamp() / 1000)
