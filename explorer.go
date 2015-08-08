@@ -13,6 +13,7 @@ import (
 	//"io"
 	"strconv"
 	"strings"
+	"time"
 
 	"encoding/json"
 	"github.com/FactomProject/factom"
@@ -80,14 +81,19 @@ func main() {
 	server.Get(`/test`, test)
 	server.Get(`/.*`, handle404)
 
-	err = Synchronize()
-	if err != nil {
-		//if err != io.EOF {
-			panic(err)
-		//}
-	}
+	go SynchronizationGoroutine()
 
 	server.Run(fmt.Sprintf(":%d", cfg.PortNumber))
+}
+
+func SynchronizationGoroutine() {
+	for {
+		err := Synchronize()
+		if err != nil {
+			panic(err)
+		}
+		time.Sleep(10*time.Second)
+	}
 }
 
 func test(ctx *web.Context) {
@@ -161,7 +167,6 @@ func handleChains(ctx *web.Context) {
 }
 
 func handleDBlock(ctx *web.Context, keyMR string) {
-	Synchronize()
 	type fullblock struct {
 		DBlock *DBlock
 		DBInfo DBInfo
@@ -187,14 +192,18 @@ func handleDBlock(ctx *web.Context, keyMR string) {
 }
 
 func handleDBlocks(ctx *web.Context) {
-	Synchronize()
 	type dblockPlus struct {
 		DBlocks  []*DBlock
 		PageInfo *PageState
 	}
 
 	height := GetBlockHeight()
-	dBlocks := GetDBlocks(0, height)
+	dBlocks, err := GetDBlocks(0, height)
+	if err != nil {
+		log.Println(err)
+		handle404(ctx)
+		return
+	}
 
 	d := dblockPlus{
 		DBlocks: dBlocks,
@@ -205,7 +214,6 @@ func handleDBlocks(ctx *web.Context) {
 	}
 
 	page := 1
-	var err error
 	if p := ctx.Params["page"]; p != "" {
 		page, err = strconv.Atoi(p)
 		if err != nil {
@@ -229,7 +237,6 @@ func handleDBlocks(ctx *web.Context) {
 }
 
 func handleBlock(ctx *web.Context, mr string) {
-	Synchronize()
 	log.Printf("handleBlock - %v\n", mr)
 	type blockPlus struct {
 		Block    *Block
@@ -282,7 +289,6 @@ func handleBlock(ctx *web.Context, mr string) {
 }
 
 func handleEntry(ctx *web.Context, hash string) {
-	Synchronize()
 	entry, err := GetEntry(hash)
 	if err != nil {
 		log.Println(err)
@@ -306,7 +312,6 @@ func handleEntryEid(ctx *web.Context, eid string) {
 }*/
 
 func handleHome(ctx *web.Context) {
-	Synchronize()
 	handleDBlocks(ctx)
 }
 

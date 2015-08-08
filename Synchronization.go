@@ -102,6 +102,9 @@ func Synchronize() error {
 			return err
 		}
 
+		if maxHeight < body.Header.SequenceNumber {
+			maxHeight = body.Header.SequenceNumber
+		}
 		previousKeyMR = body.Header.PrevBlockKeyMR
 		if previousKeyMR == "0000000000000000000000000000000000000000000000000000000000000000" {
 			dataStatus.LastKnownBlock = head.KeyMR
