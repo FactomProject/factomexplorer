@@ -18,7 +18,16 @@ func GetDBlockFromFactom(keyMR string) (*DBlock, error) {
 	}
 
 	answer = new(DBlock)
-	answer.DBlock = *body
+	answer.DBHash = body.DBHash
+	answer.PrevBlockKeyMR = body.Header.PrevBlockKeyMR
+	answer.TimeStamp = body.Header.TimeStamp
+	answer.SequenceNumber = body.Header.SequenceNumber
+	answer.EntryBlockList = make([]ListEntry, len(body.EntryBlockList))
+	for i, v:=range(body.EntryBlockList) {
+		answer.EntryBlockList[i].ChainID = v.ChainID
+		answer.EntryBlockList[i].KeyMR = v.KeyMR
+	}
+	//answer.DBlock = *body
 	answer.BlockTimeStr = TimestampToString(body.Header.TimeStamp)
 	answer.KeyMR = keyMR
 
@@ -28,6 +37,82 @@ func GetDBlockFromFactom(keyMR string) (*DBlock, error) {
 func TimestampToString(timestamp uint64) string {
 	blockTime := time.Unix(int64(timestamp), 0)
 	return blockTime.Format("2006-01-02 15:04:05")
+}
+
+func ProcessBlocks() error {
+	log.Println("ProcessBlocks()")
+	dataStatus:=LoadDataStatus()
+	if dataStatus.LastKnownBlock == dataStatus.LastProcessedBlock {
+		return nil
+	}
+	toProcess:=dataStatus.LastKnownBlock
+	previousBlock, err := LoadDBlock(toProcess)
+	if err!=nil {
+		return err
+	}
+	for {
+		block := previousBlock
+		toProcess = block.PrevBlockKeyMR
+		if toProcess == "0000000000000000000000000000000000000000000000000000000000000000" || block.KeyMR == dataStatus.LastProcessedBlock {
+			//dataStatus.LastProcessedBlock = dataStatus.LastKnownBlock
+			break
+		}
+		previousBlock, err = LoadDBlock(toProcess)
+
+		if previousBlock.NextBlockKeyMR != "" {
+			continue
+		}
+
+		blockList:=block.EntryBlockList[:]
+		blockList = append(blockList, block.AdminBlock)
+		blockList = append(blockList, block.EntryCreditBlock)
+		blockList = append(blockList, block.FactoidBlock)
+
+		for _, v:=range(blockList) {
+			err = ProcessBlock(v.KeyMR)
+			if err!=nil {
+				return err
+			}
+		}
+
+		previousBlock.NextBlockKeyMR = block.KeyMR
+		err = SaveDBlock(previousBlock)
+		if err!=nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ProcessBlock(keyMR string) error {
+	log.Printf("ProcessBlock()")
+	previousBlock, err:=LoadBlock(keyMR)
+	if err!=nil {
+		return err
+	}
+	log.Printf("chain - %v", previousBlock.ChainID)
+
+	for {
+		block:=previousBlock
+		toProcess:=block.PrevBlockHash
+		if toProcess == "0000000000000000000000000000000000000000000000000000000000000000" {
+			return nil
+		}
+		log.Printf("toProcess - %v", toProcess)
+		previousBlock, err = LoadBlock(toProcess)
+		if err!=nil {
+			return err
+		}
+		if previousBlock.NextBlockHash != "" {
+			return nil
+		}
+		previousBlock.NextBlockHash = block.PartialHash
+		err = SaveBlock(previousBlock)
+		if err!=nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func Synchronize() error {
@@ -47,15 +132,15 @@ func Synchronize() error {
 		}
 
 		if block!=nil {
-			if maxHeight < block.DBlock.Header.SequenceNumber {
-				maxHeight = block.DBlock.Header.SequenceNumber
+			if maxHeight < block.SequenceNumber {
+				maxHeight = block.SequenceNumber
 			}
 			if previousKeyMR == dataStatus.LastKnownBlock {
 				dataStatus.LastKnownBlock = head.KeyMR
 				dataStatus.DBlockHeight = maxHeight
 				break
 			} else {
-				previousKeyMR = block.Header.PrevBlockKeyMR
+				previousKeyMR = block.PrevBlockKeyMR
 				continue
 			}
 		}
@@ -64,7 +149,7 @@ func Synchronize() error {
 			return err
 		}
 
-		log.Printf("\n\nProcessing block number %v\n\n", body.Header.SequenceNumber)
+		log.Printf("\n\nProcessing block number %v\n\n", body.SequenceNumber)
 
 		str, err := EncodeJSONString(body)
 		if err != nil {
@@ -80,15 +165,15 @@ func Synchronize() error {
 			switch v.ChainID {
 			case "000000000000000000000000000000000000000000000000000000000000000a":
 				body.AdminEntries += fetchedBlock.EntryCount
-				body.AdminBlock = fetchedBlock
+				body.AdminBlock = ListEntry{ChainID:v.ChainID, KeyMR: v.KeyMR}
 				break
 			case "000000000000000000000000000000000000000000000000000000000000000c":
 				body.EntryCreditEntries += fetchedBlock.EntryCount
-				body.EntryCreditBlock = fetchedBlock
+				body.EntryCreditBlock = ListEntry{ChainID:v.ChainID, KeyMR: v.KeyMR}
 				break
 			case "000000000000000000000000000000000000000000000000000000000000000f":
 				body.FactoidEntries += fetchedBlock.EntryCount
-				body.FactoidBlock = fetchedBlock
+				body.FactoidBlock = ListEntry{ChainID:v.ChainID, KeyMR: v.KeyMR}
 				break
 			default:
 				body.EntryEntries += fetchedBlock.EntryCount
@@ -102,10 +187,10 @@ func Synchronize() error {
 			return err
 		}
 
-		if maxHeight < body.Header.SequenceNumber {
-			maxHeight = body.Header.SequenceNumber
+		if maxHeight < body.SequenceNumber {
+			maxHeight = body.SequenceNumber
 		}
-		previousKeyMR = body.Header.PrevBlockKeyMR
+		previousKeyMR = body.PrevBlockKeyMR
 		if previousKeyMR == "0000000000000000000000000000000000000000000000000000000000000000" {
 			dataStatus.LastKnownBlock = head.KeyMR
 			dataStatus.DBlockHeight = maxHeight

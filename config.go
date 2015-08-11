@@ -13,6 +13,7 @@ type ExplorerConfig struct {
 	Explorer struct {
 		PortNumber int
 		StaticDir  string
+		DatabaseDir string
 		UseDatabase bool
 	}
 }
@@ -25,6 +26,7 @@ const defaultConfig = `
 [explorer]
 PortNumber	= 8087
 StaticDir	= ""
+DatabaseDir	= "/tmp/"
 UseDatabase	= true
 `
 

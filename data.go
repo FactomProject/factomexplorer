@@ -20,7 +20,11 @@ var BlockIndexes map[string]string //used to index blocks by both their full and
 
 type DataStatusStruct struct {
 	DBlockHeight      int
+
+	//Last DBlock we have seen and saved in an uninterrupted chain
 	LastKnownBlock    string
+	//Last DBlock we have processed and connected back and forth
+	LastProcessedBlock string
 }
 
 var DataStatus *DataStatusStruct
@@ -51,8 +55,23 @@ func init() {
 	//DataStatus.LastKnownBlock = "0000000000000000000000000000000000000000000000000000000000000000"
 }
 
+type ListEntry struct {
+	ChainID string
+	KeyMR   string
+}
+
 type DBlock struct {
-	factom.DBlock
+	DBHash string
+
+	PrevBlockKeyMR string
+	NextBlockKeyMR string
+	TimeStamp      uint64
+	SequenceNumber int
+
+	EntryBlockList []ListEntry
+	AdminBlock       ListEntry
+	FactoidBlock     ListEntry
+	EntryCreditBlock ListEntry
 
 	BlockTimeStr string
 	KeyMR        string
@@ -63,10 +82,6 @@ type DBlock struct {
 	EntryCreditEntries int
 	FactoidEntries     int
 	EntryEntries       int
-
-	AdminBlock       *Block
-	FactoidBlock     *Block
-	EntryCreditBlock *Block
 }
 
 type Common struct {
@@ -85,6 +100,7 @@ type Block struct {
 	PartialHash string
 
 	PrevBlockHash string
+	NextBlockHash string
 
 	EntryCount int
 
@@ -188,7 +204,7 @@ func SaveDBlock(b *DBlock) error {
 	}
 	DBlocks[b.KeyMR] = b
 
-	err = SaveDBlockKeyMRBySequence(b.KeyMR, b.DBlock.Header.SequenceNumber)
+	err = SaveDBlockKeyMRBySequence(b.KeyMR, b.SequenceNumber)
 	if err!=nil {
 		return err
 	}
@@ -241,7 +257,7 @@ func LoadBlockIndex(hash string) (string, error) {
 	}
 
 	ind:=new(string)
-	ind2, err := LoadData(EntriesBucket, hash, ind)
+	ind2, err := LoadData(BlockIndexesBucket, hash, ind)
 	if err!=nil {
 		return "", err
 	}
@@ -300,6 +316,7 @@ func LoadBlock(hash string) (*Block, error) {
 		return nil, nil
 	}
 	Blocks[key] = block
+	Blocks[hash] = block
 	return block, nil
 }
 
@@ -436,6 +453,7 @@ func LoadDataStatus() (*DataStatusStruct) {
 	if ds2 == nil {
 		ds = new(DataStatusStruct)
 		ds.LastKnownBlock = "0000000000000000000000000000000000000000000000000000000000000000"
+		ds.LastProcessedBlock = "0000000000000000000000000000000000000000000000000000000000000000"
 	}
 	DataStatus = ds
 	log.Printf("LoadDataStatus DS - %v, %v", ds, ds2)

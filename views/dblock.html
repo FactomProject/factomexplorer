@@ -29,7 +29,7 @@
         </div>
         <div>
           <dt>Previous Block KeyMR:</dt>
-          <dd><a href='/dblock/{{hashfilter .DBlock.Header.PrevBlockKeyMR}}'>{{hashfilter .DBlock.Header.PrevBlockKeyMR}}</a></dd>
+          <dd><a href='/dblock/{{hashfilter .DBlock.PrevBlockKeyMR}}'>{{hashfilter .DBlock.PrevBlockKeyMR}}</a></dd>
         </div>
         <div>
           <dt>Created:</dt>
@@ -48,7 +48,7 @@
               <div>
                 <dt>Admin Block:</dt>
                 <dd>
-                  <span class="large primary"><a href="/ablock/{{.DBlock.AdminBlock.PartialHash}}">{{.DBlock.AdminBlock.PartialHash}}</a></span>
+                  <span class="large primary"><a href="/ablock/{{.DBlock.AdminBlock.KeyMR}}">{{.DBlock.AdminBlock.KeyMR}}</a></span>
                 </dd>
               </div>
             </dl>
@@ -56,7 +56,7 @@
               <div>
                 <dt>Entry Credit Block:</dt>
                 <dd>
-                  <span class="large primary"><a href="/ecblock/{{.DBlock.EntryCreditBlock.PartialHash}}">{{.DBlock.EntryCreditBlock.PartialHash}}</a></span>
+                  <span class="large primary"><a href="/ecblock/{{.DBlock.EntryCreditBlock.KeyMR}}">{{.DBlock.EntryCreditBlock.KeyMR}}</a></span>
                 </dd>
               </div>
             </dl>
@@ -64,7 +64,7 @@
               <div>
                 <dt>Factoid Block:</dt>
                 <dd>
-                  <span class="large primary"><a href="/fblock/{{.DBlock.FactoidBlock.PartialHash}}">{{.DBlock.FactoidBlock.PartialHash}}</a></span>
+                  <span class="large primary"><a href="/fblock/{{.DBlock.FactoidBlock.KeyMR}}">{{.DBlock.FactoidBlock.KeyMR}}</a></span>
                 </dd>
               </div>
             </dl>

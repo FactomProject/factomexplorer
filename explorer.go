@@ -32,7 +32,7 @@ func main() {
 		dir string
 	)
 
-	Init(cfg.StaticDir)
+	Init(cfg.DatabaseDir)
 
 	server.Config.StaticDir, err = os.Getwd()
 	if err != nil {
@@ -89,6 +89,11 @@ func main() {
 func SynchronizationGoroutine() {
 	for {
 		err := Synchronize()
+		if err != nil {
+			panic(err)
+		}
+		time.Sleep(10*time.Second)
+		err = ProcessBlocks()
 		if err != nil {
 			panic(err)
 		}
