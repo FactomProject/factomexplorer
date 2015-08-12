@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/FactomProject/factom"
+	"github.com/FactomProject/FactomCode/common"
+	"bytes"
 	"log"
 	"strings"
 )
@@ -84,6 +86,15 @@ type DBlock struct {
 	EntryEntries       int
 }
 
+func (e *DBlock) JSON() (string, error) {
+	return common.EncodeJSONString(e)
+}
+
+func (e *DBlock) Spew() string {
+	return common.Spew(e)
+}
+
+
 type Common struct {
 	ChainID   string
 	Timestamp string
@@ -91,6 +102,15 @@ type Common struct {
 	JSONString   string
 	SpewString   string
 	BinaryString string
+}
+
+func (e *Common) JSON() (string, error) {
+	return common.EncodeJSONString(e)
+}
+
+
+func (e *Common) Spew() string {
+	return common.Spew(e)
 }
 
 type Block struct {
@@ -112,6 +132,18 @@ type Block struct {
 	IsEntryBlock       bool
 }
 
+func (e *Block) JSON() (string, error) {
+	return common.EncodeJSONString(e)
+}
+
+func (e *Block) JSONBuffer(b *bytes.Buffer) error {
+	return common.EncodeJSONToBuffer(e, b)
+}
+
+func (e *Block) Spew() string {
+	return common.Spew(e)
+}
+
 type Entry struct {
 	Common
 
@@ -120,6 +152,14 @@ type Entry struct {
 
 	//Marshallable blocks
 	Hash string
+}
+
+func (e *Entry) JSON() (string, error) {
+	return common.EncodeJSONString(e)
+}
+
+func (e *Entry) Spew() string {
+	return common.Spew(e)
 }
 
 type Chain struct {
@@ -431,7 +471,6 @@ func LoadChain(hash string) (*Chain, error) {
 }
 
 func SaveDataStatus(ds *DataStatusStruct) error {
-	log.Printf("SaveDataStatus DS - %v", ds)
 	err := SaveData(DataStatusBucket, DataStatusBucket, ds)
 	if err!=nil {
 		return err

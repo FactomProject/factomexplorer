@@ -52,9 +52,10 @@ func ProcessBlocks() error {
 	}
 	for {
 		block := previousBlock
+		log.Printf("Processing dblock %v\n", block.KeyMR)
 		toProcess = block.PrevBlockKeyMR
 		if toProcess == "0000000000000000000000000000000000000000000000000000000000000000" || block.KeyMR == dataStatus.LastProcessedBlock {
-			//dataStatus.LastProcessedBlock = dataStatus.LastKnownBlock
+			dataStatus.LastProcessedBlock = dataStatus.LastKnownBlock
 			break
 		}
 		previousBlock, err = LoadDBlock(toProcess)
@@ -63,7 +64,7 @@ func ProcessBlocks() error {
 			continue
 		}
 
-		blockList:=block.EntryBlockList[:]
+		blockList := block.EntryBlockList[:]
 		blockList = append(blockList, block.AdminBlock)
 		blockList = append(blockList, block.EntryCreditBlock)
 		blockList = append(blockList, block.FactoidBlock)
@@ -94,11 +95,11 @@ func ProcessBlock(keyMR string) error {
 
 	for {
 		block:=previousBlock
+		log.Printf("Processing block %v\n", block.PartialHash)
 		toProcess:=block.PrevBlockHash
 		if toProcess == "0000000000000000000000000000000000000000000000000000000000000000" {
 			return nil
 		}
-		log.Printf("toProcess - %v", toProcess)
 		previousBlock, err = LoadBlock(toProcess)
 		if err!=nil {
 			return err
@@ -149,7 +150,7 @@ func Synchronize() error {
 			return err
 		}
 
-		log.Printf("\n\nProcessing block number %v\n\n", body.SequenceNumber)
+		log.Printf("\n\nProcessing dblock number %v\n", body.SequenceNumber)
 
 		str, err := EncodeJSONString(body)
 		if err != nil {
