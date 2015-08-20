@@ -9,6 +9,26 @@ import (
 	"time"
 )
 
+func GetAddressInformationFromFactom(address string) (*Address, error) {
+	answer := new(Address)
+	answer.Address = address
+
+	ecBalance, err := factom.ECBalance(address)
+	if err != nil {
+		fmt.Printf("GetAddressInformationFromFactom 1 - %v\n", err)
+	} else {
+		fmt.Printf("ECBalance - %v\n", ecBalance)
+	}
+	fctBalance, err := factom.FctBalance(address)
+	if err != nil {
+		fmt.Printf("GetAddressInformationFromFactom 2 - %v\n", err)
+	} else {
+		fmt.Printf("FctBalance - %v\n", fctBalance)
+	}
+
+	return nil, nil
+}
+
 func GetDBlockFromFactom(keyMR string) (*DBlock, error) {
 	answer := new(DBlock)
 
@@ -20,7 +40,7 @@ func GetDBlockFromFactom(keyMR string) (*DBlock, error) {
 	answer = new(DBlock)
 	answer.DBHash = body.DBHash
 	answer.PrevBlockKeyMR = body.Header.PrevBlockKeyMR
-	answer.TimeStamp = body.Header.TimeStamp
+	answer.Timestamp = body.Header.Timestamp
 	answer.SequenceNumber = body.Header.SequenceNumber
 	answer.EntryBlockList = make([]ListEntry, len(body.EntryBlockList))
 	for i, v := range body.EntryBlockList {
@@ -28,7 +48,7 @@ func GetDBlockFromFactom(keyMR string) (*DBlock, error) {
 		answer.EntryBlockList[i].KeyMR = v.KeyMR
 	}
 	//answer.DBlock = *body
-	answer.BlockTimeStr = TimestampToString(body.Header.TimeStamp)
+	answer.BlockTimeStr = TimestampToString(body.Header.Timestamp)
 	answer.KeyMR = keyMR
 
 	return answer, nil

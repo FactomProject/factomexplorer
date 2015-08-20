@@ -66,7 +66,7 @@ type DBlock struct {
 
 	PrevBlockKeyMR string
 	NextBlockKeyMR string
-	TimeStamp      uint64
+	Timestamp      uint64
 	SequenceNumber int
 
 	EntryBlockList   []ListEntry
@@ -172,6 +172,17 @@ type DecodedString struct {
 	Encoded string
 	Decoded string
 }
+
+type Address struct {
+	Address     string
+	AddressType string //EC, Factoid, etc.
+	PublicKey   string
+	Balance     float64
+}
+
+//-----------------------------------------------------------------------------------------------
+//-------------------------------------Save, load, etc.------------------------------------------
+//-----------------------------------------------------------------------------------------------
 
 func RecordChain(block *Block) error {
 	if block.PrevBlockHash != "0000000000000000000000000000000000000000000000000000000000000000" {
