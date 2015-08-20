@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/FactomProject/FactomCode/common"
+	"github.com/FactomProject/factoid"
 	"github.com/FactomProject/factoid/block"
 	"github.com/FactomProject/factom"
 	"log"
@@ -13,20 +14,46 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 	answer := new(Address)
 	answer.Address = address
 
+	invalid := 0 //to count how many times we got "invalid address"
+
 	ecBalance, err := factom.ECBalance(address)
+	fmt.Printf("ECBalance - %v, %v\n\n", ecBalance, err)
 	if err != nil {
-		fmt.Printf("GetAddressInformationFromFactom 1 - %v\n", err)
+		if err.Error() != "Invalid EC Address" {
+			return nil, err
+		}
+		invalid++
 	} else {
-		fmt.Printf("ECBalance - %v\n", ecBalance)
+		answer.Balance = factoid.ConvertDecimalToString(uint64(ecBalance))
+		answer.AddressType = "EC Address"
+		if ecBalance > 0 {
+			return answer, nil
+		}
 	}
 	fctBalance, err := factom.FctBalance(address)
+	fmt.Printf("FctBalance - %v, %v\n\n", fctBalance, err)
 	if err != nil {
-		fmt.Printf("GetAddressInformationFromFactom 2 - %v\n", err)
+		if err.Error() != "Invalid Factoid Address" {
+			return nil, err
+		}
+		invalid++
 	} else {
-		fmt.Printf("FctBalance - %v\n", fctBalance)
+		answer.AddressType = "Factoid Address"
+		if fctBalance > 0 {
+			answer.Balance = factoid.ConvertDecimalToString(uint64(fctBalance))
+			return answer, nil
+		}
+	}
+	if invalid > 1 {
+		//2 responses - it's not a valid address period
+		return nil, fmt.Errorf("Invalid address")
+	}
+	if invalid == 0 {
+		//no invalid responses - meaning it's a public key valid for both factoid and ec
+		answer.AddressType = "Unknown Address"
 	}
 
-	return nil, nil
+	return answer, nil
 }
 
 func GetDBlockFromFactom(keyMR string) (*DBlock, error) {

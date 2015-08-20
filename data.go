@@ -177,7 +177,7 @@ type Address struct {
 	Address     string
 	AddressType string //EC, Factoid, etc.
 	PublicKey   string
-	Balance     float64
+	Balance     string
 }
 
 //-----------------------------------------------------------------------------------------------

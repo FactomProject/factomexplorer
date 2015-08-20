@@ -62,6 +62,7 @@ func main() {
 		dir+"/views/index.html",
 		dir+"/views/pagination.html",
 		dir+"/views/entry.html",
+		dir+"/views/address.html",
 	))
 
 	server.Get(`/(?:home)?`, handleHome)
@@ -77,6 +78,7 @@ func main() {
 	server.Get(`/fblock/([^/]+)?`, handleBlock)
 	server.Get(`/entry/([^/]+)?`, handleEntry)
 	server.Get(`/entry/([^/]+)?`, handleEntry)
+	server.Get(`/address/([^/]+)?`, handleAddress)
 	server.Post(`/search/?`, handleSearch)
 	server.Get(`/test`, test)
 	server.Get(`/.*`, handle404)
@@ -140,11 +142,24 @@ func handleSearch(ctx *web.Context) {
 		handleBlock(ctx, searchText)
 	case "dblock":
 		handleDBlock(ctx, searchText)
+	case "address":
+		handleAddress(ctx, searchText)
 		/*	case "extID":
 			handleEntryEid(ctx, searchText)*/
 	default:
 		handle404(ctx)
 	}
+}
+
+func handleAddress(ctx *web.Context, hash string) {
+	address, err := GetAddressInformationFromFactom(hash)
+	if err != nil {
+		log.Println(err)
+		handle404(ctx)
+		return
+	}
+
+	tpl.ExecuteTemplate(ctx, "address.html", address)
 }
 
 func handleChain(ctx *web.Context, hash string) {
