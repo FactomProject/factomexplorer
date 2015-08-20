@@ -92,12 +92,12 @@ func SynchronizationGoroutine() {
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(10*time.Second)
+		time.Sleep(10 * time.Second)
 		err = ProcessBlocks()
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(10*time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }
 
@@ -123,7 +123,6 @@ func handle404(ctx *web.Context) {
 	tpl.ExecuteTemplate(ctx, "404.html", c)
 }
 
-
 func handleSearch(ctx *web.Context) {
 	fmt.Println("r.Form:", ctx.Params["searchType"])
 	fmt.Println("r.Form:", ctx.Params["searchText"])
@@ -141,13 +140,12 @@ func handleSearch(ctx *web.Context) {
 		handleBlock(ctx, searchText)
 	case "dblock":
 		handleDBlock(ctx, searchText)
-/*	case "extID":
-		handleEntryEid(ctx, searchText)*/
+		/*	case "extID":
+			handleEntryEid(ctx, searchText)*/
 	default:
 		handle404(ctx)
 	}
 }
-
 
 func handleChain(ctx *web.Context, hash string) {
 	chain, err := GetChainByName(hash)

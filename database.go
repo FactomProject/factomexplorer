@@ -1,11 +1,10 @@
 package main
 
 import (
-
-	"encoding/gob"
-	"github.com/boltdb/bolt"
 	"bytes"
+	"encoding/gob"
 	"fmt"
+	"github.com/boltdb/bolt"
 	"log"
 )
 
@@ -17,9 +16,9 @@ func Init(filePath string) {
 	var err error
 	db, err = bolt.Open(filePath+DatabaseFile, 0600, nil)
 	if err != nil {
-		panic("Database was not found, and could not be created - "+err.Error())
+		panic("Database was not found, and could not be created - " + err.Error())
 	}
-	for _, v:=range(BucketList) {
+	for _, v := range BucketList {
 		err = db.Update(func(tx *bolt.Tx) error {
 			_, err := tx.CreateBucketIfNotExists([]byte(v))
 			if err != nil {
@@ -27,7 +26,7 @@ func Init(filePath string) {
 			}
 			return nil
 		})
-		if err!=nil {
+		if err != nil {
 			panic(err)
 		}
 	}
@@ -39,7 +38,7 @@ func LoadData(bucket, key string, dst interface{}) (interface{}, error) {
 	}
 
 	var v []byte
-	err:=db.View(func(tx *bolt.Tx) error {
+	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		v1 := b.Get([]byte(key))
 		if v1 == nil {
@@ -49,7 +48,7 @@ func LoadData(bucket, key string, dst interface{}) (interface{}, error) {
 		copy(v, v1)
 		return nil
 	})
-	if err!=nil {
+	if err != nil {
 		log.Printf("Error loading %v of %v", bucket, key)
 		return nil, err
 	}
@@ -67,7 +66,7 @@ func LoadData(bucket, key string, dst interface{}) (interface{}, error) {
 	return dst, nil
 }
 
-func SaveData(bucket, key string, toStore interface{}) (error) {
+func SaveData(bucket, key string, toStore interface{}) error {
 	if cfg.UseDatabase == false {
 		return nil
 	}
@@ -86,7 +85,7 @@ func SaveData(bucket, key string, toStore interface{}) (error) {
 		err := b.Put([]byte(key), data.Bytes())
 		return err
 	})
-	if err!=nil {
+	if err != nil {
 		log.Printf("Error saving %v of %v - %v", bucket, key, toStore)
 		return err
 	}

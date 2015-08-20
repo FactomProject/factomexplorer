@@ -1,11 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
-	"github.com/FactomProject/factom"
 	"github.com/FactomProject/FactomCode/common"
-	"bytes"
+	"github.com/FactomProject/factom"
 	"log"
 	"strings"
 )
@@ -21,16 +21,15 @@ var ChainIDsByDecodedName map[string]string
 var BlockIndexes map[string]string //used to index blocks by both their full and partial hash
 
 type DataStatusStruct struct {
-	DBlockHeight      int
+	DBlockHeight int
 
 	//Last DBlock we have seen and saved in an uninterrupted chain
-	LastKnownBlock    string
+	LastKnownBlock string
 	//Last DBlock we have processed and connected back and forth
 	LastProcessedBlock string
 }
 
 var DataStatus *DataStatusStruct
-
 
 const DBlocksBucket string = "DBlocks"
 const DBlockKeyMRsBySequenceBucket string = "DBlockKeyMRsBySequence"
@@ -70,7 +69,7 @@ type DBlock struct {
 	TimeStamp      uint64
 	SequenceNumber int
 
-	EntryBlockList []ListEntry
+	EntryBlockList   []ListEntry
 	AdminBlock       ListEntry
 	FactoidBlock     ListEntry
 	EntryCreditBlock ListEntry
@@ -94,7 +93,6 @@ func (e *DBlock) Spew() string {
 	return common.Spew(e)
 }
 
-
 type Common struct {
 	ChainID   string
 	Timestamp string
@@ -107,7 +105,6 @@ type Common struct {
 func (e *Common) JSON() (string, error) {
 	return common.EncodeJSONString(e)
 }
-
 
 func (e *Common) Spew() string {
 	return common.Spew(e)
@@ -148,7 +145,7 @@ type Entry struct {
 	Common
 
 	ExternalIDs []DecodedString
-	Content DecodedString
+	Content     DecodedString
 
 	//Marshallable blocks
 	Hash string
@@ -163,8 +160,8 @@ func (e *Entry) Spew() string {
 }
 
 type Chain struct {
-	ChainID string
-	Names []DecodedString
+	ChainID      string
+	Names        []DecodedString
 	FirstEntryID string
 
 	//Not saved
@@ -176,20 +173,18 @@ type DecodedString struct {
 	Decoded string
 }
 
-
-
 func RecordChain(block *Block) error {
 	if block.PrevBlockHash != "0000000000000000000000000000000000000000000000000000000000000000" {
 		return nil
 	}
 
-	c:=new(Chain)
+	c := new(Chain)
 	c.ChainID = block.ChainID
 	c.FirstEntryID = block.EntryList[0].Hash
 	c.Names = block.EntryList[0].ExternalIDs[:]
 
-	err:=SaveChain(c)
-	if err!=nil {
+	err := SaveChain(c)
+	if err != nil {
 		return err
 	}
 
@@ -199,8 +194,8 @@ func RecordChain(block *Block) error {
 
 func StoreEntriesFromBlock(block *Block) error {
 	for _, v := range block.EntryList {
-		err:=SaveEntry(v)
-		if err!=nil {
+		err := SaveEntry(v)
+		if err != nil {
 			return err
 		}
 	}
@@ -208,18 +203,18 @@ func StoreEntriesFromBlock(block *Block) error {
 }
 
 func LoadDBlockKeyMRBySequence(sequence int) (string, error) {
-	seq:=fmt.Sprintf("%v", sequence)
-	keyMR, found:=DBlockKeyMRsBySequence[seq]
+	seq := fmt.Sprintf("%v", sequence)
+	keyMR, found := DBlockKeyMRsBySequence[seq]
 	if found == true {
 		return keyMR, nil
 	}
 
-	key:=new(string)
+	key := new(string)
 	key2, err := LoadData(DBlockKeyMRsBySequenceBucket, seq, key)
-	if err!=nil {
+	if err != nil {
 		return "", err
 	}
-	if key2==nil {
+	if key2 == nil {
 		return "", nil
 	}
 	DBlockKeyMRsBySequence[seq] = *key
@@ -227,9 +222,9 @@ func LoadDBlockKeyMRBySequence(sequence int) (string, error) {
 }
 
 func SaveDBlockKeyMRBySequence(keyMR string, sequence int) error {
-	seq:=fmt.Sprintf("%v", sequence)
+	seq := fmt.Sprintf("%v", sequence)
 	err := SaveData(DBlockKeyMRsBySequenceBucket, seq, keyMR)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	DBlockKeyMRsBySequence[seq] = keyMR
@@ -239,13 +234,13 @@ func SaveDBlockKeyMRBySequence(keyMR string, sequence int) error {
 //Savers and Loaders
 func SaveDBlock(b *DBlock) error {
 	err := SaveData(DBlocksBucket, b.KeyMR, b)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	DBlocks[b.KeyMR] = b
 
 	err = SaveDBlockKeyMRBySequence(b.KeyMR, b.SequenceNumber)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
@@ -258,12 +253,12 @@ func LoadDBlock(hash string) (*DBlock, error) {
 		return block, nil
 	}
 
-	block=new(DBlock)
+	block = new(DBlock)
 	block2, err := LoadData(DBlocksBucket, hash, block)
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
-	if block2==nil {
+	if block2 == nil {
 		return nil, nil
 	}
 	DBlocks[hash] = block
@@ -271,8 +266,8 @@ func LoadDBlock(hash string) (*DBlock, error) {
 }
 
 func LoadDBlockBySequence(sequence int) (*DBlock, error) {
-	key, err:=LoadDBlockKeyMRBySequence(sequence)
-	if err!=nil {
+	key, err := LoadDBlockKeyMRBySequence(sequence)
+	if err != nil {
 		return nil, err
 	}
 	if key == "" {
@@ -283,7 +278,7 @@ func LoadDBlockBySequence(sequence int) (*DBlock, error) {
 
 func SaveBlockIndex(index, hash string) error {
 	err := SaveData(BlockIndexesBucket, index, hash)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	BlockIndexes[index] = hash
@@ -291,17 +286,17 @@ func SaveBlockIndex(index, hash string) error {
 }
 
 func LoadBlockIndex(hash string) (string, error) {
-	index, found:=BlockIndexes[hash]
+	index, found := BlockIndexes[hash]
 	if found == true {
 		return index, nil
 	}
 
-	ind:=new(string)
+	ind := new(string)
 	ind2, err := LoadData(BlockIndexesBucket, hash, ind)
-	if err!=nil {
+	if err != nil {
 		return "", err
 	}
-	if ind2==nil {
+	if ind2 == nil {
 		return "", nil
 	}
 	BlockIndexes[hash] = *ind
@@ -311,17 +306,17 @@ func LoadBlockIndex(hash string) (string, error) {
 func SaveBlock(b *Block) error {
 	StoreEntriesFromBlock(b)
 
-	err:=SaveBlockIndex(b.FullHash, b.PartialHash)
-	if err!=nil {
+	err := SaveBlockIndex(b.FullHash, b.PartialHash)
+	if err != nil {
 		return err
 	}
 	err = SaveBlockIndex(b.PartialHash, b.PartialHash)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 
 	err = SaveData(BlocksBucket, b.PartialHash, b)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	Blocks[b.PartialHash] = b
@@ -334,8 +329,8 @@ func SaveBlock(b *Block) error {
 }
 
 func LoadBlock(hash string) (*Block, error) {
-	key, err:=LoadBlockIndex(hash)
-	if err!=nil {
+	key, err := LoadBlockIndex(hash)
+	if err != nil {
 		return nil, err
 	}
 	if key == "" {
@@ -347,12 +342,12 @@ func LoadBlock(hash string) (*Block, error) {
 		return block, nil
 	}
 
-	block=new(Block)
+	block = new(Block)
 	block2, err := LoadData(BlocksBucket, key, block)
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
-	if block2==nil {
+	if block2 == nil {
 		return nil, nil
 	}
 	Blocks[key] = block
@@ -362,7 +357,7 @@ func LoadBlock(hash string) (*Block, error) {
 
 func SaveEntry(e *Entry) error {
 	err := SaveData(EntriesBucket, e.Hash, e)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	Entries[e.Hash] = e
@@ -370,17 +365,17 @@ func SaveEntry(e *Entry) error {
 }
 
 func LoadEntry(hash string) (*Entry, error) {
-	entry, found:=Entries[hash]
+	entry, found := Entries[hash]
 	if found == true {
 		return entry, nil
 	}
 
-	entry=new(Entry)
+	entry = new(Entry)
 	entry2, err := LoadData(EntriesBucket, hash, entry)
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
-	if entry2==nil {
+	if entry2 == nil {
 		return nil, nil
 	}
 	Entries[hash] = entry
@@ -389,12 +384,12 @@ func LoadEntry(hash string) (*Entry, error) {
 
 func SaveChainIDsByName(chainID, decodedName, encodedName string) error {
 	err := SaveData(ChainIDsByDecodedNameBucket, decodedName, chainID)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	ChainIDsByDecodedName[decodedName] = chainID
 	err = SaveData(ChainIDsByEncodedNameBucket, encodedName, chainID)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	ChainIDsByEncodedName[encodedName] = chainID
@@ -402,33 +397,32 @@ func SaveChainIDsByName(chainID, decodedName, encodedName string) error {
 }
 
 func LoadChainIDByName(name string) (string, error) {
-	id, found:=ChainIDsByDecodedName[name]
+	id, found := ChainIDsByDecodedName[name]
 	if found == true {
 		return id, nil
 	}
 
-	entry:=new(string)
+	entry := new(string)
 	entry2, err := LoadData(ChainIDsByDecodedNameBucket, name, entry)
-	if err!=nil {
+	if err != nil {
 		return "", err
 	}
-	if entry2!=nil {
+	if entry2 != nil {
 		ChainIDsByDecodedName[name] = *entry
 		return *entry, nil
 	}
 
-
-	id, found=ChainIDsByEncodedName[name]
+	id, found = ChainIDsByEncodedName[name]
 	if found == true {
 		return id, nil
 	}
 
-	entry=new(string)
+	entry = new(string)
 	entry2, err = LoadData(ChainIDsByEncodedNameBucket, name, entry)
-	if err!=nil {
+	if err != nil {
 		return "", err
 	}
-	if entry2!=nil {
+	if entry2 != nil {
 		ChainIDsByEncodedName[name] = *entry
 		return *entry, nil
 	}
@@ -438,15 +432,14 @@ func LoadChainIDByName(name string) (string, error) {
 
 func SaveChain(c *Chain) error {
 	err := SaveData(ChainsBucket, c.ChainID, c)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	Chains[c.ChainID] = c
 
-
-	for _, v:=range(c.Names) {
+	for _, v := range c.Names {
 		err = SaveChainIDsByName(c.ChainID, v.Decoded, v.Encoded)
-		if err!=nil {
+		if err != nil {
 			return err
 		}
 	}
@@ -455,15 +448,15 @@ func SaveChain(c *Chain) error {
 }
 
 func LoadChain(hash string) (*Chain, error) {
-	chain, found:=Chains[hash]
+	chain, found := Chains[hash]
 	if found == true {
 		return chain, nil
 	}
 
-	chain=new(Chain)
+	chain = new(Chain)
 	var err error
 	_, err = LoadData(ChainsBucket, hash, chain)
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 	Chains[hash] = chain
@@ -472,21 +465,21 @@ func LoadChain(hash string) (*Chain, error) {
 
 func SaveDataStatus(ds *DataStatusStruct) error {
 	err := SaveData(DataStatusBucket, DataStatusBucket, ds)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	DataStatus = ds
 	return nil
 }
 
-func LoadDataStatus() (*DataStatusStruct) {
-	if DataStatus !=nil {
+func LoadDataStatus() *DataStatusStruct {
+	if DataStatus != nil {
 		return DataStatus
 	}
-	ds:=new(DataStatusStruct)
+	ds := new(DataStatusStruct)
 	var err error
 	ds2, err := LoadData(DataStatusBucket, DataStatusBucket, ds)
-	if err!=nil {
+	if err != nil {
 		panic(err)
 	}
 	if ds2 == nil {
@@ -499,14 +492,13 @@ func LoadDataStatus() (*DataStatusStruct) {
 	return ds
 }
 
-
 //Getters
 
 func GetBlock(hash string) (*Block, error) {
 	hash = strings.ToLower(hash)
 
-	block, err:=LoadBlock(hash)
-	if err!=nil {
+	block, err := LoadBlock(hash)
+	if err != nil {
 		return nil, err
 	}
 	if block == nil {
@@ -522,8 +514,8 @@ func GetBlockHeight() int {
 func GetDBlocks(start, max int) ([]*DBlock, error) {
 	answer := []*DBlock{}
 	for i := start; i <= max; i++ {
-		block, err:=LoadDBlockBySequence(i)
-		if err!=nil {
+		block, err := LoadDBlockBySequence(i)
+		if err != nil {
 			return nil, err
 		}
 		if block == nil {
@@ -537,8 +529,8 @@ func GetDBlocks(start, max int) ([]*DBlock, error) {
 func GetDBlock(keyMR string) (*DBlock, error) {
 	keyMR = strings.ToLower(keyMR)
 
-	block, err:=LoadDBlock(keyMR)
-	if err!=nil {
+	block, err := LoadDBlock(keyMR)
+	if err != nil {
 		return nil, err
 	}
 	return block, nil
@@ -548,14 +540,12 @@ type DBInfo struct {
 	BTCTxHash string
 }
 
-
-
 //Getters
 
 func GetEntry(hash string) (*Entry, error) {
 	hash = strings.ToLower(hash)
-	entry, err:=LoadEntry(hash)
-	if err!=nil {
+	entry, err := LoadEntry(hash)
+	if err != nil {
 		return nil, err
 	}
 	if entry == nil {
@@ -571,10 +561,10 @@ func GetDBInfo(keyMR string) (DBInfo, error) {
 	return DBInfo{}, nil
 }
 
-func GetChains()([]*Chain, error) {
+func GetChains() ([]*Chain, error) {
 	//TODO: load chains from database
-	answer:=[]*Chain{}
-	for _, v:=range(Chains) {
+	answer := []*Chain{}
+	for _, v := range Chains {
 		answer = append(answer, v)
 	}
 	return answer, nil
@@ -583,14 +573,14 @@ func GetChains()([]*Chain, error) {
 func GetChain(hash string) (*Chain, error) {
 	hash = strings.ToLower(hash)
 	chain, err := LoadChain(hash)
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 	if chain == nil {
 		return chain, errors.New("Chain not found")
 	}
 	entry, err := LoadEntry(chain.FirstEntryID)
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 	if entry == nil {
@@ -601,8 +591,8 @@ func GetChain(hash string) (*Chain, error) {
 }
 
 func GetChainByName(name string) (*Chain, error) {
-	id, err:=LoadChainIDByName(name)
-	if err!=nil {
+	id, err := LoadChainIDByName(name)
+	if err != nil {
 		return nil, err
 	}
 	if id != "" {

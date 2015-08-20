@@ -10,7 +10,7 @@ import (
 )
 
 func GetDBlockFromFactom(keyMR string) (*DBlock, error) {
-	answer:=new(DBlock)
+	answer := new(DBlock)
 
 	body, err := factom.GetDBlock(keyMR)
 	if err != nil {
@@ -23,7 +23,7 @@ func GetDBlockFromFactom(keyMR string) (*DBlock, error) {
 	answer.TimeStamp = body.Header.TimeStamp
 	answer.SequenceNumber = body.Header.SequenceNumber
 	answer.EntryBlockList = make([]ListEntry, len(body.EntryBlockList))
-	for i, v:=range(body.EntryBlockList) {
+	for i, v := range body.EntryBlockList {
 		answer.EntryBlockList[i].ChainID = v.ChainID
 		answer.EntryBlockList[i].KeyMR = v.KeyMR
 	}
@@ -41,13 +41,13 @@ func TimestampToString(timestamp uint64) string {
 
 func ProcessBlocks() error {
 	log.Println("ProcessBlocks()")
-	dataStatus:=LoadDataStatus()
+	dataStatus := LoadDataStatus()
 	if dataStatus.LastKnownBlock == dataStatus.LastProcessedBlock {
 		return nil
 	}
-	toProcess:=dataStatus.LastKnownBlock
+	toProcess := dataStatus.LastKnownBlock
 	previousBlock, err := LoadDBlock(toProcess)
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	for {
@@ -69,16 +69,16 @@ func ProcessBlocks() error {
 		blockList = append(blockList, block.EntryCreditBlock)
 		blockList = append(blockList, block.FactoidBlock)
 
-		for _, v:=range(blockList) {
+		for _, v := range blockList {
 			err = ProcessBlock(v.KeyMR)
-			if err!=nil {
+			if err != nil {
 				return err
 			}
 		}
 
 		previousBlock.NextBlockKeyMR = block.KeyMR
 		err = SaveDBlock(previousBlock)
-		if err!=nil {
+		if err != nil {
 			return err
 		}
 	}
@@ -87,21 +87,21 @@ func ProcessBlocks() error {
 
 func ProcessBlock(keyMR string) error {
 	log.Printf("ProcessBlock()")
-	previousBlock, err:=LoadBlock(keyMR)
-	if err!=nil {
+	previousBlock, err := LoadBlock(keyMR)
+	if err != nil {
 		return err
 	}
 	log.Printf("chain - %v", previousBlock.ChainID)
 
 	for {
-		block:=previousBlock
+		block := previousBlock
 		log.Printf("Processing block %v\n", block.PartialHash)
-		toProcess:=block.PrevBlockHash
+		toProcess := block.PrevBlockHash
 		if toProcess == "0000000000000000000000000000000000000000000000000000000000000000" {
 			return nil
 		}
 		previousBlock, err = LoadBlock(toProcess)
-		if err!=nil {
+		if err != nil {
 			return err
 		}
 		if previousBlock.NextBlockHash != "" {
@@ -109,7 +109,7 @@ func ProcessBlock(keyMR string) error {
 		}
 		previousBlock.NextBlockHash = block.PartialHash
 		err = SaveBlock(previousBlock)
-		if err!=nil {
+		if err != nil {
 			return err
 		}
 	}
@@ -123,16 +123,16 @@ func Synchronize() error {
 		return err
 	}
 	previousKeyMR := head.KeyMR
-	dataStatus:=LoadDataStatus()
-	maxHeight:=dataStatus.DBlockHeight
+	dataStatus := LoadDataStatus()
+	maxHeight := dataStatus.DBlockHeight
 	for {
 
 		block, err := LoadDBlock(previousKeyMR)
-		if err!=nil {
+		if err != nil {
 			return err
 		}
 
-		if block!=nil {
+		if block != nil {
 			if maxHeight < block.SequenceNumber {
 				maxHeight = block.SequenceNumber
 			}
@@ -166,15 +166,15 @@ func Synchronize() error {
 			switch v.ChainID {
 			case "000000000000000000000000000000000000000000000000000000000000000a":
 				body.AdminEntries += fetchedBlock.EntryCount
-				body.AdminBlock = ListEntry{ChainID:v.ChainID, KeyMR: v.KeyMR}
+				body.AdminBlock = ListEntry{ChainID: v.ChainID, KeyMR: v.KeyMR}
 				break
 			case "000000000000000000000000000000000000000000000000000000000000000c":
 				body.EntryCreditEntries += fetchedBlock.EntryCount
-				body.EntryCreditBlock = ListEntry{ChainID:v.ChainID, KeyMR: v.KeyMR}
+				body.EntryCreditBlock = ListEntry{ChainID: v.ChainID, KeyMR: v.KeyMR}
 				break
 			case "000000000000000000000000000000000000000000000000000000000000000f":
 				body.FactoidEntries += fetchedBlock.EntryCount
-				body.FactoidBlock = ListEntry{ChainID:v.ChainID, KeyMR: v.KeyMR}
+				body.FactoidBlock = ListEntry{ChainID: v.ChainID, KeyMR: v.KeyMR}
 				break
 			default:
 				body.EntryEntries += fetchedBlock.EntryCount
@@ -199,16 +199,15 @@ func Synchronize() error {
 		}
 
 	}
-	err=SaveDataStatus(dataStatus)
-	if err!=nil {
+	err = SaveDataStatus(dataStatus)
+	if err != nil {
 		return err
 	}
 	return nil
 }
 
-
 func FetchBlock(chainID, hash, blockTime string) (*Block, error) {
-	block:=new(Block)
+	block := new(Block)
 
 	raw, err := factom.GetRaw(hash)
 	if err != nil {
@@ -218,25 +217,25 @@ func FetchBlock(chainID, hash, blockTime string) (*Block, error) {
 	case "000000000000000000000000000000000000000000000000000000000000000a":
 		block, err = ParseAdminBlock(chainID, hash, raw, blockTime)
 		if err != nil {
-		return nil, err
+			return nil, err
 		}
 		break
 	case "000000000000000000000000000000000000000000000000000000000000000c":
 		block, err = ParseEntryCreditBlock(chainID, hash, raw, blockTime)
 		if err != nil {
-		return nil, err
+			return nil, err
 		}
 		break
 	case "000000000000000000000000000000000000000000000000000000000000000f":
 		block, err = ParseFactoidBlock(chainID, hash, raw, blockTime)
 		if err != nil {
-		return nil, err
+			return nil, err
 		}
 		break
 	default:
 		block, err = ParseEntryBlock(chainID, hash, raw, blockTime)
 		if err != nil {
-		return nil, err
+			return nil, err
 		}
 		break
 	}
@@ -246,30 +245,28 @@ func FetchBlock(chainID, hash, blockTime string) (*Block, error) {
 		return nil, err
 	}
 
-
 	return block, nil
 }
 
-
 func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
-	answer:=new(Block)
+	answer := new(Block)
 
 	ecBlock := common.NewECBlock()
 	_, err := ecBlock.UnmarshalBinaryData(rawBlock)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	answer.ChainID = chainID
 	h, err := ecBlock.Hash()
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 	answer.FullHash = h.String()
 
 	h, err = ecBlock.HeaderHash()
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 	answer.PartialHash = h.String()
 
@@ -281,7 +278,7 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 
 	for i, v := range ecBlock.Body.Entries {
-		entry:=new(Entry)
+		entry := new(Entry)
 
 		marshalled, err := v.MarshalBinary()
 		if err != nil {
@@ -304,7 +301,7 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 
 	answer.JSONString, err = ecBlock.JSONString()
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 	answer.SpewString = ecBlock.Spew()
 	answer.IsEntryCreditBlock = true
@@ -313,7 +310,7 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 }
 
 func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
-	answer:=new(Block)
+	answer := new(Block)
 
 	fBlock := new(block.FBlock)
 	_, err := fBlock.UnmarshalBinaryData(rawBlock)
@@ -331,8 +328,8 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 	answer.EntryList = make([]*Entry, answer.EntryCount)
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 	for i, v := range transactions {
-		entry:=new(Entry)
-		bin, err:=v.MarshalBinary()
+		entry := new(Entry)
+		bin, err := v.MarshalBinary()
 
 		if err != nil {
 			return nil, err
@@ -353,7 +350,7 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 	}
 	answer.JSONString, err = fBlock.JSONString()
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 	answer.SpewString = fBlock.Spew()
 	answer.IsFactoidBlock = true
@@ -362,7 +359,7 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 }
 
 func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
-	answer:=new(Block)
+	answer := new(Block)
 
 	eBlock := common.NewEBlock()
 	_, err := eBlock.UnmarshalBinaryData(rawBlock)
@@ -371,7 +368,7 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 	}
 
 	answer.ChainID = chainID
-	h, err:=eBlock.KeyMR()
+	h, err := eBlock.KeyMR()
 	if err != nil {
 		return nil, err
 	}
@@ -379,7 +376,7 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 	if err != nil {
 		return nil, err
 	}
-	h, err=eBlock.Hash()
+	h, err = eBlock.Hash()
 	if err != nil {
 		return nil, err
 	}
@@ -392,7 +389,7 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 
 	for i, v := range eBlock.Body.EBEntries {
-		entry, err:=FetchAndParseEntry(v.String(), blockTime)
+		entry, err := FetchAndParseEntry(v.String(), blockTime)
 		if err != nil {
 			return nil, err
 		}
@@ -411,45 +408,44 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 }
 
 func FetchAndParseEntry(hash, blockTime string) (*Entry, error) {
-	e:=new(Entry)
-	raw, err:=factom.GetRaw(hash)
-	if err!=nil {
+	e := new(Entry)
+	raw, err := factom.GetRaw(hash)
+	if err != nil {
 		return nil, err
 	}
 
-	entry:=new(common.Entry)
+	entry := new(common.Entry)
 	_, err = entry.UnmarshalBinaryData(raw)
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
-
 
 	e.ChainID = entry.ChainID.String()
 	e.Hash = hash
-	str, err:=entry.JSONString()
-	if err!=nil {
+	str, err := entry.JSONString()
+	if err != nil {
 		return nil, err
 	}
-	e.JSONString = str 
+	e.JSONString = str
 	e.SpewString = entry.Spew()
 	e.BinaryString = fmt.Sprintf("%x", raw)
 	e.Timestamp = blockTime
 
 	e.Content = ByteSliceToDecodedString(entry.Content)
 	e.ExternalIDs = make([]DecodedString, len(entry.ExtIDs))
-	for i, v:=range(entry.ExtIDs) {
+	for i, v := range entry.ExtIDs {
 		e.ExternalIDs[i] = ByteSliceToDecodedString(v)
 	}
 
 	err = SaveEntry(e)
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 
 	return e, nil
 }
 
-func ByteSliceToDecodedString(b []byte) (DecodedString) {
+func ByteSliceToDecodedString(b []byte) DecodedString {
 	var ds DecodedString
 	ds.Encoded = fmt.Sprintf("%x", b)
 	ds.Decoded = string(b)
@@ -457,23 +453,23 @@ func ByteSliceToDecodedString(b []byte) (DecodedString) {
 }
 
 func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
-	answer:=new(Block)
+	answer := new(Block)
 
 	aBlock := new(common.AdminBlock)
 	_, err := aBlock.UnmarshalBinaryData(rawBlock)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	answer.ChainID = chainID
 	fullHash, err := aBlock.LedgerKeyMR()
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 	answer.FullHash = fullHash.String()
 	partialHash, err := aBlock.PartialHash()
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 	answer.PartialHash = partialHash.String()
 	answer.EntryCount = len(aBlock.ABEntries)
@@ -485,7 +481,7 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 		if err != nil {
 			return nil, err
 		}
-		entry:=new(Entry)
+		entry := new(Entry)
 
 		entry.BinaryString = fmt.Sprintf("%x", marshalled)
 		entry.Hash = fmt.Sprintf("%x", marshalled)
@@ -502,7 +498,7 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 	}
 	answer.JSONString, err = aBlock.JSONString()
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	answer.SpewString = aBlock.Spew()

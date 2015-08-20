@@ -11,8 +11,8 @@ import (
 
 type ExplorerConfig struct {
 	Explorer struct {
-		PortNumber int
-		StaticDir  string
+		PortNumber  int
+		StaticDir   string
 		DatabaseDir string
 		UseDatabase bool
 	}
