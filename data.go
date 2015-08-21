@@ -147,6 +147,8 @@ type Entry struct {
 	ExternalIDs []DecodedString
 	Content     DecodedString
 
+	MinuteMarker string
+
 	//Marshallable blocks
 	Hash string
 }

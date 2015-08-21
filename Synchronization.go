@@ -7,8 +7,19 @@ import (
 	"github.com/FactomProject/factoid/block"
 	"github.com/FactomProject/factom"
 	"log"
+	"runtime"
+	"strconv"
 	"time"
 )
+
+func Log(format string, args ...interface{}) {
+	_, file, line, ok := runtime.Caller(1)
+	if !ok {
+		file = "???"
+		line = 0
+	}
+	fmt.Printf(file+":"+strconv.Itoa(line)+" - "+format+"\n", args...)
+}
 
 func GetAddressInformationFromFactom(address string) (*Address, error) {
 	answer := new(Address)
@@ -167,6 +178,7 @@ func Synchronize() error {
 	log.Println("Synchronize()")
 	head, err := factom.GetDBlockHead()
 	if err != nil {
+		Log("Error - %v", err)
 		return err
 	}
 	previousKeyMR := head.KeyMR
@@ -176,6 +188,7 @@ func Synchronize() error {
 
 		block, err := LoadDBlock(previousKeyMR)
 		if err != nil {
+			Log("Error - %v", err)
 			return err
 		}
 
@@ -194,6 +207,7 @@ func Synchronize() error {
 		}
 		body, err := GetDBlockFromFactom(previousKeyMR)
 		if err != nil {
+			Log("Error - %v", err)
 			return err
 		}
 
@@ -201,6 +215,7 @@ func Synchronize() error {
 
 		str, err := EncodeJSONString(body)
 		if err != nil {
+			Log("Error - %v", err)
 			return err
 		}
 		log.Printf("%v", str)
@@ -208,6 +223,7 @@ func Synchronize() error {
 		for _, v := range body.EntryBlockList {
 			fetchedBlock, err := FetchBlock(v.ChainID, v.KeyMR, body.BlockTimeStr)
 			if err != nil {
+				Log("Error - %v", err)
 				return err
 			}
 			switch v.ChainID {
@@ -232,6 +248,7 @@ func Synchronize() error {
 
 		err = SaveDBlock(body)
 		if err != nil {
+			Log("Error - %v", err)
 			return err
 		}
 
@@ -248,6 +265,7 @@ func Synchronize() error {
 	}
 	err = SaveDataStatus(dataStatus)
 	if err != nil {
+		Log("Error - %v", err)
 		return err
 	}
 	return nil
@@ -258,30 +276,35 @@ func FetchBlock(chainID, hash, blockTime string) (*Block, error) {
 
 	raw, err := factom.GetRaw(hash)
 	if err != nil {
+		Log("Error - %v", err)
 		return nil, err
 	}
 	switch chainID {
 	case "000000000000000000000000000000000000000000000000000000000000000a":
 		block, err = ParseAdminBlock(chainID, hash, raw, blockTime)
 		if err != nil {
+			Log("Error - %v", err)
 			return nil, err
 		}
 		break
 	case "000000000000000000000000000000000000000000000000000000000000000c":
 		block, err = ParseEntryCreditBlock(chainID, hash, raw, blockTime)
 		if err != nil {
+			Log("Error - %v", err)
 			return nil, err
 		}
 		break
 	case "000000000000000000000000000000000000000000000000000000000000000f":
 		block, err = ParseFactoidBlock(chainID, hash, raw, blockTime)
 		if err != nil {
+			Log("Error - %v", err)
 			return nil, err
 		}
 		break
 	default:
 		block, err = ParseEntryBlock(chainID, hash, raw, blockTime)
 		if err != nil {
+			Log("Error - %v", err)
 			return nil, err
 		}
 		break
@@ -289,6 +312,7 @@ func FetchBlock(chainID, hash, blockTime string) (*Block, error) {
 
 	err = SaveBlock(block)
 	if err != nil {
+		Log("Error - %v", err)
 		return nil, err
 	}
 
@@ -406,46 +430,63 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 }
 
 func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
+	Log("ParseEntryBlock - %x", rawBlock)
 	answer := new(Block)
 
 	eBlock := common.NewEBlock()
 	_, err := eBlock.UnmarshalBinaryData(rawBlock)
 	if err != nil {
+		Log("Error - %v", err)
 		return nil, err
 	}
 
 	answer.ChainID = chainID
 	h, err := eBlock.KeyMR()
 	if err != nil {
+		Log("Error - %v", err)
 		return nil, err
 	}
 	answer.PartialHash = h.String()
 	if err != nil {
+		Log("Error - %v", err)
 		return nil, err
 	}
 	h, err = eBlock.Hash()
 	if err != nil {
+		Log("Error - %v", err)
 		return nil, err
 	}
 	answer.FullHash = h.String()
 
 	answer.PrevBlockHash = eBlock.Header.PrevKeyMR.String()
 
-	answer.EntryCount = len(eBlock.Body.EBEntries)
-	answer.EntryList = make([]*Entry, answer.EntryCount)
+	answer.EntryCount = 0
+	answer.EntryList = []*Entry{}
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 
-	for i, v := range eBlock.Body.EBEntries {
-		entry, err := FetchAndParseEntry(v.String(), blockTime)
-		if err != nil {
-			return nil, err
-		}
-
-		answer.EntryList[i] = entry
-	}
 	answer.JSONString, err = eBlock.JSONString()
 	if err != nil {
+		Log("Error - %v", err)
 		return nil, err
+	}
+
+	Log("Block - %v", answer.JSONString)
+	lastMinuteMarkedEntry := 0
+	for _, v := range eBlock.Body.EBEntries {
+		if IsMinuteMarker(v.String()) {
+			for i := lastMinuteMarkedEntry; i < len(answer.EntryList); i++ {
+				answer.EntryList[i].MinuteMarker = v.String()
+			}
+			lastMinuteMarkedEntry = len(answer.EntryList)
+		} else {
+			entry, err := FetchAndParseEntry(v.String(), blockTime)
+			if err != nil {
+				Log("Error - %v", err)
+				return nil, err
+			}
+			answer.EntryCount++
+			answer.EntryList = append(answer.EntryList, entry)
+		}
 	}
 	answer.SpewString = eBlock.Spew()
 
@@ -454,16 +495,26 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 	return answer, nil
 }
 
+func IsMinuteMarker(hash string) bool {
+	h, err := common.HexToHash(hash)
+	if err != nil {
+		panic(err)
+	}
+	return h.IsMinuteMarker()
+}
+
 func FetchAndParseEntry(hash, blockTime string) (*Entry, error) {
 	e := new(Entry)
 	raw, err := factom.GetRaw(hash)
 	if err != nil {
+		Log("Error - %v", err)
 		return nil, err
 	}
 
 	entry := new(common.Entry)
 	_, err = entry.UnmarshalBinaryData(raw)
 	if err != nil {
+		Log("Error unmarshalling data - %v, %x - %v", hash, err, raw)
 		return nil, err
 	}
 
@@ -471,6 +522,7 @@ func FetchAndParseEntry(hash, blockTime string) (*Entry, error) {
 	e.Hash = hash
 	str, err := entry.JSONString()
 	if err != nil {
+		Log("Error - %v", err)
 		return nil, err
 	}
 	e.JSONString = str
@@ -486,6 +538,7 @@ func FetchAndParseEntry(hash, blockTime string) (*Entry, error) {
 
 	err = SaveEntry(e)
 	if err != nil {
+		Log("Error - %v", err)
 		return nil, err
 	}
 
