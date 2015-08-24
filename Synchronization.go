@@ -9,6 +9,7 @@ import (
 	"log"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -35,7 +36,7 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 		}
 		invalid++
 	} else {
-		answer.Balance = factoid.ConvertDecimalToString(uint64(ecBalance))
+		answer.Balance = strings.TrimSpace(factoid.ConvertDecimal(uint64(ecBalance)))
 		answer.AddressType = "EC Address"
 		if ecBalance > 0 {
 			return answer, nil
@@ -51,7 +52,7 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 	} else {
 		answer.AddressType = "Factoid Address"
 		if fctBalance > 0 {
-			answer.Balance = factoid.ConvertDecimalToString(uint64(fctBalance))
+			answer.Balance = strings.TrimSpace(factoid.ConvertDecimal(uint64(fctBalance)))
 			return answer, nil
 		}
 	}
