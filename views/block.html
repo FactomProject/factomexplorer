@@ -78,10 +78,17 @@
               </thead>
               <tbody>
               {{range .Block.EntryList}}
-                  <tr class="clickableRow"href="/entry/{{hashfilter .Hash}}">
+                {{if .ShortEntry}}
+                  <tr>
                       <td>{{.Timestamp}}</td>
-                      <td class="hidden-xs">{{hashfilter .Hash}}</td>
+                      <td class="hidden-xs">{{.ShortEntry}}</td>
                   </tr>
+                {{else}}
+                    <tr class="clickableRow"href="/entry/{{hashfilter .Hash}}">
+                        <td>{{.Timestamp}}</td>
+                        <td class="hidden-xs">{{hashfilter .Hash}}</td>
+                    </tr>
+                  {{end}}
               {{end}}
 
               </tbody>

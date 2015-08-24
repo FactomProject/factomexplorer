@@ -144,6 +144,8 @@ func (e *Block) Spew() string {
 type Entry struct {
 	Common
 
+	ShortEntry string //a way to replace the entry with a short string
+
 	ExternalIDs []DecodedString
 	Content     DecodedString
 

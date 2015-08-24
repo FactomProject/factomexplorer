@@ -359,13 +359,14 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 		entry.Timestamp = blockTime
 		entry.ChainID = chainID
 
-		entry.Hash = fmt.Sprintf("%x", v.ECID())
+		entry.Hash = v.Hash().String()
 
 		entry.JSONString, err = v.JSONString()
 		if err != nil {
 			return nil, err
 		}
 		entry.SpewString = v.Spew()
+		entry.ShortEntry = v.Interpret()
 
 		answer.EntryList[i] = entry
 	}
@@ -584,7 +585,7 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 		entry := new(Entry)
 
 		entry.BinaryString = fmt.Sprintf("%x", marshalled)
-		entry.Hash = fmt.Sprintf("%x", marshalled)
+		entry.Hash = v.Hash().String()
 		entry.Timestamp = blockTime
 		entry.ChainID = chainID
 
@@ -593,8 +594,10 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 			return nil, err
 		}
 		entry.SpewString = v.Spew()
+		entry.ShortEntry = v.Interpret()
 
 		answer.EntryList[i] = entry
+
 	}
 	answer.JSONString, err = aBlock.JSONString()
 	if err != nil {
