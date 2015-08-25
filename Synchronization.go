@@ -6,6 +6,7 @@ import (
 	"github.com/FactomProject/factoid"
 	"github.com/FactomProject/factoid/block"
 	"github.com/FactomProject/factom"
+	"github.com/FactomProject/fctwallet/Wallet"
 	"log"
 	"runtime"
 	"strconv"
@@ -34,7 +35,7 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 
 	invalid := 0 //to count how many times we got "invalid address"
 
-	ecBalance, err := factom.ECBalance(address)
+	ecBalance, err := Wallet.ECBalance(address)
 	fmt.Printf("ECBalance - %v, %v\n\n", ecBalance, err)
 	if err != nil {
 		if err.Error() != "Invalid EC Address" {
@@ -48,8 +49,8 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 			return answer, nil
 		}
 	}
-	fctBalance, err := factom.FctBalance(address)
-	fmt.Printf("FctBalance - %v, %v\n\n", fctBalance, err)
+	fctBalance, err := Wallet.FactoidBalance(address)
+	fmt.Printf("FactoidBalance - %v, %v\n\n", fctBalance, err)
 	if err != nil {
 		if err.Error() != "Invalid Factoid Address" {
 			return nil, err
