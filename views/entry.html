@@ -53,10 +53,12 @@
           <dt>Spew Data:</dt>
           <div>{{.SpewString}}</div>
         </div>
-        <div>
-          <dt>Content:</dt>
-          <div>{{.Content}}</div>
-        </div>
+        {{if .Content}}
+          <div>
+            <dt>Content:</dt>
+            <div>{{.Content}}</div>
+          </div>
+        {{end}}
         {{if .AnchorRecord}}
           <div>
             <dt>AnchorRecord:</dt>
@@ -64,7 +66,57 @@
           </div>
         {{end}}
       </dl>
-      </div>
+    </div>
+
+    {{if .AnchorRecord}}
+      {{with .AnchorRecord}}
+        <h1 class="screen-title">Anchor Record:</h1>
+        <div class="card">
+          <table class="table table-hover standard-table clickable-rows">
+            <tbody>
+                  <tr>
+                    <td>AnchorRecordVer</td>
+                    <td class="hidden-xs">{{.AnchorRecordVer}}</td>
+                  </tr>
+                  <tr>
+                    <td>DBHeight</td>
+                    <td class="hidden-xs">{{.DBHeight}}</td>
+                  </tr>
+                  <tr>
+                    <td>KeyMR</td>
+                    <td class="hidden-xs">{{.KeyMR}}</td>
+                  </tr>
+                  <tr>
+                    <td>RecordHeight</td>
+                    <td class="hidden-xs">{{.RecordHeight}}</td>
+                  </tr>
+
+                  <tr class="clickableRow"href="https://blockchain.info/address/{{.Bitcoin.Address}}">
+                    <td>Bitcoin Address</td>
+                    <td class="hidden-xs">{{.Bitcoin.Address}}</td>
+                  </tr>
+                  <tr class="clickableRow"href="https://blockchain.info/tx/{{.Bitcoin.TXID}}">
+                    <td>Bitcoin TxID</td>
+                    <td class="hidden-xs">{{hashfilter .Bitcoin.TXID}}</td>
+                  </tr>
+                  <tr class="clickableRow"href="https://blockchain.info/block-height/{{.Bitcoin.BlockHeight}}">
+                    <td>Bitcoin BlockHeight</td>
+                    <td class="hidden-xs">{{.Bitcoin.BlockHeight}}</td>
+                  </tr>
+                  <tr class="clickableRow"href="https://blockchain.info/block/{{.Bitcoin.BlockHash}}">
+                    <td>Bitcoin BlockHash</td>
+                    <td class="hidden-xs">{{hashfilter .Bitcoin.BlockHash}}</td>
+                  </tr>
+                  <tr>
+                    <td>Bitcoin Offset</td>
+                    <td class="hidden-xs">{{.Bitcoin.Offset}}</td>
+                  </tr>
+
+              </tbody>
+          </table>
+        </div>
+      {{end}}
+    {{end}}
 
   </div>
 
