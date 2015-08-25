@@ -13,6 +13,12 @@ import (
 	"time"
 )
 
+var AnchorBlockID string
+
+func init() {
+	AnchorBlockID = ReadConfig().Anchor.AnchorChainID
+}
+
 func Log(format string, args ...interface{}) {
 	_, file, line, ok := runtime.Caller(1)
 	if !ok {
@@ -481,7 +487,7 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 			}
 			lastMinuteMarkedEntry = len(answer.EntryList)
 		} else {
-			entry, err := FetchAndParseEntry(v.String(), blockTime)
+			entry, err := FetchAndParseEntry(v.String(), blockTime, IsHashZeroes(answer.PrevBlockHash) && answer.EntryCount == 0)
 			if err != nil {
 				Log("Error - %v", err)
 				return nil, err
@@ -497,6 +503,10 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 	return answer, nil
 }
 
+func IsHashZeroes(hash string) bool {
+	return hash == "0000000000000000000000000000000000000000000000000000000000000000"
+}
+
 func IsMinuteMarker(hash string) bool {
 	h, err := common.HexToHash(hash)
 	if err != nil {
@@ -505,7 +515,7 @@ func IsMinuteMarker(hash string) bool {
 	return h.IsMinuteMarker()
 }
 
-func FetchAndParseEntry(hash, blockTime string) (*Entry, error) {
+func FetchAndParseEntry(hash, blockTime string, isFirstEntry bool) (*Entry, error) {
 	e := new(Entry)
 	raw, err := factom.GetRaw(hash)
 	if err != nil {
@@ -538,6 +548,19 @@ func FetchAndParseEntry(hash, blockTime string) (*Entry, error) {
 		e.ExternalIDs[i] = ByteSliceToDecodedString(v)
 	}
 
+	if isFirstEntry == true {
+		//TODO: parse the first entry somehow perhaps?
+	} else {
+		if IsAnchorChainID(e.ChainID) {
+			ar, err := ParseAnchorChainData(e.Content.Decoded)
+			if err != nil {
+				Log("Error - %v", err)
+				return nil, err
+			}
+			e.AnchorRecord = ar
+		}
+	}
+
 	err = SaveEntry(e)
 	if err != nil {
 		Log("Error - %v", err)
@@ -545,6 +568,25 @@ func FetchAndParseEntry(hash, blockTime string) (*Entry, error) {
 	}
 
 	return e, nil
+}
+
+func IsAnchorChainID(chainID string) bool {
+	return chainID == AnchorBlockID
+}
+
+func ParseAnchorChainData(data string) (*AnchorRecord, error) {
+	if len(data) < 128 {
+		return nil, fmt.Errorf("Data too short")
+	}
+	tmp := data[:len(data)-128]
+	ar := new(AnchorRecord)
+
+	err := common.DecodeJSONString(tmp, ar)
+	if err != nil {
+		Log("ParseAnchorChainData - %v", err)
+		return nil, err
+	}
+	return ar, nil
 }
 
 func ByteSliceToDecodedString(b []byte) DecodedString {

@@ -16,6 +16,9 @@ type ExplorerConfig struct {
 		DatabaseDir string
 		UseDatabase bool
 	}
+	Anchor struct {
+		AnchorChainID string
+	}
 }
 
 const defaultConfig = `
@@ -28,6 +31,9 @@ PortNumber	= 8087
 StaticDir	= ""
 DatabaseDir	= "/tmp/"
 UseDatabase	= true
+
+[anchor]
+AnchorChainID						= df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604
 `
 
 // ReadConfig reads the default factomexplorer.conf file and returns the

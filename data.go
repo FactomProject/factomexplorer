@@ -153,6 +153,24 @@ type Entry struct {
 
 	//Marshallable blocks
 	Hash string
+
+	//Anchor chain-specific data
+	AnchorRecord *AnchorRecord
+}
+
+type AnchorRecord struct {
+	AnchorRecordVer int
+	DBHeight        uint32
+	KeyMR           string
+	RecordHeight    uint32
+
+	Bitcoin struct {
+		Address     string //"1HLoD9E4SDFFPDiYfNYnkBLQ85Y51J3Zb1",
+		TXID        string //"9b0fc92260312ce44e74ef369f5c66bbb85848f2eddd5a7a1cde251e54ccfdd5", BTC Hash - in reverse byte order
+		BlockHeight int32  //345678,
+		BlockHash   string //"00000000000000000cc14eacfc7057300aea87bed6fee904fd8e1c1f3dc008d4", BTC Hash - in reverse byte order
+		Offset      int32  //87
+	}
 }
 
 func (e *Entry) JSON() (string, error) {

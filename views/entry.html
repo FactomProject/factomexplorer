@@ -53,6 +53,16 @@
           <dt>Spew Data:</dt>
           <div>{{.SpewString}}</div>
         </div>
+        <div>
+          <dt>Content:</dt>
+          <div>{{.Content}}</div>
+        </div>
+        {{if .AnchorRecord}}
+          <div>
+            <dt>AnchorRecord:</dt>
+            <div>{{.AnchorRecord}}</div>
+          </div>
+        {{end}}
       </dl>
       </div>
 
