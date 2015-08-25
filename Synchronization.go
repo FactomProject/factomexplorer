@@ -543,7 +543,7 @@ func FetchAndParseEntry(hash, blockTime string, isFirstEntry bool) (*Entry, erro
 	e.BinaryString = fmt.Sprintf("%x", raw)
 	e.Timestamp = blockTime
 
-	e.Content = ByteSliceToDecodedString(entry.Content)
+	e.Content = ByteSliceToDecodedStringPointer(entry.Content)
 	e.ExternalIDs = make([]DecodedString, len(entry.ExtIDs))
 	for i, v := range entry.ExtIDs {
 		e.ExternalIDs[i] = ByteSliceToDecodedString(v)
@@ -590,11 +590,15 @@ func ParseAnchorChainData(data string) (*AnchorRecord, error) {
 	return ar, nil
 }
 
-func ByteSliceToDecodedString(b []byte) DecodedString {
-	var ds DecodedString
+func ByteSliceToDecodedStringPointer(b []byte) *DecodedString {
+	ds := new(DecodedString)
 	ds.Encoded = fmt.Sprintf("%x", b)
 	ds.Decoded = string(b)
 	return ds
+}
+
+func ByteSliceToDecodedString(b []byte) DecodedString {
+	return *ByteSliceToDecodedStringPointer(b)
 }
 
 func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {

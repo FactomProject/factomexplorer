@@ -147,7 +147,7 @@ type Entry struct {
 	ShortEntry string //a way to replace the entry with a short string
 
 	ExternalIDs []DecodedString
-	Content     DecodedString
+	Content     *DecodedString
 
 	MinuteMarker string
 
