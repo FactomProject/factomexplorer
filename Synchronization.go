@@ -166,6 +166,16 @@ func ProcessBlock(keyMR string) error {
 		if toProcess == "0000000000000000000000000000000000000000000000000000000000000000" {
 			return nil
 		}
+
+		if block.ChainID == AnchorBlockID {
+			for _, v := range block.EntryList {
+				err = ProcessAnchorEntry(v)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
 		previousBlock, err = LoadBlock(toProcess)
 		if err != nil {
 			return err
@@ -178,6 +188,23 @@ func ProcessBlock(keyMR string) error {
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func ProcessAnchorEntry(e *Entry) error {
+	if e.AnchorRecord == nil {
+		return fmt.Errorf("No anchor record provided")
+	}
+	dBlock, err := LoadDBlock(e.AnchorRecord.KeyMR)
+	if err != nil {
+		return err
+	}
+	dBlock.AnchorRecord = e.Hash
+	dBlock.AnchoredInTransaction = e.AnchorRecord.Bitcoin.TXID
+	err = SaveDBlock(dBlock)
+	if err != nil {
+		return err
 	}
 	return nil
 }

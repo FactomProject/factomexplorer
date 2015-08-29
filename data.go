@@ -77,6 +77,9 @@ type DBlock struct {
 	BlockTimeStr string
 	KeyMR        string
 
+	AnchoredInTransaction string
+	AnchorRecord          string
+
 	Blocks int
 
 	AdminEntries       int
