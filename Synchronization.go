@@ -38,12 +38,12 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 	ecBalance, err := Wallet.ECBalance(address)
 	fmt.Printf("ECBalance - %v, %v\n\n", ecBalance, err)
 	if err != nil {
-		if err.Error() != "Invalid EC Address" {
+		if err.Error() != "Invalid EC Address" && !strings.Contains(err.Error(), "encoding/hex") {
 			return nil, err
 		}
 		invalid++
 	} else {
-		answer.Balance = strings.TrimSpace(factoid.ConvertDecimal(uint64(ecBalance)))
+		answer.Balance = fmt.Sprintf("%d", ecBalance)
 		answer.AddressType = "EC Address"
 		if ecBalance > 0 {
 			return answer, nil
@@ -59,7 +59,7 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 	} else {
 		answer.AddressType = "Factoid Address"
 		if fctBalance > 0 {
-			answer.Balance = strings.TrimSpace(factoid.ConvertDecimal(uint64(fctBalance)))
+			answer.Balance = factoid.ConvertDecimalToString(uint64(fctBalance))
 			return answer, nil
 		}
 	}
