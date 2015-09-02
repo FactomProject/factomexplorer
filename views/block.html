@@ -1,6 +1,6 @@
 {{$pageTitle := "Factom Explorer"}}
 {{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
-{{$bodyClass := "eblock"}}
+{{$bodyClass := "block"}}
 
 <!DOCTYPE html>
 <html>
@@ -20,26 +20,47 @@
   <div class="mask"></div>
 
   <div class="main">
-
-    <h1 class="screen-title">Entry Block</h1>
+      <h1 class="screen-title">{{chainNamePrefixFilter .Block.ChainID}} Block</h1>
 
     <div class="card">
       <dl class="blockinfo">
         <div>
-          <dt>Entry Block Hash:</dt>
-          <dd>{{hashfilter .Hash}}</dd>
+          <dt>Partial Hash:</dt>
+          <dd>{{hashfilter .Block.PartialHash}}</dd>
         </div>
+        <div>
+          <dt>Full Hash:</dt>
+          <dd>{{.Block.FullHash}}</dd>
+        </div>
+        {{if .Block.IsEntryBlock}}
+          <div>
+            <dt>ChainID:</dt>
+            <dd><a href="/chain/{{.Block.ChainID}}">{{.Block.ChainID}}</a></dd>
+          </div>
+        {{end}}
         <div>
           <dt>Entries:</dt>
           <dd>{{.Count}}</dd>
         </div>
         <div>
           <dt>Previous Block:</dt>
-          <dd><a href="/eblock/{{hashfilter .Block.PrevBlockHash}}">{{hashfilter .Block.PrevBlockHash}}</a></dd>
+          <dd><a href="/{{blockPrefixFilter .Block.ChainID}}/{{hashfilter .Block.PrevBlockHash}}">{{hashfilter .Block.PrevBlockHash}}</a></dd>
         </div>
         <div>
           <dt>Created:</dt>
           <dd>{{.Block.Timestamp}}</dd>
+        </div>
+        <div>
+          <dt>Raw binary:</dt>
+          <div>{{.Block.BinaryString}}</div>
+        </div>
+        <div>
+          <dt>JSON Data:</dt>
+          <div>{{.Block.JSONString}}</div>
+        </div>
+        <div>
+          <dt>Spew Data:</dt>
+          <div>{{.Block.SpewString}}</div>
         </div>
       </dl>
     </div>
@@ -57,10 +78,17 @@
               </thead>
               <tbody>
               {{range .Block.EntryList}}
-                  <tr class="clickableRow"href="/sentry/{{hashfilter .Hash}}">
+                {{if .ShortEntry}}
+                  <tr>
                       <td>{{.Timestamp}}</td>
-                      <td class="hidden-xs">{{hashfilter .BinaryString}}</td>
+                      <td class="hidden-xs">{{.ShortEntry}}</td>
                   </tr>
+                {{else}}
+                    <tr class="clickableRow"href="/entry/{{hashfilter .Hash}}">
+                        <td>{{.Timestamp}}</td>
+                        <td class="hidden-xs">{{hashfilter .Hash}}</td>
+                    </tr>
+                  {{end}}
               {{end}}
 
               </tbody>

@@ -2,8 +2,20 @@
 {{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
 {{$bodyClass := "chain"}}
 
-{{template "head"}}
-{{template "header"}}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="../css/main.css" rel="stylesheet" />
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+	{{template "cheader.html"}}
 
   <div class="mask"></div>
 
@@ -14,8 +26,8 @@
     <div class="card">
       <dl class="blockinfo">
         <div>
-          <dt>Chain Name:</dt>
-          <dd class="chain-name">{{chainNameToString .Name}}</dd>
+          <dt>Chain Names:</dt>
+          <dd class="chain-name">[{{range .Names}} { {{.Encoded}}, {{.Decoded}} } {{end}}]</dd>
         </div>
         <div>
           <dt>Chain ID:</dt>
@@ -25,29 +37,39 @@
     </div>
   </div>
 
-  <h1 class="screen-title">Entry Blocks <span class='screen-title-sub'>included in this chain</span></h1>
+	{{with .FirstEntry}}
+    <h1 class="screen-title">First Entry</h1>
+     <div class="card entry-block-list">
+      <dl class="blockinfo">
+        <div>
+          <dt>Chain:</dt>
+          <dd>{{.ChainID}}</dd>
+        </div>
+        {{range .ExternalIDs}}
+        {{with .}}
+        <div>
+          <dt>External ID:</dt>
+          <dd>
+            <span>{{.Encoded}}, {{.Decoded}}</span>
+          </dd>
+        </div>
+   	   {{end}}
+ 	   {{end}}
+    
+        <div>
+          <dt>Content:</dt>
+          <dd>{{.Content.Encoded}}, {{.Content.Decoded}}</dd>
+        </div>
+      </dl>
+      </div>
+     {{end}}
 
-    <div class="card entry-block-list">
-
-	{{range .eBlocks}}
-		{{with .}}
-	      <dl class="blockinfo">
-	        <div>
-	          <dt>Entry Block:</dt>
-	          <dd>
-	            <span class="large primary"><a href="eblock/{{.Hash}}">Block ID {{.Hash}}</a></span>
-	          </dd>
-	        </div>
-	        <div>
-	          <dt>Hash:</dt>
-	          <dd>{{.Hash}}</dd>
-	        </div>
-	      </dl>
-	    {{end}}
-	{{end}}
-
-    </div>
-    {{template pagination}}
   </div>
 
-{{template foot}}
+  </div>
+
+</div>
+<script src="../scripts/min/scripts-min.js"></script>
+
+</body>
+</html>

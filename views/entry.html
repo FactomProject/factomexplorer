@@ -1,0 +1,131 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "entry"}}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="../css/main.css" rel="stylesheet" />
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+	{{template "header.html"}}
+  <div class="mask"></div>
+
+  <div class="main">
+
+  <h1 class="screen-title">{{chainNamePrefixFilter .ChainID}} Data</h1>
+
+     <div class="card entry-block-list">
+      <dl class="blockinfo">
+        <div>
+          <dt>Hash:</dt>
+          <dd>{{.Hash}}</dd>
+        </div>
+        <div>
+          <dt>Chain:</dt>
+          <dd>{{.ChainID}}</dd>
+        </div>
+        <div>
+          <dt>Timestamp:</dt>
+          <dd>{{.Timestamp}}</dd>
+        </div>
+        <div>
+          <dt>Minute Marker:</dt>
+          <dd>{{.MinuteMarker}}</dd>
+        </div>
+	    
+        <div>
+          <dt>Entry Data:</dt>
+          <div>{{.BinaryString}}</div>
+        </div>
+        <div>
+          <dt>JSON Data:</dt>
+          <div>{{.JSONString}}</div>
+        </div>
+        <div>
+          <dt>Spew Data:</dt>
+          <div>{{.SpewString}}</div>
+        </div>
+        {{if .Content}}
+          <div>
+            <dt>Content:</dt>
+            <div>{{.Content}}</div>
+          </div>
+        {{end}}
+        {{if .AnchorRecord}}
+          <div>
+            <dt>AnchorRecord:</dt>
+            <div>{{.AnchorRecord}}</div>
+          </div>
+        {{end}}
+      </dl>
+    </div>
+
+    {{if .AnchorRecord}}
+      {{with .AnchorRecord}}
+        <h1 class="screen-title">Anchor Record:</h1>
+        <div class="card">
+          <table class="table table-hover standard-table clickable-rows">
+            <tbody>
+                  <tr>
+                    <td>AnchorRecordVer</td>
+                    <td class="hidden-xs">{{.AnchorRecordVer}}</td>
+                  </tr>
+                  <tr>
+                    <td>DBHeight</td>
+                    <td class="hidden-xs">{{.DBHeight}}</td>
+                  </tr>
+                  <tr class="clickableRow"href="/dblock/{{.KeyMR}}">
+                    <td>KeyMR</td>
+                    <td class="hidden-xs">{{.KeyMR}}</td>
+                  </tr>
+                  <tr>
+                    <td>RecordHeight</td>
+                    <td class="hidden-xs">{{.RecordHeight}}</td>
+                  </tr>
+
+                  <tr class="clickableRow"href="https://blockchain.info/address/{{.Bitcoin.Address}}">
+                    <td>Bitcoin Address</td>
+                    <td class="hidden-xs">{{.Bitcoin.Address}}</td>
+                  </tr>
+                  <tr class="clickableRow"href="https://blockchain.info/tx/{{.Bitcoin.TXID}}">
+                    <td>Bitcoin TxID</td>
+                    <td class="hidden-xs">{{hashfilter .Bitcoin.TXID}}</td>
+                  </tr>
+                  <tr class="clickableRow"href="https://blockchain.info/block-height/{{.Bitcoin.BlockHeight}}">
+                    <td>Bitcoin BlockHeight</td>
+                    <td class="hidden-xs">{{.Bitcoin.BlockHeight}}</td>
+                  </tr>
+                  <tr class="clickableRow"href="https://blockchain.info/block/{{.Bitcoin.BlockHash}}">
+                    <td>Bitcoin BlockHash</td>
+                    <td class="hidden-xs">{{hashfilter .Bitcoin.BlockHash}}</td>
+                  </tr>
+                  <tr>
+                    <td>Bitcoin Offset</td>
+                    <td class="hidden-xs">{{.Bitcoin.Offset}}</td>
+                  </tr>
+
+              </tbody>
+          </table>
+        </div>
+      {{end}}
+    {{end}}
+
+  </div>
+
+
+    </div>
+  </div>
+
+</div>
+<script src="../scripts/min/scripts-min.js"></script>
+
+</body>
+</html>

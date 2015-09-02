@@ -5993,6 +5993,7 @@ a:focus {
   text-decoration: none !important; }
 
 header {
+  width:100%;
   position: fixed;
   z-index: 100;
   padding: 32px 24px 0 24px;
@@ -6446,5 +6447,17 @@ dl.blockinfo {
     margin: 0 0 12px 0;
     font-size: 1.143em;
     color: #757575; }
+
+.error-message {
+  margin: 0 auto;
+  padding: 40px;
+  max-width: 600px;
+  text-align: center; }
+  .error-message .error-graphic {
+    margin: 0 auto;
+    margin-bottom: 24px; }
+  .error-message .home-link {
+    color: #35b1d9;
+    text-decoration: underline; }
 
 /*# sourceMappingURL=main.css.map */

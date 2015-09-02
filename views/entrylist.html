@@ -1,6 +1,6 @@
 {{$pageTitle := "Factom Explorer"}}
 {{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
-{{$bodyClass := "chains"}}
+{{$bodyClass := "eblock"}}
 
 <!DOCTYPE html>
 <html>
@@ -15,40 +15,33 @@
 <body class={{$bodyClass}}>
   <div class="full-view-wrap">
 
-	{{template "cheader.html"}}
-
+	{{template "header.html"}}
   <div class="mask"></div>
 
   <div class="main">
 
-    <h1 class="screen-title">Chains</h1>
+  	<h1 class="screen-title">Search Result - Entries</h1>
 
-    <div class="card">
+     <div class="card">
       <table class="table table-hover standard-table clickable-rows">
               <thead>
                   <tr class="first">
-                      <th class="hidden-xs ">ChainID</th>
-                     <th class="hidden-xs ">Chain Names</th>
+                      <th class="hidden-xs">Entry Hash</th>
                   </tr>
               </thead>
               <tbody>
-		{{range .}}
-		{{with .}}
-			<tr class="clickableRow" href="/chain/{{.ChainID}}">
-				<td><span>{{.ChainID}}</span></td>
-        <td class="hidden-xs">[{{range .Names}}
-				  { {{.Encoded}}, {{.Decoded}} }
-        {{end}}]</td>
- 		    	</tr>
-		{{end}}
-		{{end}}
+			{{range .}}
+                  <tr>
+                      <td class="hidden-xs"><a href="/entry/{{.}}">{{.}}</a></td>
+                  </tr>
+              {{end}}
               </tbody>
-          </table>
+       </table>     
+
     </div>
-    {{/*template pagination*/}}
   </div>
 
-</div>
+
 <script src="../scripts/min/scripts-min.js"></script>
 
 </body>
