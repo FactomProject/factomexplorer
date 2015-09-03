@@ -33,12 +33,17 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 	answer := new(Address)
 	answer.Address = address
 
+	address = strings.Replace(address, "-", "", -1)
+	if len(address) == 72 {
+		address = address[:64]
+	}
+
 	invalid := 0 //to count how many times we got "invalid address"
 
 	ecBalance, err := Wallet.ECBalance(address)
 	fmt.Printf("ECBalance - %v, %v\n\n", ecBalance, err)
 	if err != nil {
-		if err.Error() != "Invalid EC Address" && !strings.Contains(err.Error(), "encoding/hex") {
+		if !strings.Contains(err.Error(), "Invalid name or address") && !strings.Contains(err.Error(), "encoding/hex") {
 			return nil, err
 		}
 		invalid++
@@ -52,7 +57,7 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 	fctBalance, err := Wallet.FactoidBalance(address)
 	fmt.Printf("FactoidBalance - %v, %v\n\n", fctBalance, err)
 	if err != nil {
-		if err.Error() != "Invalid Factoid Address" {
+		if !strings.Contains(err.Error(), "Invalid name or address") {
 			return nil, err
 		}
 		invalid++
