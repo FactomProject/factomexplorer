@@ -216,7 +216,7 @@ func handleDBlocks(ctx *web.Context) {
 	}
 
 	height := GetBlockHeight()
-	dBlocks, err := GetDBlocks(0, height)
+	dBlocks, err := GetDBlocksReverseOrder(0, height)
 	if err != nil {
 		log.Println(err)
 		handle404(ctx)

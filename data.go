@@ -547,6 +547,18 @@ func GetBlockHeight() int {
 	return LoadDataStatus().DBlockHeight
 }
 
+func GetDBlocksReverseOrder(start, max int) ([]*DBlock, error) {
+	blocks, err := GetDBlocks(start, max)
+	if err != nil {
+		return nil, err
+	}
+	answer := make([]*DBlock, len(blocks))
+	for i := range blocks {
+		answer[len(blocks)-1-i] = blocks[i]
+	}
+	return answer, nil
+}
+
 func GetDBlocks(start, max int) ([]*DBlock, error) {
 	answer := []*DBlock{}
 	for i := start; i <= max; i++ {
