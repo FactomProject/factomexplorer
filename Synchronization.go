@@ -15,6 +15,10 @@ import (
 )
 
 var AnchorBlockID string
+var AdminBlockID string = "000000000000000000000000000000000000000000000000000000000000000a"
+var FactoidBlockID string = "000000000000000000000000000000000000000000000000000000000000000f"
+var ECBlockID string = "000000000000000000000000000000000000000000000000000000000000000c"
+var ZeroID string = "0000000000000000000000000000000000000000000000000000000000000000"
 
 func init() {
 	AnchorBlockID = ReadConfig().Anchor.AnchorChainID
@@ -125,7 +129,7 @@ func ProcessBlocks() error {
 		block := previousBlock
 		log.Printf("Processing dblock %v\n", block.KeyMR)
 		toProcess = block.PrevBlockKeyMR
-		if toProcess == "0000000000000000000000000000000000000000000000000000000000000000" || block.KeyMR == dataStatus.LastProcessedBlock {
+		if toProcess == ZeroID || block.KeyMR == dataStatus.LastProcessedBlock {
 			dataStatus.LastProcessedBlock = dataStatus.LastKnownBlock
 			break
 		}
@@ -168,7 +172,7 @@ func ProcessBlock(keyMR string) error {
 		block := previousBlock
 		log.Printf("Processing block %v\n", block.PartialHash)
 		toProcess := block.PrevBlockHash
-		if toProcess == "0000000000000000000000000000000000000000000000000000000000000000" {
+		if toProcess == ZeroID {
 			return nil
 		}
 
@@ -179,6 +183,33 @@ func ProcessBlock(keyMR string) error {
 					return err
 				}
 			}
+		}
+		if block.ChainID == FactoidBlockID {
+			var ins float64
+			var outs float64
+			var ecs int64
+
+			for _, v := range block.EntryList {
+				in, err := strconv.ParseFloat(v.TotalIns, 64)
+				if err != nil {
+					return err
+				}
+				out, err := strconv.ParseFloat(v.TotalOuts, 64)
+				if err != nil {
+					return err
+				}
+				ec, err := strconv.ParseInt(v.TotalECs, 10, 64)
+				if err != nil {
+					return err
+				}
+				ins += in
+				outs += out
+				ecs += ec
+			}
+
+			block.TotalIns = fmt.Sprintf("%.8f", ins)
+			block.TotalOuts = fmt.Sprintf("%.8f", outs)
+			block.TotalECs = fmt.Sprintf("%d", ecs)
 		}
 
 		previousBlock, err = LoadBlock(toProcess)
@@ -267,15 +298,15 @@ func Synchronize() error {
 				return err
 			}
 			switch v.ChainID {
-			case "000000000000000000000000000000000000000000000000000000000000000a":
+			case AdminBlockID:
 				body.AdminEntries += fetchedBlock.EntryCount
 				body.AdminBlock = ListEntry{ChainID: v.ChainID, KeyMR: v.KeyMR}
 				break
-			case "000000000000000000000000000000000000000000000000000000000000000c":
+			case ECBlockID:
 				body.EntryCreditEntries += fetchedBlock.EntryCount
 				body.EntryCreditBlock = ListEntry{ChainID: v.ChainID, KeyMR: v.KeyMR}
 				break
-			case "000000000000000000000000000000000000000000000000000000000000000f":
+			case FactoidBlockID:
 				body.FactoidEntries += fetchedBlock.EntryCount
 				body.FactoidBlock = ListEntry{ChainID: v.ChainID, KeyMR: v.KeyMR}
 				break
@@ -296,7 +327,7 @@ func Synchronize() error {
 			maxHeight = body.SequenceNumber
 		}
 		previousKeyMR = body.PrevBlockKeyMR
-		if previousKeyMR == "0000000000000000000000000000000000000000000000000000000000000000" {
+		if previousKeyMR == ZeroID {
 			dataStatus.LastKnownBlock = head.KeyMR
 			dataStatus.DBlockHeight = maxHeight
 			break
@@ -320,21 +351,21 @@ func FetchBlock(chainID, hash, blockTime string) (*Block, error) {
 		return nil, err
 	}
 	switch chainID {
-	case "000000000000000000000000000000000000000000000000000000000000000a":
+	case AdminBlockID:
 		block, err = ParseAdminBlock(chainID, hash, raw, blockTime)
 		if err != nil {
 			Log("Error - %v", err)
 			return nil, err
 		}
 		break
-	case "000000000000000000000000000000000000000000000000000000000000000c":
+	case ECBlockID:
 		block, err = ParseEntryCreditBlock(chainID, hash, raw, blockTime)
 		if err != nil {
 			Log("Error - %v", err)
 			return nil, err
 		}
 		break
-	case "000000000000000000000000000000000000000000000000000000000000000f":
+	case FactoidBlockID:
 		block, err = ParseFactoidBlock(chainID, hash, raw, blockTime)
 		if err != nil {
 			Log("Error - %v", err)
@@ -455,6 +486,22 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 			return nil, err
 		}
 
+		ins, err := v.TotalInputs()
+		if err != nil {
+			return nil, err
+		}
+		outs, err := v.TotalOutputs()
+		if err != nil {
+			return nil, err
+		}
+		ecs, err := v.TotalECs()
+		if err != nil {
+			return nil, err
+		}
+		entry.TotalIns = factoid.ConvertDecimalToString(uint64(ins))
+		entry.TotalOuts = factoid.ConvertDecimalToString(uint64(outs))
+		entry.TotalECs = fmt.Sprintf("%d", ecs)
+
 		answer.EntryList[i] = entry
 	}
 	answer.JSONString, err = fBlock.JSONString()
@@ -532,7 +579,7 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 }
 
 func IsHashZeroes(hash string) bool {
-	return hash == "0000000000000000000000000000000000000000000000000000000000000000"
+	return hash == ZeroID
 }
 
 func IsMinuteMarker(hash string) bool {

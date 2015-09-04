@@ -129,6 +129,10 @@ type Block struct {
 	IsFactoidBlock     bool
 	IsEntryCreditBlock bool
 	IsEntryBlock       bool
+
+	TotalIns  string
+	TotalOuts string
+	TotalECs  string
 }
 
 func (e *Block) JSON() (string, error) {
@@ -158,6 +162,10 @@ type Entry struct {
 
 	//Anchor chain-specific data
 	AnchorRecord *AnchorRecord
+
+	TotalIns  string
+	TotalOuts string
+	TotalECs  string
 }
 
 type AnchorRecord struct {
@@ -209,7 +217,7 @@ type Address struct {
 //-----------------------------------------------------------------------------------------------
 
 func RecordChain(block *Block) error {
-	if block.PrevBlockHash != "0000000000000000000000000000000000000000000000000000000000000000" {
+	if block.PrevBlockHash != ZeroID {
 		return nil
 	}
 
@@ -519,8 +527,8 @@ func LoadDataStatus() *DataStatusStruct {
 	}
 	if ds2 == nil {
 		ds = new(DataStatusStruct)
-		ds.LastKnownBlock = "0000000000000000000000000000000000000000000000000000000000000000"
-		ds.LastProcessedBlock = "0000000000000000000000000000000000000000000000000000000000000000"
+		ds.LastKnownBlock = ZeroID
+		ds.LastProcessedBlock = ZeroID
 	}
 	DataStatus = ds
 	log.Printf("LoadDataStatus DS - %v, %v", ds, ds2)

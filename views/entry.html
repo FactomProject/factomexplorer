@@ -61,6 +61,20 @@
             <div>{{.AnchorRecord}}</div>
           </div>
         {{end}}
+        {{if .TotalIns}}
+          <div>
+            <dt>TotalIns:</dt>
+            <div>{{.TotalIns}}</div>
+          </div>
+          <div>
+            <dt>TotalOuts:</dt>
+            <div>{{.TotalOuts}}</div>
+          </div>
+          <div>
+            <dt>TotalECs:</dt>
+            <div>{{.TotalECs}}</div>
+          </div>
+          {{end}}
       </dl>
     </div>
 

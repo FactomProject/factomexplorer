@@ -380,11 +380,11 @@ func hashfilter(s string) string {
 
 func blockPrefixFilter(s string) string {
 	switch s {
-	case "000000000000000000000000000000000000000000000000000000000000000a":
+	case AdminBlockID:
 		return "ablock"
-	case "000000000000000000000000000000000000000000000000000000000000000c":
+	case ECBlockID:
 		return "ecblock"
-	case "000000000000000000000000000000000000000000000000000000000000000f":
+	case FactoidBlockID:
 		return "fblock"
 	}
 	return "eblock"
@@ -392,11 +392,11 @@ func blockPrefixFilter(s string) string {
 
 func chainNamePrefixFilter(s string) string {
 	switch s {
-	case "000000000000000000000000000000000000000000000000000000000000000a":
+	case AdminBlockID:
 		return "Admin"
-	case "000000000000000000000000000000000000000000000000000000000000000c":
+	case ECBlockID:
 		return "Entry Credit"
-	case "000000000000000000000000000000000000000000000000000000000000000f":
+	case FactoidBlockID:
 		return "Factoid"
 	}
 	return "Entry"
