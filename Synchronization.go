@@ -405,7 +405,6 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 		if err != nil {
 			return nil, err
 		}
-		entry.SpewString = v.Spew()
 		entry.ShortEntry = v.Interpret()
 
 		answer.EntryList[i] = entry
@@ -415,7 +414,6 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 	if err != nil {
 		return nil, err
 	}
-	answer.SpewString = ecBlock.Spew()
 	answer.IsEntryCreditBlock = true
 
 	return answer, nil
@@ -456,7 +454,6 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 		if err != nil {
 			return nil, err
 		}
-		entry.SpewString = v.Spew()
 
 		answer.EntryList[i] = entry
 	}
@@ -464,7 +461,6 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 	if err != nil {
 		return nil, err
 	}
-	answer.SpewString = fBlock.Spew()
 	answer.IsFactoidBlock = true
 
 	return answer, nil
@@ -529,7 +525,6 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 			answer.EntryList = append(answer.EntryList, entry)
 		}
 	}
-	answer.SpewString = eBlock.Spew()
 
 	answer.IsEntryBlock = true
 
@@ -571,7 +566,6 @@ func FetchAndParseEntry(hash, blockTime string, isFirstEntry bool) (*Entry, erro
 		return nil, err
 	}
 	e.JSONString = str
-	e.SpewString = entry.Spew()
 	e.BinaryString = fmt.Sprintf("%x", raw)
 	e.Timestamp = blockTime
 
@@ -673,7 +667,6 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 		if err != nil {
 			return nil, err
 		}
-		entry.SpewString = v.Spew()
 		entry.ShortEntry = v.Interpret()
 
 		answer.EntryList[i] = entry
@@ -684,7 +677,6 @@ func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 		return nil, err
 	}
 
-	answer.SpewString = aBlock.Spew()
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 	answer.IsAdminBlock = true
 

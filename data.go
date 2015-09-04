@@ -101,7 +101,6 @@ type Common struct {
 	Timestamp string
 
 	JSONString   string
-	SpewString   string
 	BinaryString string
 }
 
