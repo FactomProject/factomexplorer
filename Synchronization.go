@@ -189,6 +189,9 @@ func ProcessBlock(keyMR string) error {
 			var outs float64
 			var ecs int64
 
+			var created float64
+			var destroyed float64
+
 			for _, v := range block.EntryList {
 				in, err := strconv.ParseFloat(v.TotalIns, 64)
 				if err != nil {
@@ -205,11 +208,23 @@ func ProcessBlock(keyMR string) error {
 				ins += in
 				outs += out
 				ecs += ec
+
+				delta, err := strconv.ParseFloat(v.Delta, 64)
+				if err != nil {
+					return err
+				}
+				if delta > 0.0 {
+					created += delta
+				} else {
+					destroyed += delta
+				}
 			}
 
 			block.TotalIns = fmt.Sprintf("%.8f", ins)
 			block.TotalOuts = fmt.Sprintf("%.8f", outs)
 			block.TotalECs = fmt.Sprintf("%d", ecs)
+			block.Created = fmt.Sprintf("%.8f", created)
+			block.Destroyed = fmt.Sprintf("%.8f", destroyed)
 		}
 
 		previousBlock, err = LoadBlock(toProcess)
@@ -501,6 +516,8 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 		entry.TotalIns = factoid.ConvertDecimalToString(uint64(ins))
 		entry.TotalOuts = factoid.ConvertDecimalToString(uint64(outs))
 		entry.TotalECs = fmt.Sprintf("%d", ecs)
+
+		entry.Delta = fmt.Sprintf("%.8f", factoid.ConvertDecimalToFloat(outs)-factoid.ConvertDecimalToFloat(ins))
 
 		answer.EntryList[i] = entry
 	}

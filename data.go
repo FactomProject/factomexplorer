@@ -133,6 +133,9 @@ type Block struct {
 	TotalIns  string
 	TotalOuts string
 	TotalECs  string
+
+	Created   string
+	Destroyed string
 }
 
 func (e *Block) JSON() (string, error) {
@@ -166,6 +169,8 @@ type Entry struct {
 	TotalIns  string
 	TotalOuts string
 	TotalECs  string
+
+	Delta string
 }
 
 type AnchorRecord struct {

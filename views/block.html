@@ -63,6 +63,14 @@
             <dt>TotalECs:</dt>
             <div>{{.Block.TotalECs}}</div>
           </div>
+          <div>
+            <dt>Created:</dt>
+            <div>{{.Block.Created}}</div>
+          </div>
+          <div>
+            <dt>Destroyed:</dt>
+            <div>{{.Block.Destroyed}}</div>
+          </div>
         {{end}}
         <div>
           <dt>Raw binary:</dt>
@@ -88,6 +96,7 @@
                         <th>TotalIns</th>
                         <th>TotalOuts</th>
                         <th>TotalECs</th>
+                        <th>Delta</th>
                       {{end}}
                   </tr>
               </thead>
@@ -106,6 +115,7 @@
                         <td>{{.TotalIns}}</td>
                         <td>{{.TotalOuts}}</td>
                         <td>{{.TotalECs}}</td>
+                        <td>{{.Delta}}</td>
                       {{end}}
                     </tr>
                   {{end}}
