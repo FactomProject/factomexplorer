@@ -483,6 +483,9 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 	answer.EntryCount = len(transactions)
 	answer.EntryList = make([]*Entry, answer.EntryCount)
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
+
+	exchangeRate := float64(fBlock.GetExchRate())
+
 	for i, v := range transactions {
 		entry := new(Entry)
 		bin, err := v.MarshalBinary()
@@ -509,10 +512,12 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 		if err != nil {
 			return nil, err
 		}
-		ecs, err := v.TotalECs()
+		totalEcs, err := v.TotalECs()
 		if err != nil {
 			return nil, err
 		}
+
+		ecs := uint64(float64(totalEcs) / exchangeRate)
 		entry.TotalIns = factoid.ConvertDecimalToString(uint64(ins))
 		entry.TotalOuts = factoid.ConvertDecimalToString(uint64(outs))
 		entry.TotalECs = fmt.Sprintf("%d", ecs)
