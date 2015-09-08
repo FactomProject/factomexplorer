@@ -27,6 +27,8 @@ type DataStatusStruct struct {
 	LastKnownBlock string
 	//Last DBlock we have processed and connected back and forth
 	LastProcessedBlock string
+	//Last DBlock we tallied balances in
+	LastTalliedBlockNumber int
 }
 
 var DataStatus *DataStatusStruct
@@ -86,6 +88,8 @@ type DBlock struct {
 	EntryCreditEntries int
 	FactoidEntries     int
 	EntryEntries       int
+
+	FactoidTally string
 }
 
 func (e *DBlock) JSON() (string, error) {
@@ -130,9 +134,10 @@ type Block struct {
 	IsEntryCreditBlock bool
 	IsEntryBlock       bool
 
-	TotalIns  string
-	TotalOuts string
-	TotalECs  string
+	TotalIns   string
+	TotalOuts  string
+	TotalECs   string
+	TotalDelta string
 
 	Created   string
 	Destroyed string
@@ -534,6 +539,7 @@ func LoadDataStatus() *DataStatusStruct {
 		ds = new(DataStatusStruct)
 		ds.LastKnownBlock = ZeroID
 		ds.LastProcessedBlock = ZeroID
+		ds.LastTalliedBlockNumber = -1
 	}
 	DataStatus = ds
 	log.Printf("LoadDataStatus DS - %v, %v", ds, ds2)

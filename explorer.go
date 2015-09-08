@@ -13,7 +13,6 @@ import (
 	//"io"
 	"strconv"
 	"strings"
-	"time"
 
 	"encoding/json"
 	"github.com/FactomProject/factom"
@@ -86,21 +85,6 @@ func main() {
 	go SynchronizationGoroutine()
 
 	server.Run(fmt.Sprintf(":%d", cfg.PortNumber))
-}
-
-func SynchronizationGoroutine() {
-	for {
-		err := Synchronize()
-		if err != nil {
-			panic(err)
-		}
-		time.Sleep(10 * time.Second)
-		err = ProcessBlocks()
-		if err != nil {
-			panic(err)
-		}
-		time.Sleep(10 * time.Second)
-	}
 }
 
 func test(ctx *web.Context) {

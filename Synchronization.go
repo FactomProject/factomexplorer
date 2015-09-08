@@ -24,6 +24,26 @@ func init() {
 	AnchorBlockID = ReadConfig().Anchor.AnchorChainID
 }
 
+func SynchronizationGoroutine() {
+	for {
+		err := Synchronize()
+		if err != nil {
+			panic(err)
+		}
+		time.Sleep(10 * time.Second)
+		err = ProcessBlocks()
+		if err != nil {
+			panic(err)
+		}
+		time.Sleep(10 * time.Second)
+		err = TallyBalances()
+		if err != nil {
+			panic(err)
+		}
+		time.Sleep(10 * time.Second)
+	}
+}
+
 func Log(format string, args ...interface{}) {
 	_, file, line, ok := runtime.Caller(1)
 	if !ok {
@@ -114,6 +134,58 @@ func TimestampToString(timestamp uint64) string {
 	return blockTime.Format("2006-01-02 15:04:05")
 }
 
+func TallyBalances() error {
+	log.Println("TallyBalances()")
+	dataStatus := LoadDataStatus()
+	if dataStatus.LastTalliedBlockNumber == dataStatus.DBlockHeight {
+		return nil
+	}
+
+	block, err := LoadDBlockBySequence(dataStatus.LastTalliedBlockNumber + 1)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Tallying block %v\n", block.SequenceNumber)
+	var previousTally float64 = 0
+	if dataStatus.LastTalliedBlockNumber > -1 {
+		oldBlock, err := LoadDBlockBySequence(dataStatus.LastTalliedBlockNumber)
+		tally, err := strconv.ParseFloat(oldBlock.FactoidTally, 64)
+		if err != nil {
+			panic(err)
+		}
+		previousTally = tally
+	}
+	for {
+		factoidBlock, err := LoadBlock(block.FactoidBlock.KeyMR)
+		if err != nil {
+			panic(err)
+		}
+		currentTally, err := strconv.ParseFloat(factoidBlock.TotalDelta, 64)
+		if err != nil {
+			panic(err)
+		}
+		previousTally += currentTally
+		block.FactoidTally = fmt.Sprintf("%.8f", previousTally)
+		err = SaveDBlock(block)
+		if err != nil {
+			panic(err)
+		}
+		if block.SequenceNumber == dataStatus.DBlockHeight {
+			dataStatus.LastTalliedBlockNumber = block.SequenceNumber
+			err = SaveDataStatus(dataStatus)
+			if err != nil {
+				panic(err)
+			}
+			return nil
+		} else {
+			block, err = LoadDBlockBySequence(block.SequenceNumber + 1)
+			fmt.Printf("Tallying block %v\n", block.SequenceNumber)
+		}
+	}
+
+	return nil
+}
+
 func ProcessBlocks() error {
 	log.Println("ProcessBlocks()")
 	dataStatus := LoadDataStatus()
@@ -183,48 +255,6 @@ func ProcessBlock(keyMR string) error {
 					return err
 				}
 			}
-		}
-		if block.ChainID == FactoidBlockID {
-			var ins float64
-			var outs float64
-			var ecs int64
-
-			var created float64
-			var destroyed float64
-
-			for _, v := range block.EntryList {
-				in, err := strconv.ParseFloat(v.TotalIns, 64)
-				if err != nil {
-					return err
-				}
-				out, err := strconv.ParseFloat(v.TotalOuts, 64)
-				if err != nil {
-					return err
-				}
-				ec, err := strconv.ParseInt(v.TotalECs, 10, 64)
-				if err != nil {
-					return err
-				}
-				ins += in
-				outs += out
-				ecs += ec
-
-				delta, err := strconv.ParseFloat(v.Delta, 64)
-				if err != nil {
-					return err
-				}
-				if delta > 0.0 {
-					created += delta
-				} else {
-					destroyed += delta
-				}
-			}
-
-			block.TotalIns = fmt.Sprintf("%.8f", ins)
-			block.TotalOuts = fmt.Sprintf("%.8f", outs)
-			block.TotalECs = fmt.Sprintf("%d", ecs)
-			block.Created = fmt.Sprintf("%.8f", created)
-			block.Destroyed = fmt.Sprintf("%.8f", destroyed)
 		}
 
 		previousBlock, err = LoadBlock(toProcess)
@@ -486,6 +516,14 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 
 	exchangeRate := float64(fBlock.GetExchRate())
 
+	var ins float64
+	var outs float64
+	var ecs int64
+	var deltas float64
+
+	var created float64
+	var destroyed float64
+
 	for i, v := range transactions {
 		entry := new(Entry)
 		bin, err := v.MarshalBinary()
@@ -504,11 +542,11 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 			return nil, err
 		}
 
-		ins, err := v.TotalInputs()
+		in, err := v.TotalInputs()
 		if err != nil {
 			return nil, err
 		}
-		outs, err := v.TotalOutputs()
+		out, err := v.TotalOutputs()
 		if err != nil {
 			return nil, err
 		}
@@ -517,15 +555,50 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 			return nil, err
 		}
 
-		ecs := uint64(float64(totalEcs) / exchangeRate)
-		entry.TotalIns = factoid.ConvertDecimalToString(uint64(ins))
-		entry.TotalOuts = factoid.ConvertDecimalToString(uint64(outs))
-		entry.TotalECs = fmt.Sprintf("%d", ecs)
+		ec := uint64(float64(totalEcs) / exchangeRate)
+		entry.TotalIns = factoid.ConvertDecimalToString(uint64(in))
+		entry.TotalOuts = factoid.ConvertDecimalToString(uint64(out))
+		entry.TotalECs = fmt.Sprintf("%d", ec)
 
-		entry.Delta = fmt.Sprintf("%.8f", factoid.ConvertDecimalToFloat(outs)-factoid.ConvertDecimalToFloat(ins))
+		entry.Delta = fmt.Sprintf("%.8f", factoid.ConvertDecimalToFloat(out)-factoid.ConvertDecimalToFloat(in))
 
 		answer.EntryList[i] = entry
+
+		inF, err := strconv.ParseFloat(entry.TotalIns, 64)
+		if err != nil {
+			return nil, err
+		}
+		outF, err := strconv.ParseFloat(entry.TotalOuts, 64)
+		if err != nil {
+			return nil, err
+		}
+		ecF, err := strconv.ParseInt(entry.TotalECs, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		ins += inF
+		outs += outF
+		ecs += ecF
+
+		deltaF, err := strconv.ParseFloat(entry.Delta, 64)
+		if err != nil {
+			return nil, err
+		}
+		if deltaF > 0.0 {
+			created += deltaF
+		} else {
+			destroyed += deltaF
+		}
+		deltas += deltaF
 	}
+
+	answer.TotalIns = fmt.Sprintf("%.8f", ins)
+	answer.TotalOuts = fmt.Sprintf("%.8f", outs)
+	answer.TotalECs = fmt.Sprintf("%d", ecs)
+	answer.Created = fmt.Sprintf("%.8f", created)
+	answer.Destroyed = fmt.Sprintf("%.8f", destroyed)
+	answer.TotalDelta = fmt.Sprintf("%.8f", deltas)
+
 	answer.JSONString, err = fBlock.JSONString()
 	if err != nil {
 		return nil, err
