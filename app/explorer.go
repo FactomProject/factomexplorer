@@ -2,7 +2,7 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-package main
+package app
 
 import (
 	"appengine"
@@ -20,30 +20,26 @@ var (
 	tpl = new(template.Template)
 )
 
-func main() {
-	var (
-		err error
-	)
-
+func init() {
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
 		"hashfilter":            hashfilter,
 		"hextotext":             hextotext,
 		"blockPrefixFilter":     blockPrefixFilter,
 		"chainNamePrefixFilter": chainNamePrefixFilter,
 	}).ParseFiles(
-		"/views/404.html",
-		"/views/chain.html",
-		"/views/chains.html",
-		"/views/cheader.html",
-		"/views/dblock.html",
-		"/views/eblock.html",
-		"/views/block.html",
-		"/views/entries.html",
-		"/views/header.html",
-		"/views/index.html",
-		"/views/pagination.html",
-		"/views/entry.html",
-		"/views/address.html",
+		"views/404.html",
+		"views/chain.html",
+		"views/chains.html",
+		"views/cheader.html",
+		"views/dblock.html",
+		"views/eblock.html",
+		"views/block.html",
+		"views/entries.html",
+		"views/header.html",
+		"views/index.html",
+		"views/pagination.html",
+		"views/entry.html",
+		"views/address.html",
 	))
 
 	http.HandleFunc(`/(?:home)?`, handleHome)
@@ -58,7 +54,6 @@ func main() {
 	http.HandleFunc(`/ablock/([^/]+)?`, handleBlock)
 	http.HandleFunc(`/ecblock/([^/]+)?`, handleBlock)
 	http.HandleFunc(`/fblock/([^/]+)?`, handleBlock)
-	http.HandleFunc(`/entry/([^/]+)?`, handleEntry)
 	http.HandleFunc(`/entry/([^/]+)?`, handleEntry)
 	http.HandleFunc(`/address/([^/]+)?`, handleAddress)
 	http.HandleFunc(`/search/?`, handleSearch)

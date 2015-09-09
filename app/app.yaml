@@ -4,6 +4,18 @@ runtime:     go
 api_version: go1
 
 handlers:
+- url: /static
+  static_dir: static
+- url: /css
+  static_dir: css
+- url: /fonts
+  static_dir: fonts
+- url: /images
+  static_dir: images
+- url: /scripts
+  static_dir: scripts
+- url: /scss
+  static_dir: scss
 - url: /.*
   script: _go_app
   secure: always

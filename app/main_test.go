@@ -1,4 +1,4 @@
-package main_test
+package app_test
 
 import (
 	"fmt"

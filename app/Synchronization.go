@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"appengine"
@@ -6,8 +6,6 @@ import (
 	"github.com/FactomProject/FactomCode/common"
 	"github.com/FactomProject/factoid"
 	"github.com/FactomProject/factoid/block"
-	"github.com/FactomProject/factom"
-	"github.com/FactomProject/fctwallet/Wallet"
 	"github.com/ThePiachu/Go/Log"
 	"log"
 	"strconv"
@@ -49,7 +47,7 @@ func GetAddressInformationFromFactom(c appengine.Context, address string) (*Addr
 
 	invalid := 0 //to count how many times we got "invalid address"
 
-	ecBalance, err := Wallet.ECBalance(address)
+	ecBalance, err := FactomdECBalance(c, address)
 	Log.Debugf(c, "ECBalance - %v, %v\n\n", ecBalance, err)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Invalid name or address") && !strings.Contains(err.Error(), "encoding/hex") {
@@ -63,7 +61,7 @@ func GetAddressInformationFromFactom(c appengine.Context, address string) (*Addr
 			return answer, nil
 		}
 	}
-	fctBalance, err := Wallet.FactoidBalance(address)
+	fctBalance, err := FactomdFactoidBalance(c, address)
 	Log.Debugf(c, "FactoidBalance - %v, %v\n\n", fctBalance, err)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Invalid name or address") {
@@ -92,7 +90,7 @@ func GetAddressInformationFromFactom(c appengine.Context, address string) (*Addr
 func GetDBlockFromFactom(c appengine.Context, keyMR string) (*DBlock, error) {
 	answer := new(DBlock)
 
-	body, err := factom.GetDBlock(keyMR)
+	body, err := FactomdGetDBlock(c, keyMR)
 	if err != nil {
 		return answer, err
 	}
@@ -277,7 +275,7 @@ func ProcessAnchorEntry(c appengine.Context, e *Entry) error {
 
 func Synchronize(c appengine.Context) error {
 	Log.Infof(c, "Synchronize()")
-	head, err := factom.GetDBlockHead()
+	head, err := FactomdGetDBlockHead(c)
 	if err != nil {
 		Log.Errorf(c, "Error - %v", err)
 		return err
@@ -375,7 +373,7 @@ func Synchronize(c appengine.Context) error {
 func FetchBlock(c appengine.Context, chainID, hash, blockTime string) (*Block, error) {
 	block := new(Block)
 
-	raw, err := factom.GetRaw(c, hash)
+	raw, err := FactomdGetRaw(c, hash)
 	if err != nil {
 		Log.Errorf(c, "Error - %v", err)
 		return nil, err
@@ -672,7 +670,7 @@ func IsMinuteMarker(hash string) bool {
 
 func FetchAndParseEntry(c appengine.Context, hash, blockTime string, isFirstEntry bool) (*Entry, error) {
 	e := new(Entry)
-	raw, err := factom.GetRaw(hash)
+	raw, err := FactomdGetRaw(c, hash)
 	if err != nil {
 		Log.Errorf(c, "Error - %v", err)
 		return nil, err

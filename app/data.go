@@ -1,7 +1,8 @@
-package main
+package app
 
 import (
 	"appengine"
+	"appengine/datastore"
 	"bytes"
 	"errors"
 	"fmt"
@@ -466,7 +467,11 @@ func LoadDataStatus(c appengine.Context) *DataStatusStruct {
 	var err error
 	ds2, err := LoadData(c, DataStatusBucket, DataStatusBucket, ds)
 	if err != nil {
-		panic(err)
+		if err == datastore.ErrNoSuchEntity {
+
+		} else {
+			panic(err)
+		}
 	}
 	if ds2 == nil {
 		ds = new(DataStatusStruct)
