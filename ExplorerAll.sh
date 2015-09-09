@@ -120,6 +120,7 @@ checkout go-socks     $branch $default
 checkout seelog       $branch $default
 checkout snappy-go    $branch $default
 checkout websocket    $branch $default
+checkout factomexplorer $branch $default
 
 echo "
 ******************************************************** 
