@@ -7,3 +7,7 @@ handlers:
 - url: /.*
   script: _go_app
   secure: always
+- url: /Admin
+  script: _go_app
+  secure: always
+  login: admin

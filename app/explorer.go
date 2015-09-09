@@ -5,43 +5,25 @@
 package main
 
 import (
+	"appengine"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
-	"os"
-	//"io"
+	"net/http"
 	"strconv"
 	"strings"
-
-	"encoding/json"
-	"github.com/FactomProject/factom"
-	"github.com/hoisie/web"
 )
 
 var (
-	cfg    = ReadConfig().Explorer
-	server = web.NewServer()
-	tpl    = new(template.Template)
+	tpl = new(template.Template)
 )
 
 func main() {
 	var (
 		err error
-		dir string
 	)
-
-	Init(cfg.DatabaseDir)
-
-	server.Config.StaticDir, err = os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if cfg.StaticDir != "" {
-		server.Config.StaticDir = cfg.StaticDir
-		dir = cfg.StaticDir
-	}
-	dir = "."
 
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
 		"hashfilter":            hashfilter,
@@ -49,51 +31,59 @@ func main() {
 		"blockPrefixFilter":     blockPrefixFilter,
 		"chainNamePrefixFilter": chainNamePrefixFilter,
 	}).ParseFiles(
-		dir+"/views/404.html",
-		dir+"/views/chain.html",
-		dir+"/views/chains.html",
-		dir+"/views/cheader.html",
-		dir+"/views/dblock.html",
-		dir+"/views/eblock.html",
-		dir+"/views/block.html",
-		dir+"/views/entries.html",
-		dir+"/views/header.html",
-		dir+"/views/index.html",
-		dir+"/views/pagination.html",
-		dir+"/views/entry.html",
-		dir+"/views/address.html",
+		"/views/404.html",
+		"/views/chain.html",
+		"/views/chains.html",
+		"/views/cheader.html",
+		"/views/dblock.html",
+		"/views/eblock.html",
+		"/views/block.html",
+		"/views/entries.html",
+		"/views/header.html",
+		"/views/index.html",
+		"/views/pagination.html",
+		"/views/entry.html",
+		"/views/address.html",
 	))
 
-	server.Get(`/(?:home)?`, handleHome)
-	server.Get(`/`, handleDBlocks)
-	server.Get(`/index.html`, handleDBlocks)
-	server.Get(`/chains/?`, handleChains)
-	server.Get(`/chain/([^/]+)?`, handleChain)
-	server.Get(`/dblocks/?`, handleDBlocks)
-	server.Get(`/dblock/([^/]+)?`, handleDBlock)
-	server.Get(`/eblock/([^/]+)?`, handleBlock)
-	server.Get(`/ablock/([^/]+)?`, handleBlock)
-	server.Get(`/ecblock/([^/]+)?`, handleBlock)
-	server.Get(`/fblock/([^/]+)?`, handleBlock)
-	server.Get(`/entry/([^/]+)?`, handleEntry)
-	server.Get(`/entry/([^/]+)?`, handleEntry)
-	server.Get(`/address/([^/]+)?`, handleAddress)
-	server.Post(`/search/?`, handleSearch)
-	server.Get(`/test`, test)
-	server.Get(`/.*`, handle404)
+	http.HandleFunc(`/(?:home)?`, handleHome)
+	http.HandleFunc(`/Admin/upkeep`, Upkeep)
+	http.HandleFunc(`/`, handleDBlocks)
+	http.HandleFunc(`/index.html`, handleDBlocks)
+	http.HandleFunc(`/chains/?`, handleChains)
+	http.HandleFunc(`/chain/([^/]+)?`, handleChain)
+	http.HandleFunc(`/dblocks/?`, handleDBlocks)
+	http.HandleFunc(`/dblock/([^/]+)?`, handleDBlock)
+	http.HandleFunc(`/eblock/([^/]+)?`, handleBlock)
+	http.HandleFunc(`/ablock/([^/]+)?`, handleBlock)
+	http.HandleFunc(`/ecblock/([^/]+)?`, handleBlock)
+	http.HandleFunc(`/fblock/([^/]+)?`, handleBlock)
+	http.HandleFunc(`/entry/([^/]+)?`, handleEntry)
+	http.HandleFunc(`/entry/([^/]+)?`, handleEntry)
+	http.HandleFunc(`/address/([^/]+)?`, handleAddress)
+	http.HandleFunc(`/search/?`, handleSearch)
+	http.HandleFunc(`/test`, test)
+	http.HandleFunc(`/.*`, handle404)
 
-	go SynchronizationGoroutine()
-
-	server.Run(fmt.Sprintf(":%d", cfg.PortNumber))
 }
 
-func test(ctx *web.Context) {
-	head, err := factom.GetChainHead("000000000000000000000000000000000000000000000000000000000000000a")
-	log.Printf("test - %v, %v", head.ChainHead, err)
-	/*body, err := factom.GetDBlock(head.KeyMR)
-	str, _ := EncodeJSONString(body)
-	log.Printf("test - %v, %v", str, err)
-	Synchronize()*/
+func Upkeep(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	SynchronizationGoroutine(c)
+}
+
+func getIndexParameter(r *http.Request) string {
+	searchText := strings.TrimSpace(r.FormValue("searchText"))
+	if searchText != "" {
+		return searchText
+	}
+	params := strings.Split(r.URL.String(), "/")
+	return params[len(params)-1]
+}
+
+func test(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	c.Debugf("Test")
 }
 
 func EncodeJSONString(data interface{}) (string, error) {
@@ -104,106 +94,107 @@ func EncodeJSONString(data interface{}) (string, error) {
 	return string(encoded), err
 }
 
-func handle404(ctx *web.Context) {
-	var c interface{}
-	tpl.ExecuteTemplate(ctx, "404.html", c)
+func handle404(w http.ResponseWriter, r *http.Request) {
+	tpl.ExecuteTemplate(w, "404.html", nil)
 }
 
-func handleSearch(ctx *web.Context) {
-	fmt.Println("r.Form:", ctx.Params["searchType"])
-	fmt.Println("r.Form:", ctx.Params["searchText"])
+func handleSearch(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("r.Form:", r.FormValue("searchType"))
+	fmt.Println("r.Form:", r.FormValue("searchText"))
 
 	//	pagesize := 1000
 	//	hashArray := make([]*notaryapi.Hash, 0, 5)
-	searchText := strings.TrimSpace(ctx.Params["searchText"])
 
-	switch searchType := ctx.Params["searchType"]; searchType {
+	switch searchType := r.FormValue("searchType"); searchType {
 	case "entry":
-		handleEntry(ctx, searchText)
+		handleEntry(w, r)
 	case "eblock":
-		handleBlock(ctx, searchText)
+		handleBlock(w, r)
 	case "block":
-		handleBlock(ctx, searchText)
+		handleBlock(w, r)
 	case "dblock":
-		handleDBlock(ctx, searchText)
+		handleDBlock(w, r)
 	case "address":
-		handleAddress(ctx, searchText)
+		handleAddress(w, r)
 		/*	case "extID":
-			handleEntryEid(ctx, searchText)*/
+			handleEntryEid(w, r, searchText)*/
 	default:
-		handle404(ctx)
+		handle404(w, r)
 	}
 }
 
-func handleAddress(ctx *web.Context, hash string) {
-	address, err := GetAddressInformationFromFactom(hash)
+func handleAddress(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	hash := getIndexParameter(r)
+	address, err := GetAddressInformationFromFactom(c, hash)
 	if err != nil {
 		log.Println(err)
-		handle404(ctx)
+		handle404(w, r)
 		return
 	}
 
-	tpl.ExecuteTemplate(ctx, "address.html", address)
+	tpl.ExecuteTemplate(w, "address.html", address)
 }
 
-func handleChain(ctx *web.Context, hash string) {
-	chain, err := GetChainByName(hash)
+func handleChain(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	hash := getIndexParameter(r)
+	chain, err := GetChainByName(c, hash)
 	if err != nil {
 		log.Println(err)
-		handle404(ctx)
+		handle404(w, r)
 		return
 	}
 
-	tpl.ExecuteTemplate(ctx, "chain.html", chain)
+	tpl.ExecuteTemplate(w, "chain.html", chain)
 }
 
-func handleChains(ctx *web.Context) {
-	chains, err := GetChains()
+func handleChains(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	chains, err := GetChains(c)
 	if err != nil {
 		log.Println(err)
-		handle404(ctx)
+		handle404(w, r)
 		return
 	}
 
-	tpl.ExecuteTemplate(ctx, "chains.html", chains)
+	tpl.ExecuteTemplate(w, "chains.html", chains)
 }
 
-func handleDBlock(ctx *web.Context, keyMR string) {
+func handleDBlock(w http.ResponseWriter, r *http.Request) {
+	keyMR := getIndexParameter(r)
+	c := appengine.NewContext(r)
 	type fullblock struct {
 		DBlock *DBlock
 		DBInfo DBInfo
 	}
 
-	dblock, err := GetDBlock(keyMR)
+	dblock, err := GetDBlock(c, keyMR)
 	if err != nil {
 		log.Println(err)
-		handle404(ctx)
+		handle404(w, r)
 		return
-	}
-	dbinfo, err := GetDBInfo(keyMR)
-	if err != nil {
-		log.Println(err)
 	}
 
 	b := fullblock{
 		DBlock: dblock,
-		DBInfo: dbinfo,
 	}
 
-	tpl.ExecuteTemplate(ctx, "dblock.html", b)
+	tpl.ExecuteTemplate(w, "dblock.html", b)
 }
 
-func handleDBlocks(ctx *web.Context) {
+func handleDBlocks(w http.ResponseWriter, r *http.Request) {
 	type dblockPlus struct {
 		DBlocks  []*DBlock
 		PageInfo *PageState
 	}
 
-	height := GetBlockHeight()
-	dBlocks, err := GetDBlocksReverseOrder(0, height)
+	c := appengine.NewContext(r)
+	height := GetBlockHeight(c)
+	dBlocks, err := GetDBlocksReverseOrder(c, 0, height)
 	if err != nil {
 		log.Println(err)
-		handle404(ctx)
+		handle404(w, r)
 		return
 	}
 
@@ -216,17 +207,17 @@ func handleDBlocks(ctx *web.Context) {
 	}
 
 	page := 1
-	if p := ctx.Params["page"]; p != "" {
+	if p := r.FormValue("page"); p != "" {
 		page, err = strconv.Atoi(p)
 		if err != nil {
 			log.Println(err)
-			handle404(ctx)
+			handle404(w, r)
 			return
 		}
 		d.PageInfo.Current = page
 	}
 	if page > d.PageInfo.Max {
-		handle404(ctx)
+		handle404(w, r)
 		return
 	}
 	if i, j := 50*(page-1), 50*page; len(dBlocks) > j {
@@ -235,10 +226,11 @@ func handleDBlocks(ctx *web.Context) {
 		d.DBlocks = d.DBlocks[i:]
 	}
 
-	tpl.ExecuteTemplate(ctx, "index.html", d)
+	tpl.ExecuteTemplate(w, "index.html", d)
 }
 
-func handleBlock(ctx *web.Context, mr string) {
+func handleBlock(w http.ResponseWriter, r *http.Request) {
+	mr := getIndexParameter(r)
 	log.Printf("handleBlock - %v\n", mr)
 	type blockPlus struct {
 		Block    *Block
@@ -246,12 +238,13 @@ func handleBlock(ctx *web.Context, mr string) {
 		Count    int
 		PageInfo *PageState
 	}
+	c := appengine.NewContext(r)
 
-	block, err := GetBlock(mr)
+	block, err := GetBlock(c, mr)
 	if err != nil {
 		log.Printf("handleEBlock - factom.GetEBlock\n")
 		log.Println(err)
-		handle404(ctx)
+		handle404(w, r)
 		return
 	}
 
@@ -266,19 +259,19 @@ func handleBlock(ctx *web.Context, mr string) {
 	}
 
 	page := 1
-	if p := ctx.Params["page"]; p != "" {
+	if p := r.FormValue("page"); p != "" {
 		page, err = strconv.Atoi(p)
 		if err != nil {
 			log.Printf("handleEBlock - strconv\n")
 			log.Println(err)
-			handle404(ctx)
+			handle404(w, r)
 			return
 		}
 		e.PageInfo.Current = page
 	}
 	if page > e.PageInfo.Max {
 		log.Printf("handleEBlock - e.PageInfo.Max\n")
-		handle404(ctx)
+		handle404(w, r)
 		return
 	}
 	if i, j := 50*(page-1), 50*page; len(block.EntryList) > j {
@@ -287,34 +280,36 @@ func handleBlock(ctx *web.Context, mr string) {
 		e.Block.EntryList = e.Block.EntryList[i:]
 	}
 
-	tpl.ExecuteTemplate(ctx, "block.html", e)
+	tpl.ExecuteTemplate(w, "block.html", e)
 }
 
-func handleEntry(ctx *web.Context, hash string) {
-	entry, err := GetEntry(hash)
+func handleEntry(w http.ResponseWriter, r *http.Request) {
+	hash := getIndexParameter(r)
+	c := appengine.NewContext(r)
+	entry, err := GetEntry(c, hash)
 	if err != nil {
 		log.Println(err)
-		handle404(ctx)
+		handle404(w, r)
 		return
 	}
 
-	tpl.ExecuteTemplate(ctx, "entry.html", entry)
+	tpl.ExecuteTemplate(w, "entry.html", entry)
 }
 
 /*
-func handleEntryEid(ctx *web.Context, eid string) {
+func handleEntryEid(w http.ResponseWriter, r *http.Request, eid string) {
 	entries, err := factom.GetEntriesByExtID(eid)
 	if err != nil {
 		log.Println(err)
-		handle404(ctx)
+		handle404(w, r)
 		return
 	}
 
-	tpl.ExecuteTemplate(ctx, "entries.html", entries)
+	tpl.ExecuteTemplate(w, "entries.html", entries)
 }*/
 
-func handleHome(ctx *web.Context) {
-	handleDBlocks(ctx)
+func handleHome(w http.ResponseWriter, r *http.Request) {
+	handleDBlocks(w, r)
 }
 
 type PageState struct {

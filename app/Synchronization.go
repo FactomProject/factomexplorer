@@ -1,59 +1,44 @@
 package main
 
 import (
+	"appengine"
 	"fmt"
 	"github.com/FactomProject/FactomCode/common"
 	"github.com/FactomProject/factoid"
 	"github.com/FactomProject/factoid/block"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/fctwallet/Wallet"
+	"github.com/ThePiachu/Go/Log"
 	"log"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
 )
 
-var AnchorBlockID string
+var AnchorBlockID string = "df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604"
 var AdminBlockID string = "000000000000000000000000000000000000000000000000000000000000000a"
 var FactoidBlockID string = "000000000000000000000000000000000000000000000000000000000000000f"
 var ECBlockID string = "000000000000000000000000000000000000000000000000000000000000000c"
 var ZeroID string = "0000000000000000000000000000000000000000000000000000000000000000"
 
-func init() {
-	AnchorBlockID = ReadConfig().Anchor.AnchorChainID
-}
-
-func SynchronizationGoroutine() {
+func SynchronizationGoroutine(c appengine.Context) {
 	for {
-		err := Synchronize()
+		err := Synchronize(c)
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(10 * time.Second)
-		err = ProcessBlocks()
+		err = ProcessBlocks(c)
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(10 * time.Second)
-		err = TallyBalances()
+		err = TallyBalances(c)
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(10 * time.Second)
 	}
 }
 
-func Log(format string, args ...interface{}) {
-	_, file, line, ok := runtime.Caller(1)
-	if !ok {
-		file = "???"
-		line = 0
-	}
-	fmt.Printf(file+":"+strconv.Itoa(line)+" - "+format+"\n", args...)
-}
-
-func GetAddressInformationFromFactom(address string) (*Address, error) {
+func GetAddressInformationFromFactom(c appengine.Context, address string) (*Address, error) {
 	answer := new(Address)
 	answer.Address = address
 
@@ -65,7 +50,7 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 	invalid := 0 //to count how many times we got "invalid address"
 
 	ecBalance, err := Wallet.ECBalance(address)
-	fmt.Printf("ECBalance - %v, %v\n\n", ecBalance, err)
+	Log.Debugf(c, "ECBalance - %v, %v\n\n", ecBalance, err)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Invalid name or address") && !strings.Contains(err.Error(), "encoding/hex") {
 			return nil, err
@@ -79,7 +64,7 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 		}
 	}
 	fctBalance, err := Wallet.FactoidBalance(address)
-	fmt.Printf("FactoidBalance - %v, %v\n\n", fctBalance, err)
+	Log.Debugf(c, "FactoidBalance - %v, %v\n\n", fctBalance, err)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Invalid name or address") {
 			return nil, err
@@ -104,7 +89,7 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 	return answer, nil
 }
 
-func GetDBlockFromFactom(keyMR string) (*DBlock, error) {
+func GetDBlockFromFactom(c appengine.Context, keyMR string) (*DBlock, error) {
 	answer := new(DBlock)
 
 	body, err := factom.GetDBlock(keyMR)
@@ -134,21 +119,21 @@ func TimestampToString(timestamp uint64) string {
 	return blockTime.Format("2006-01-02 15:04:05")
 }
 
-func TallyBalances() error {
-	log.Println("TallyBalances()")
-	dataStatus := LoadDataStatus()
+func TallyBalances(c appengine.Context) error {
+	Log.Infof(c, "TallyBalances()")
+	dataStatus := LoadDataStatus(c)
 	if dataStatus.LastTalliedBlockNumber == dataStatus.DBlockHeight {
 		return nil
 	}
 
-	block, err := LoadDBlockBySequence(dataStatus.LastTalliedBlockNumber + 1)
+	block, err := LoadDBlockBySequence(c, dataStatus.LastTalliedBlockNumber+1)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Tallying block %v\n", block.SequenceNumber)
+	Log.Debugf(c, "Tallying block %v\n", block.SequenceNumber)
 	var previousTally float64 = 0
 	if dataStatus.LastTalliedBlockNumber > -1 {
-		oldBlock, err := LoadDBlockBySequence(dataStatus.LastTalliedBlockNumber)
+		oldBlock, err := LoadDBlockBySequence(c, dataStatus.LastTalliedBlockNumber)
 		tally, err := strconv.ParseFloat(oldBlock.FactoidTally, 64)
 		if err != nil {
 			panic(err)
@@ -156,7 +141,7 @@ func TallyBalances() error {
 		previousTally = tally
 	}
 	for {
-		factoidBlock, err := LoadBlock(block.FactoidBlock.KeyMR)
+		factoidBlock, err := LoadBlock(c, block.FactoidBlock.KeyMR)
 		if err != nil {
 			panic(err)
 		}
@@ -166,34 +151,34 @@ func TallyBalances() error {
 		}
 		previousTally += currentTally
 		block.FactoidTally = fmt.Sprintf("%.8f", previousTally)
-		err = SaveDBlock(block)
+		err = SaveDBlock(c, block)
 		if err != nil {
 			panic(err)
 		}
 		if block.SequenceNumber == dataStatus.DBlockHeight {
 			dataStatus.LastTalliedBlockNumber = block.SequenceNumber
-			err = SaveDataStatus(dataStatus)
+			err = SaveDataStatus(c, dataStatus)
 			if err != nil {
 				panic(err)
 			}
 			return nil
 		} else {
-			block, err = LoadDBlockBySequence(block.SequenceNumber + 1)
-			fmt.Printf("Tallying block %v\n", block.SequenceNumber)
+			block, err = LoadDBlockBySequence(c, block.SequenceNumber+1)
+			Log.Debugf(c, "Tallying block %v\n", block.SequenceNumber)
 		}
 	}
 
 	return nil
 }
 
-func ProcessBlocks() error {
-	log.Println("ProcessBlocks()")
-	dataStatus := LoadDataStatus()
+func ProcessBlocks(c appengine.Context) error {
+	Log.Infof(c, "ProcessBlocks()")
+	dataStatus := LoadDataStatus(c)
 	if dataStatus.LastKnownBlock == dataStatus.LastProcessedBlock {
 		return nil
 	}
 	toProcess := dataStatus.LastKnownBlock
-	previousBlock, err := LoadDBlock(toProcess)
+	previousBlock, err := LoadDBlock(c, toProcess)
 	if err != nil {
 		return err
 	}
@@ -205,7 +190,7 @@ func ProcessBlocks() error {
 			dataStatus.LastProcessedBlock = dataStatus.LastKnownBlock
 			break
 		}
-		previousBlock, err = LoadDBlock(toProcess)
+		previousBlock, err = LoadDBlock(c, toProcess)
 
 		if previousBlock.NextBlockKeyMR != "" {
 			continue
@@ -217,14 +202,14 @@ func ProcessBlocks() error {
 		blockList = append(blockList, block.FactoidBlock)
 
 		for _, v := range blockList {
-			err = ProcessBlock(v.KeyMR)
+			err = ProcessBlock(c, v.KeyMR)
 			if err != nil {
 				return err
 			}
 		}
 
 		previousBlock.NextBlockKeyMR = block.KeyMR
-		err = SaveDBlock(previousBlock)
+		err = SaveDBlock(c, previousBlock)
 		if err != nil {
 			return err
 		}
@@ -232,9 +217,9 @@ func ProcessBlocks() error {
 	return nil
 }
 
-func ProcessBlock(keyMR string) error {
+func ProcessBlock(c appengine.Context, keyMR string) error {
 	log.Printf("ProcessBlock()")
-	previousBlock, err := LoadBlock(keyMR)
+	previousBlock, err := LoadBlock(c, keyMR)
 	if err != nil {
 		return err
 	}
@@ -242,7 +227,7 @@ func ProcessBlock(keyMR string) error {
 
 	for {
 		block := previousBlock
-		log.Printf("Processing block %v\n", block.PartialHash)
+		Log.Debugf(c, "Processing block %v\n", block.PartialHash)
 		toProcess := block.PrevBlockHash
 		if toProcess == ZeroID {
 			return nil
@@ -250,14 +235,14 @@ func ProcessBlock(keyMR string) error {
 
 		if block.ChainID == AnchorBlockID {
 			for _, v := range block.EntryList {
-				err = ProcessAnchorEntry(v)
+				err = ProcessAnchorEntry(c, v)
 				if err != nil {
 					return err
 				}
 			}
 		}
 
-		previousBlock, err = LoadBlock(toProcess)
+		previousBlock, err = LoadBlock(c, toProcess)
 		if err != nil {
 			return err
 		}
@@ -265,7 +250,7 @@ func ProcessBlock(keyMR string) error {
 			return nil
 		}
 		previousBlock.NextBlockHash = block.PartialHash
-		err = SaveBlock(previousBlock)
+		err = SaveBlock(c, previousBlock)
 		if err != nil {
 			return err
 		}
@@ -273,38 +258,38 @@ func ProcessBlock(keyMR string) error {
 	return nil
 }
 
-func ProcessAnchorEntry(e *Entry) error {
+func ProcessAnchorEntry(c appengine.Context, e *Entry) error {
 	if e.AnchorRecord == nil {
 		return fmt.Errorf("No anchor record provided")
 	}
-	dBlock, err := LoadDBlock(e.AnchorRecord.KeyMR)
+	dBlock, err := LoadDBlock(c, e.AnchorRecord.KeyMR)
 	if err != nil {
 		return err
 	}
 	dBlock.AnchorRecord = e.Hash
 	dBlock.AnchoredInTransaction = e.AnchorRecord.Bitcoin.TXID
-	err = SaveDBlock(dBlock)
+	err = SaveDBlock(c, dBlock)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func Synchronize() error {
-	log.Println("Synchronize()")
+func Synchronize(c appengine.Context) error {
+	Log.Infof(c, "Synchronize()")
 	head, err := factom.GetDBlockHead()
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return err
 	}
 	previousKeyMR := head.KeyMR
-	dataStatus := LoadDataStatus()
+	dataStatus := LoadDataStatus(c)
 	maxHeight := dataStatus.DBlockHeight
 	for {
 
-		block, err := LoadDBlock(previousKeyMR)
+		block, err := LoadDBlock(c, previousKeyMR)
 		if err != nil {
-			Log("Error - %v", err)
+			Log.Errorf(c, "Error - %v", err)
 			return err
 		}
 
@@ -321,25 +306,25 @@ func Synchronize() error {
 				continue
 			}
 		}
-		body, err := GetDBlockFromFactom(previousKeyMR)
+		body, err := GetDBlockFromFactom(c, previousKeyMR)
 		if err != nil {
-			Log("Error - %v", err)
+			Log.Errorf(c, "Error - %v", err)
 			return err
 		}
 
-		log.Printf("\n\nProcessing dblock number %v\n", body.SequenceNumber)
+		Log.Debugf(c, "Processing dblock number %v", body.SequenceNumber)
 
 		str, err := EncodeJSONString(body)
 		if err != nil {
-			Log("Error - %v", err)
+			Log.Errorf(c, "Error - %v", err)
 			return err
 		}
-		log.Printf("%v", str)
+		Log.Debugf(c, "%v", str)
 
 		for _, v := range body.EntryBlockList {
-			fetchedBlock, err := FetchBlock(v.ChainID, v.KeyMR, body.BlockTimeStr)
+			fetchedBlock, err := FetchBlock(c, v.ChainID, v.KeyMR, body.BlockTimeStr)
 			if err != nil {
-				Log("Error - %v", err)
+				Log.Errorf(c, "Error - %v", err)
 				return err
 			}
 			switch v.ChainID {
@@ -362,9 +347,9 @@ func Synchronize() error {
 		}
 		body.EntryBlockList = body.EntryBlockList[3:]
 
-		err = SaveDBlock(body)
+		err = SaveDBlock(c, body)
 		if err != nil {
-			Log("Error - %v", err)
+			Log.Errorf(c, "Error - %v", err)
 			return err
 		}
 
@@ -379,63 +364,63 @@ func Synchronize() error {
 		}
 
 	}
-	err = SaveDataStatus(dataStatus)
+	err = SaveDataStatus(c, dataStatus)
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return err
 	}
 	return nil
 }
 
-func FetchBlock(chainID, hash, blockTime string) (*Block, error) {
+func FetchBlock(c appengine.Context, chainID, hash, blockTime string) (*Block, error) {
 	block := new(Block)
 
-	raw, err := factom.GetRaw(hash)
+	raw, err := factom.GetRaw(c, hash)
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 	switch chainID {
 	case AdminBlockID:
-		block, err = ParseAdminBlock(chainID, hash, raw, blockTime)
+		block, err = ParseAdminBlock(c, chainID, hash, raw, blockTime)
 		if err != nil {
-			Log("Error - %v", err)
+			Log.Errorf(c, "Error - %v", err)
 			return nil, err
 		}
 		break
 	case ECBlockID:
-		block, err = ParseEntryCreditBlock(chainID, hash, raw, blockTime)
+		block, err = ParseEntryCreditBlock(c, chainID, hash, raw, blockTime)
 		if err != nil {
-			Log("Error - %v", err)
+			Log.Errorf(c, "Error - %v", err)
 			return nil, err
 		}
 		break
 	case FactoidBlockID:
-		block, err = ParseFactoidBlock(chainID, hash, raw, blockTime)
+		block, err = ParseFactoidBlock(c, chainID, hash, raw, blockTime)
 		if err != nil {
-			Log("Error - %v", err)
+			Log.Errorf(c, "Error - %v", err)
 			return nil, err
 		}
 		break
 	default:
-		block, err = ParseEntryBlock(chainID, hash, raw, blockTime)
+		block, err = ParseEntryBlock(c, chainID, hash, raw, blockTime)
 		if err != nil {
-			Log("Error - %v", err)
+			Log.Errorf(c, "Error - %v", err)
 			return nil, err
 		}
 		break
 	}
 
-	err = SaveBlock(block)
+	err = SaveBlock(c, block)
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 
 	return block, nil
 }
 
-func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
+func ParseEntryCreditBlock(c appengine.Context, chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
 	answer := new(Block)
 
 	ecBlock := common.NewECBlock()
@@ -495,7 +480,7 @@ func ParseEntryCreditBlock(chainID, hash string, rawBlock []byte, blockTime stri
 	return answer, nil
 }
 
-func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
+func ParseFactoidBlock(c appengine.Context, chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
 	answer := new(Block)
 
 	fBlock := new(block.FBlock)
@@ -608,31 +593,31 @@ func ParseFactoidBlock(chainID, hash string, rawBlock []byte, blockTime string) 
 	return answer, nil
 }
 
-func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
-	Log("ParseEntryBlock - %x", rawBlock)
+func ParseEntryBlock(c appengine.Context, chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
+	Log.Infof(c, "ParseEntryBlock - %x", rawBlock)
 	answer := new(Block)
 
 	eBlock := common.NewEBlock()
 	_, err := eBlock.UnmarshalBinaryData(rawBlock)
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 
 	answer.ChainID = chainID
 	h, err := eBlock.KeyMR()
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 	answer.PartialHash = h.String()
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 	h, err = eBlock.Hash()
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 	answer.FullHash = h.String()
@@ -645,11 +630,11 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 
 	answer.JSONString, err = eBlock.JSONString()
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 
-	Log("Block - %v", answer.JSONString)
+	Log.Errorf(c, "Block - %v", answer.JSONString)
 	lastMinuteMarkedEntry := 0
 	for _, v := range eBlock.Body.EBEntries {
 		if IsMinuteMarker(v.String()) {
@@ -658,9 +643,9 @@ func ParseEntryBlock(chainID, hash string, rawBlock []byte, blockTime string) (*
 			}
 			lastMinuteMarkedEntry = len(answer.EntryList)
 		} else {
-			entry, err := FetchAndParseEntry(v.String(), blockTime, IsHashZeroes(answer.PrevBlockHash) && answer.EntryCount == 0)
+			entry, err := FetchAndParseEntry(c, v.String(), blockTime, IsHashZeroes(answer.PrevBlockHash) && answer.EntryCount == 0)
 			if err != nil {
-				Log("Error - %v", err)
+				Log.Errorf(c, "Error - %v", err)
 				return nil, err
 			}
 			answer.EntryCount++
@@ -685,18 +670,18 @@ func IsMinuteMarker(hash string) bool {
 	return h.IsMinuteMarker()
 }
 
-func FetchAndParseEntry(hash, blockTime string, isFirstEntry bool) (*Entry, error) {
+func FetchAndParseEntry(c appengine.Context, hash, blockTime string, isFirstEntry bool) (*Entry, error) {
 	e := new(Entry)
 	raw, err := factom.GetRaw(hash)
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 
 	entry := new(common.Entry)
 	_, err = entry.UnmarshalBinaryData(raw)
 	if err != nil {
-		Log("Error unmarshalling data - %v, %x - %v", hash, err, raw)
+		Log.Errorf(c, "Error unmarshalling data - %v, %x - %v", hash, err, raw)
 		return nil, err
 	}
 
@@ -704,7 +689,7 @@ func FetchAndParseEntry(hash, blockTime string, isFirstEntry bool) (*Entry, erro
 	e.Hash = hash
 	str, err := entry.JSONString()
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 	e.JSONString = str
@@ -721,18 +706,18 @@ func FetchAndParseEntry(hash, blockTime string, isFirstEntry bool) (*Entry, erro
 		//TODO: parse the first entry somehow perhaps?
 	} else {
 		if IsAnchorChainID(e.ChainID) {
-			ar, err := ParseAnchorChainData(e.Content.Decoded)
+			ar, err := ParseAnchorChainData(c, e.Content.Decoded)
 			if err != nil {
-				Log("Error - %v", err)
+				Log.Errorf(c, "Error - %v", err)
 				return nil, err
 			}
 			e.AnchorRecord = ar
 		}
 	}
 
-	err = SaveEntry(e)
+	err = SaveEntry(c, e)
 	if err != nil {
-		Log("Error - %v", err)
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 
@@ -743,7 +728,7 @@ func IsAnchorChainID(chainID string) bool {
 	return chainID == AnchorBlockID
 }
 
-func ParseAnchorChainData(data string) (*AnchorRecord, error) {
+func ParseAnchorChainData(c appengine.Context, data string) (*AnchorRecord, error) {
 	if len(data) < 128 {
 		return nil, fmt.Errorf("Data too short")
 	}
@@ -752,7 +737,7 @@ func ParseAnchorChainData(data string) (*AnchorRecord, error) {
 
 	err := common.DecodeJSONString(tmp, ar)
 	if err != nil {
-		Log("ParseAnchorChainData - %v", err)
+		Log.Infof(c, "ParseAnchorChainData - %v", err)
 		return nil, err
 	}
 	return ar, nil
@@ -769,7 +754,7 @@ func ByteSliceToDecodedString(b []byte) DecodedString {
 	return *ByteSliceToDecodedStringPointer(b)
 }
 
-func ParseAdminBlock(chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
+func ParseAdminBlock(c appengine.Context, chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
 	answer := new(Block)
 
 	aBlock := new(common.AdminBlock)
