@@ -791,7 +791,11 @@ func ParseAdminBlock(c appengine.Context, chainID, hash string, rawBlock []byte,
 	return answer, nil
 }
 
-func GetEntriesByExtID(c appengine.Context, eid string) ([]Entry, error) {
-
-	return nil, nil
+func GetEntriesByExtID(c appengine.Context, eid string) ([]*Entry, error) {
+	chain, err := GetChainByName(c, eid)
+	if err != nil {
+		Log.Errorf(c, "Error - %v", err)
+		return nil, err
+	}
+	return chain.Entries, nil
 }

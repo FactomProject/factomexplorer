@@ -651,22 +651,26 @@ func GetChain(c appengine.Context, hash string) (*Chain, error) {
 	hash = strings.ToLower(hash)
 	chain, err := LoadChain(c, hash)
 	if err != nil {
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 	if chain == nil {
-		return chain, errors.New("Chain not found")
+		return nil, errors.New("Chain not found")
 	}
 	entry, err := LoadEntry(c, chain.FirstEntryID)
 	if err != nil {
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 	if entry == nil {
-		return chain, errors.New("First entry not found")
+		Log.Errorf(c, "Error - %v", err)
+		return nil, errors.New("First entry not found")
 	}
 	chain.FirstEntry = entry
 
 	entries, err := GetAllChainEntries(c, chain.ChainID)
 	if err != nil {
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 	chain.Entries = entries
@@ -677,6 +681,7 @@ func GetChain(c appengine.Context, hash string) (*Chain, error) {
 func GetChainByName(c appengine.Context, name string) (*Chain, error) {
 	id, err := LoadChainIDByName(c, name)
 	if err != nil {
+		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 	if id != "" {

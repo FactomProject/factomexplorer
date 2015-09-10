@@ -8,7 +8,6 @@ import (
 	"appengine"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"github.com/ThePiachu/Go/Log"
 	"html/template"
 	"log"
@@ -54,6 +53,7 @@ func init() {
 	http.HandleFunc(`/fblock/`, handleBlock)
 	http.HandleFunc(`/entry/`, handleEntry)
 	http.HandleFunc(`/address/`, handleAddress)
+	http.HandleFunc(`/search`, handleSearch)
 	http.HandleFunc(`/search/`, handleSearch)
 	http.HandleFunc(`/test`, test)
 	http.HandleFunc(`/index.html`, handleDBlocks)
@@ -97,8 +97,8 @@ func handle404(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleSearch(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("r.Form:", r.FormValue("searchType"))
-	fmt.Println("r.Form:", r.FormValue("searchText"))
+	c := appengine.NewContext(r)
+	Log.Debugf(c, "handleSearch - `%v`, `%v`", r.FormValue("searchType"), r.FormValue("searchText"))
 
 	//	pagesize := 1000
 	//	hashArray := make([]*notaryapi.Hash, 0, 5)
@@ -126,7 +126,7 @@ func handleAddress(w http.ResponseWriter, r *http.Request) {
 	hash := getIndexParameter(r)
 	address, err := GetAddressInformationFromFactom(c, hash)
 	if err != nil {
-		log.Println(err)
+		Log.Errorf(c, "Error - %v", err)
 		handle404(w, r)
 		return
 	}
@@ -139,7 +139,7 @@ func handleChain(w http.ResponseWriter, r *http.Request) {
 	hash := getIndexParameter(r)
 	chain, err := GetChainByName(c, hash)
 	if err != nil {
-		log.Println(err)
+		Log.Errorf(c, "Error - %v", err)
 		handle404(w, r)
 		return
 	}
@@ -151,7 +151,7 @@ func handleChains(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	chains, err := GetChains(c)
 	if err != nil {
-		log.Println(err)
+		Log.Errorf(c, "Error - %v", err)
 		handle404(w, r)
 		return
 	}
@@ -169,7 +169,7 @@ func handleDBlock(w http.ResponseWriter, r *http.Request) {
 
 	dblock, err := GetDBlock(c, keyMR)
 	if err != nil {
-		log.Println(err)
+		Log.Errorf(c, "Error - %v", err)
 		handle404(w, r)
 		return
 	}
@@ -192,7 +192,7 @@ func handleDBlocks(w http.ResponseWriter, r *http.Request) {
 	height := GetBlockHeight(c)
 	dBlocks, err := GetDBlocksReverseOrder(c, 0, height)
 	if err != nil {
-		log.Println(err)
+		Log.Errorf(c, "Error - %v", err)
 		handle404(w, r)
 		return
 	}
@@ -209,7 +209,7 @@ func handleDBlocks(w http.ResponseWriter, r *http.Request) {
 	if p := r.FormValue("page"); p != "" {
 		page, err = strconv.Atoi(p)
 		if err != nil {
-			log.Println(err)
+			Log.Errorf(c, "Error - %v", err)
 			handle404(w, r)
 			return
 		}
@@ -242,7 +242,7 @@ func handleBlock(w http.ResponseWriter, r *http.Request) {
 	block, err := GetBlock(c, mr)
 	if err != nil {
 		log.Printf("handleEBlock - factom.GetEBlock\n")
-		log.Println(err)
+		Log.Errorf(c, "Error - %v", err)
 		handle404(w, r)
 		return
 	}
@@ -262,7 +262,7 @@ func handleBlock(w http.ResponseWriter, r *http.Request) {
 		page, err = strconv.Atoi(p)
 		if err != nil {
 			log.Printf("handleEBlock - strconv\n")
-			log.Println(err)
+			Log.Errorf(c, "Error - %v", err)
 			handle404(w, r)
 			return
 		}
@@ -287,7 +287,7 @@ func handleEntry(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	entry, err := GetEntry(c, hash)
 	if err != nil {
-		log.Println(err)
+		Log.Errorf(c, "Error - %v", err)
 		handle404(w, r)
 		return
 	}
@@ -298,13 +298,13 @@ func handleEntry(w http.ResponseWriter, r *http.Request) {
 func handleEntryEid(w http.ResponseWriter, r *http.Request) {
 	eid := getIndexParameter(r)
 	c := appengine.NewContext(r)
+	Log.Debugf(c, "handleEntryEid - %v", eid)
 	entries, err := GetEntriesByExtID(c, eid)
 	if err != nil {
-		log.Println(err)
+		Log.Errorf(c, "Error - %v", err)
 		handle404(w, r)
 		return
 	}
-
 	tpl.ExecuteTemplate(w, "entries.html", entries)
 }
 
@@ -338,7 +338,7 @@ func (p *PageState) Prev() int {
 func hextotext(h string) string {
 	p, err := hex.DecodeString(h)
 	if err != nil {
-		log.Println(err)
+		panic(err)
 	}
 	return string(p)
 }
