@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/ThePiachu/Go/Log"
 	"html/template"
 	"log"
 	"net/http"
@@ -42,23 +43,22 @@ func init() {
 		"views/address.html",
 	))
 
-	http.HandleFunc(`/(?:home)?`, handleHome)
 	http.HandleFunc(`/Admin/upkeep`, Upkeep)
-	http.HandleFunc(`/`, handleDBlocks)
-	http.HandleFunc(`/index.html`, handleDBlocks)
-	http.HandleFunc(`/chains/?`, handleChains)
-	http.HandleFunc(`/chain/([^/]+)?`, handleChain)
-	http.HandleFunc(`/dblocks/?`, handleDBlocks)
-	http.HandleFunc(`/dblock/([^/]+)?`, handleDBlock)
-	http.HandleFunc(`/eblock/([^/]+)?`, handleBlock)
-	http.HandleFunc(`/ablock/([^/]+)?`, handleBlock)
-	http.HandleFunc(`/ecblock/([^/]+)?`, handleBlock)
-	http.HandleFunc(`/fblock/([^/]+)?`, handleBlock)
-	http.HandleFunc(`/entry/([^/]+)?`, handleEntry)
-	http.HandleFunc(`/address/([^/]+)?`, handleAddress)
-	http.HandleFunc(`/search/?`, handleSearch)
+	http.HandleFunc(`/chains/`, handleChains)
+	http.HandleFunc(`/chain/`, handleChain)
+	http.HandleFunc(`/dblocks/`, handleDBlocks)
+	http.HandleFunc(`/dblock/`, handleDBlock)
+	http.HandleFunc(`/eblock/`, handleBlock)
+	http.HandleFunc(`/ablock/`, handleBlock)
+	http.HandleFunc(`/ecblock/`, handleBlock)
+	http.HandleFunc(`/fblock/`, handleBlock)
+	http.HandleFunc(`/entry/`, handleEntry)
+	http.HandleFunc(`/address/`, handleAddress)
+	http.HandleFunc(`/search/`, handleSearch)
 	http.HandleFunc(`/test`, test)
+	http.HandleFunc(`/index.html`, handleDBlocks)
 	http.HandleFunc(`/.*`, handle404)
+	http.HandleFunc(`/`, handleHome)
 
 }
 
@@ -68,11 +68,14 @@ func Upkeep(w http.ResponseWriter, r *http.Request) {
 }
 
 func getIndexParameter(r *http.Request) string {
+	c := appengine.NewContext(r)
 	searchText := strings.TrimSpace(r.FormValue("searchText"))
 	if searchText != "" {
+		Log.Debugf(c, "SearchText - %v", searchText)
 		return searchText
 	}
 	params := strings.Split(r.URL.String(), "/")
+	Log.Debugf(c, "params[len(params)-1] - %v", params[len(params)-1])
 	return params[len(params)-1]
 }
 
@@ -185,6 +188,7 @@ func handleDBlocks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := appengine.NewContext(r)
+	Log.Debugf(c, "handleDBlocks")
 	height := GetBlockHeight(c)
 	dBlocks, err := GetDBlocksReverseOrder(c, 0, height)
 	if err != nil {
@@ -304,6 +308,8 @@ func handleEntryEid(w http.ResponseWriter, r *http.Request, eid string) {
 }*/
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	Log.Debugf(c, "handleHome")
 	handleDBlocks(w, r)
 }
 

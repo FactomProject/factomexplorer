@@ -150,22 +150,25 @@ func FactomdGetDBlock(c appengine.Context, keymr string) (*FactomdDBlock, error)
 }
 
 func FactomdGetDBlockHead(c appengine.Context) (*FactomdDBlockHead, error) {
-	resp, err := Call(c, fmt.Sprintf("http://%s/v1/directory-block-head/", server))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf(string(body))
-	}
+	/*	resp, err := Call(c, fmt.Sprintf("http://%s/v1/directory-block-head/", server))
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		if resp.StatusCode != 200 {
+			return nil, fmt.Errorf(string(body))
+		}
+
+		d := new(FactomdDBlockHead)
+		json.Unmarshal(body, d)
+	*/
 
 	d := new(FactomdDBlockHead)
-	json.Unmarshal(body, d)
-
+	d.KeyMR = "3a5ec711a1dc1c6e463b0c0344560f830eb0b56e42def141cb423b0d8487a1dc"
 	return d, nil
 }
 

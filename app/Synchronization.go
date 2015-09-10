@@ -20,19 +20,17 @@ var ECBlockID string = "00000000000000000000000000000000000000000000000000000000
 var ZeroID string = "0000000000000000000000000000000000000000000000000000000000000000"
 
 func SynchronizationGoroutine(c appengine.Context) {
-	for {
-		err := Synchronize(c)
-		if err != nil {
-			panic(err)
-		}
-		err = ProcessBlocks(c)
-		if err != nil {
-			panic(err)
-		}
-		err = TallyBalances(c)
-		if err != nil {
-			panic(err)
-		}
+	err := Synchronize(c)
+	if err != nil {
+		panic(err)
+	}
+	err = ProcessBlocks(c)
+	if err != nil {
+		panic(err)
+	}
+	err = TallyBalances(c)
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -98,7 +96,7 @@ func GetDBlockFromFactom(c appengine.Context, keyMR string) (*DBlock, error) {
 	answer = new(DBlock)
 	answer.DBHash = body.DBHash
 	answer.PrevBlockKeyMR = body.Header.PrevBlockKeyMR
-	answer.Timestamp = body.Header.Timestamp
+	answer.Timestamp = int64(body.Header.Timestamp)
 	answer.SequenceNumber = body.Header.SequenceNumber
 	answer.EntryBlockList = make([]ListEntry, len(body.EntryBlockList))
 	for i, v := range body.EntryBlockList {
@@ -694,7 +692,7 @@ func FetchAndParseEntry(c appengine.Context, hash, blockTime string, isFirstEntr
 	e.BinaryString = fmt.Sprintf("%x", raw)
 	e.Timestamp = blockTime
 
-	e.Content = ByteSliceToDecodedStringPointer(entry.Content)
+	e.Content = ByteSliceToDecodedString(entry.Content)
 	e.ExternalIDs = make([]DecodedString, len(entry.ExtIDs))
 	for i, v := range entry.ExtIDs {
 		e.ExternalIDs[i] = ByteSliceToDecodedString(v)
@@ -724,21 +722,6 @@ func FetchAndParseEntry(c appengine.Context, hash, blockTime string, isFirstEntr
 
 func IsAnchorChainID(chainID string) bool {
 	return chainID == AnchorBlockID
-}
-
-func ParseAnchorChainData(c appengine.Context, data string) (*AnchorRecord, error) {
-	if len(data) < 128 {
-		return nil, fmt.Errorf("Data too short")
-	}
-	tmp := data[:len(data)-128]
-	ar := new(AnchorRecord)
-
-	err := common.DecodeJSONString(tmp, ar)
-	if err != nil {
-		Log.Infof(c, "ParseAnchorChainData - %v", err)
-		return nil, err
-	}
-	return ar, nil
 }
 
 func ByteSliceToDecodedStringPointer(b []byte) *DecodedString {

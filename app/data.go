@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/FactomProject/FactomCode/common"
 	"github.com/FactomProject/factom"
+	"github.com/ThePiachu/Go/Datastore"
 	"github.com/ThePiachu/Go/Log"
 	"strings"
 )
@@ -49,7 +50,7 @@ type DBlock struct {
 
 	PrevBlockKeyMR string
 	NextBlockKeyMR string
-	Timestamp      uint64
+	Timestamp      int64
 	SequenceNumber int
 
 	EntryBlockList   []ListEntry
@@ -85,8 +86,8 @@ type Common struct {
 	ChainID   string
 	Timestamp string
 
-	JSONString   string
-	BinaryString string
+	JSONString   string `datastore:",noindex"`
+	BinaryString string `datastore:",noindex"`
 }
 
 func (e *Common) JSON() (string, error) {
@@ -108,7 +109,8 @@ type Block struct {
 
 	EntryCount int
 
-	EntryList []*Entry
+	EntryIDList []string
+	EntryList   []*Entry `datastore:"-"`
 
 	IsAdminBlock       bool
 	IsFactoidBlock     bool
@@ -142,7 +144,7 @@ type Entry struct {
 	ShortEntry string //a way to replace the entry with a short string
 
 	ExternalIDs []DecodedString
-	Content     *DecodedString
+	Content     DecodedString
 
 	MinuteMarker string
 
@@ -150,7 +152,7 @@ type Entry struct {
 	Hash string
 
 	//Anchor chain-specific data
-	AnchorRecord *AnchorRecord
+	AnchorRecord *AnchorRecord `datastore:"-"`
 
 	TotalIns  string
 	TotalOuts string
@@ -188,7 +190,7 @@ type Chain struct {
 	FirstEntryID string
 
 	//Not saved
-	FirstEntry *Entry
+	FirstEntry *Entry `datastore:"-"`
 }
 
 type DecodedString struct {
@@ -208,7 +210,9 @@ type Address struct {
 //-----------------------------------------------------------------------------------------------
 
 func RecordChain(c appengine.Context, block *Block) error {
+	Log.Debugf(c, "RecordChain")
 	if block.PrevBlockHash != ZeroID {
+		Log.Debugf(c, "block.PrevBlockHash != ZeroID")
 		return nil
 	}
 
@@ -219,19 +223,23 @@ func RecordChain(c appengine.Context, block *Block) error {
 
 	err := SaveChain(c, chain)
 	if err != nil {
+		Log.Errorf(c, "StoreEntriesFromBlock - %v", err)
 		return err
 	}
 
-	Log.Debugf(c, "\n\nChain - %v\n\n", chain)
+	Log.Debugf(c, "Chain - %v", chain)
 	return nil
 }
 
 func StoreEntriesFromBlock(c appengine.Context, block *Block) error {
-	for _, v := range block.EntryList {
+	block.EntryIDList = make([]string, len(block.EntryList))
+	for i, v := range block.EntryList {
 		err := SaveEntry(c, v)
 		if err != nil {
+			Log.Errorf(c, "StoreEntriesFromBlock - %v", err)
 			return err
 		}
+		block.EntryIDList[i] = v.Hash
 	}
 	return nil
 }
@@ -239,7 +247,7 @@ func StoreEntriesFromBlock(c appengine.Context, block *Block) error {
 func LoadDBlockKeyMRBySequence(c appengine.Context, sequence int) (string, error) {
 	seq := fmt.Sprintf("%v", sequence)
 
-	key := new(string)
+	key := new(Index)
 	key2, err := LoadData(c, DBlockKeyMRsBySequenceBucket, seq, key)
 	if err != nil {
 		return "", err
@@ -247,13 +255,14 @@ func LoadDBlockKeyMRBySequence(c appengine.Context, sequence int) (string, error
 	if key2 == nil {
 		return "", nil
 	}
-	return *key, nil
+	return key.Index, nil
 }
 
 func SaveDBlockKeyMRBySequence(c appengine.Context, keyMR string, sequence int) error {
 	seq := fmt.Sprintf("%v", sequence)
-	err := SaveData(c, DBlockKeyMRsBySequenceBucket, seq, keyMR)
+	err := SaveData(c, DBlockKeyMRsBySequenceBucket, seq, &Index{Index: keyMR})
 	if err != nil {
+		Log.Errorf(c, "SaveDBlockKeyMRBySequence - %v", err)
 		return err
 	}
 	return nil
@@ -263,11 +272,13 @@ func SaveDBlockKeyMRBySequence(c appengine.Context, keyMR string, sequence int) 
 func SaveDBlock(c appengine.Context, b *DBlock) error {
 	err := SaveData(c, DBlocksBucket, b.KeyMR, b)
 	if err != nil {
+		Log.Errorf(c, "SaveDBlock - %v", err)
 		return err
 	}
 
 	err = SaveDBlockKeyMRBySequence(c, b.KeyMR, b.SequenceNumber)
 	if err != nil {
+		Log.Errorf(c, "SaveDBlock - %v", err)
 		return err
 	}
 
@@ -298,9 +309,15 @@ func LoadDBlockBySequence(c appengine.Context, sequence int) (*DBlock, error) {
 	return LoadDBlock(c, key)
 }
 
+type Index struct {
+	Index string
+}
+
 func SaveBlockIndex(c appengine.Context, index, hash string) error {
-	err := SaveData(c, BlockIndexesBucket, index, hash)
+
+	err := SaveData(c, BlockIndexesBucket, index, &Index{Index: hash})
 	if err != nil {
+		Log.Errorf(c, "SaveBlockIndex - %v", err)
 		return err
 	}
 
@@ -308,7 +325,7 @@ func SaveBlockIndex(c appengine.Context, index, hash string) error {
 }
 
 func LoadBlockIndex(c appengine.Context, hash string) (string, error) {
-	ind := new(string)
+	ind := new(Index)
 	ind2, err := LoadData(c, BlockIndexesBucket, hash, ind)
 	if err != nil {
 		return "", err
@@ -317,7 +334,7 @@ func LoadBlockIndex(c appengine.Context, hash string) (string, error) {
 		return "", nil
 	}
 
-	return *ind, nil
+	return ind.Index, nil
 }
 
 func SaveBlock(c appengine.Context, b *Block) error {
@@ -325,20 +342,26 @@ func SaveBlock(c appengine.Context, b *Block) error {
 
 	err := SaveBlockIndex(c, b.FullHash, b.PartialHash)
 	if err != nil {
+		Log.Errorf(c, "SaveBlock - %v", err)
 		return err
 	}
 	err = SaveBlockIndex(c, b.PartialHash, b.PartialHash)
 	if err != nil {
+		Log.Errorf(c, "SaveBlock - %v", err)
 		return err
 	}
 
 	err = SaveData(c, BlocksBucket, b.PartialHash, b)
 	if err != nil {
+		Log.Errorf(c, "SaveBlock - %v", err)
 		return err
 	}
 
 	if b.IsEntryBlock {
-		RecordChain(c, b)
+		err = RecordChain(c, b)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -347,6 +370,7 @@ func SaveBlock(c appengine.Context, b *Block) error {
 func LoadBlock(c appengine.Context, hash string) (*Block, error) {
 	key, err := LoadBlockIndex(c, hash)
 	if err != nil {
+		Log.Errorf(c, "LoadBlock - %v", err)
 		return nil, err
 	}
 	if key == "" {
@@ -356,13 +380,34 @@ func LoadBlock(c appengine.Context, hash string) (*Block, error) {
 	block := new(Block)
 	block2, err := LoadData(c, BlocksBucket, key, block)
 	if err != nil {
+		Log.Errorf(c, "LoadBlock - %v", err)
 		return nil, err
 	}
 	if block2 == nil {
 		return nil, nil
 	}
+	err = LoadBlockEntries(c, block)
+	if err != nil {
+		Log.Errorf(c, "LoadBlock - %v", err)
+	}
 
 	return block, nil
+}
+
+func LoadBlockEntries(c appengine.Context, block *Block) error {
+	if len(block.EntryList) > 0 {
+		return nil
+	}
+	entries := make([]*Entry, len(block.EntryIDList))
+	for i, v := range block.EntryIDList {
+		entry, err := LoadEntry(c, v)
+		if err != nil {
+			return err
+		}
+		entries[i] = entry
+	}
+	block.EntryList = entries
+	return nil
 }
 
 func SaveEntry(c appengine.Context, e *Entry) error {
@@ -383,18 +428,43 @@ func LoadEntry(c appengine.Context, hash string) (*Entry, error) {
 	if entry2 == nil {
 		return nil, nil
 	}
+	if entry.ChainID == AnchorBlockID {
+		ar, err := ParseAnchorChainData(c, entry.Content.Decoded)
+		if err != nil {
+			Log.Errorf(c, "LoadEntry - %v", err)
+			return nil, err
+		}
+		entry.AnchorRecord = ar
+	}
 
 	return entry, nil
 }
 
-func SaveChainIDsByName(c appengine.Context, chainID, decodedName, encodedName string) error {
-	err := SaveData(c, ChainIDsByDecodedNameBucket, decodedName, chainID)
+func ParseAnchorChainData(c appengine.Context, data string) (*AnchorRecord, error) {
+	if len(data) < 128 {
+		return nil, nil
+	}
+	tmp := data[:len(data)-128]
+	ar := new(AnchorRecord)
+
+	err := common.DecodeJSONString(tmp, ar)
 	if err != nil {
+		Log.Infof(c, "ParseAnchorChainData - %v", err)
+		return nil, err
+	}
+	return ar, nil
+}
+
+func SaveChainIDsByName(c appengine.Context, chainID, decodedName, encodedName string) error {
+	err := SaveData(c, ChainIDsByDecodedNameBucket, decodedName, &Index{Index: chainID})
+	if err != nil {
+		Log.Errorf(c, "SaveChainIDsByName - %v", err)
 		return err
 	}
 
-	err = SaveData(c, ChainIDsByEncodedNameBucket, encodedName, chainID)
+	err = SaveData(c, ChainIDsByEncodedNameBucket, encodedName, &Index{Index: chainID})
 	if err != nil {
+		Log.Errorf(c, "SaveChainIDsByName - %v", err)
 		return err
 	}
 
@@ -402,22 +472,24 @@ func SaveChainIDsByName(c appengine.Context, chainID, decodedName, encodedName s
 }
 
 func LoadChainIDByName(c appengine.Context, name string) (string, error) {
-	entry := new(string)
+	entry := new(Index)
 	entry2, err := LoadData(c, ChainIDsByDecodedNameBucket, name, entry)
 	if err != nil {
+		Log.Errorf(c, "LoadChainIDByName - %v", err)
 		return "", err
 	}
 	if entry2 != nil {
-		return *entry, nil
+		return entry.Index, nil
 	}
 
-	entry = new(string)
+	entry = new(Index)
 	entry2, err = LoadData(c, ChainIDsByEncodedNameBucket, name, entry)
 	if err != nil {
+		Log.Errorf(c, "LoadChainIDByName - %v", err)
 		return "", err
 	}
 	if entry2 != nil {
-		return *entry, nil
+		return entry.Index, nil
 	}
 
 	return "", nil
@@ -426,12 +498,14 @@ func LoadChainIDByName(c appengine.Context, name string) (string, error) {
 func SaveChain(c appengine.Context, chain *Chain) error {
 	err := SaveData(c, ChainsBucket, chain.ChainID, chain)
 	if err != nil {
+		Log.Errorf(c, "SaveChain - %v", err)
 		return err
 	}
 
 	for _, v := range chain.Names {
 		err = SaveChainIDsByName(c, chain.ChainID, v.Decoded, v.Encoded)
 		if err != nil {
+			Log.Errorf(c, "SaveChain - %v", err)
 			return err
 		}
 	}
@@ -560,16 +634,16 @@ func GetEntry(c appengine.Context, hash string) (*Entry, error) {
 	return entry, nil
 }
 
-func GetChains(c appengine.Context) ([]*Chain, error) {
+func GetChains(c appengine.Context) ([]Chain, error) {
 	//TODO: load chains from database
-	/*answer := []*Chain{}
-	for _, v := range Chains {
-		answer = append(answer, v)
-	}
-	return answer, nil*/
 
-	//TODO: FIXME: do
-	return nil, nil
+	answer := []Chain{}
+	_, err := Datastore.QueryGetAll(c, ChainsBucket, &answer)
+	if err != nil {
+		Log.Errorf(c, "GetChains - %v", err)
+		return nil, err
+	}
+	return answer, nil
 }
 
 func GetChain(c appengine.Context, hash string) (*Chain, error) {
