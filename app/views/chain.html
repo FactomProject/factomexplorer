@@ -46,28 +46,45 @@
           <dd>{{.ChainID}}</dd>
         </div>
         {{range .ExternalIDs}}
-        {{with .}}
-        <div>
-          <dt>External ID:</dt>
-          <dd>
-            <span>{{.Encoded}}, {{.Decoded}}</span>
-          </dd>
-        </div>
+          {{with .}}
+          <div>
+            <dt>External ID:</dt>
+            <dd>
+              <span>{{.Encoded}}, {{.Decoded}}</span>
+            </dd>
+          </div>
+     	   {{end}}
    	   {{end}}
- 	   {{end}}
-    
         <div>
           <dt>Content:</dt>
           <dd>{{.Content.Encoded}}, {{.Content.Decoded}}</dd>
         </div>
       </dl>
-      </div>
-     {{end}}
+    </div>
+   {{end}}
 
+    <h1 class="screen-title">Entries:</h1>
+     <div class="card">
+      <table class="table table-hover standard-table clickable-rows">
+        <thead>
+            <tr class="first">
+                <th class="date-time">Created</th>
+                <th class="hidden-xs ">Hash</th>
+            </tr>
+        </thead>
+        <tbody>
+          {{range .Entries}}
+            <tr class="clickableRow"href="/entry/{{hashfilter .Hash}}">
+                <td>{{.Timestamp}}</td>
+                <td class="hidden-xs">{{hashfilter .Hash}}</td>
+            </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
   </div>
 
   </div>
-
 </div>
 <script src="../scripts/min/scripts-min.js"></script>
 

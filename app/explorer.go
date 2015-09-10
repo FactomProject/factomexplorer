@@ -114,8 +114,8 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 		handleDBlock(w, r)
 	case "address":
 		handleAddress(w, r)
-		/*	case "extID":
-			handleEntryEid(w, r, searchText)*/
+	case "extID":
+		handleEntryEid(w, r)
 	default:
 		handle404(w, r)
 	}
@@ -295,9 +295,10 @@ func handleEntry(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "entry.html", entry)
 }
 
-/*
-func handleEntryEid(w http.ResponseWriter, r *http.Request, eid string) {
-	entries, err := factom.GetEntriesByExtID(eid)
+func handleEntryEid(w http.ResponseWriter, r *http.Request) {
+	eid := getIndexParameter(r)
+	c := appengine.NewContext(r)
+	entries, err := GetEntriesByExtID(c, eid)
 	if err != nil {
 		log.Println(err)
 		handle404(w, r)
@@ -305,7 +306,7 @@ func handleEntryEid(w http.ResponseWriter, r *http.Request, eid string) {
 	}
 
 	tpl.ExecuteTemplate(w, "entries.html", entries)
-}*/
+}
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)

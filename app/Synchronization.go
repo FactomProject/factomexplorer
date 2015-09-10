@@ -790,3 +790,8 @@ func ParseAdminBlock(c appengine.Context, chainID, hash string, rawBlock []byte,
 
 	return answer, nil
 }
+
+func GetEntriesByExtID(c appengine.Context, eid string) ([]Entry, error) {
+
+	return nil, nil
+}

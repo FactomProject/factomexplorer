@@ -190,7 +190,8 @@ type Chain struct {
 	FirstEntryID string
 
 	//Not saved
-	FirstEntry *Entry `datastore:"-"`
+	FirstEntry *Entry   `datastore:"-"`
+	Entries    []*Entry `datastore:"-"`
 }
 
 type DecodedString struct {
@@ -663,6 +664,13 @@ func GetChain(c appengine.Context, hash string) (*Chain, error) {
 		return chain, errors.New("First entry not found")
 	}
 	chain.FirstEntry = entry
+
+	entries, err := GetAllChainEntries(c, chain.ChainID)
+	if err != nil {
+		return nil, err
+	}
+	chain.Entries = entries
+
 	return chain, nil
 }
 
@@ -680,4 +688,21 @@ func GetChainByName(c appengine.Context, name string) (*Chain, error) {
 
 type EBlock struct {
 	factom.EBlock
+}
+
+func GetAllChainEntries(c appengine.Context, chainID string) ([]*Entry, error) {
+	tmp := []Entry{}
+	keys, err := Datastore.QueryGetAllKeysWithFilterAndOrder(c, EntriesBucket, "ChainID=", chainID, "Timestamp", &tmp)
+	if err != nil {
+		return nil, err
+	}
+	answer := make([]*Entry, len(keys))
+	for i, v := range keys {
+		entry, err := GetEntry(c, v.StringID())
+		if err != nil {
+			return nil, err
+		}
+		answer[i] = entry
+	}
+	return answer, nil
 }
