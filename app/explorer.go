@@ -19,7 +19,7 @@ import (
 var (
 	tpl = new(template.Template)
 )
-var blocksPerPAge int = 50
+var blocksPerPage int = 10
 
 func init() {
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
@@ -190,16 +190,11 @@ func handleDBlocks(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	Log.Debugf(c, "handleDBlocks")
 	height := GetBlockHeight(c)
-	dBlocks, err := GetDBlocksReverseOrder(c, 0, height)
-	if err != nil {
-		Log.Errorf(c, "Error - %v", err)
-		handle404(w, r)
-		return
-	}
 
 	page := 1
-	maxPage := (len(dBlocks) / blocksPerPAge) + 1
+	maxPage := (height / blocksPerPage) + 1
 	if p := r.FormValue("page"); p != "" {
+		var err error
 		page, err = strconv.Atoi(p)
 		if err != nil {
 			Log.Errorf(c, "Error - %v", err)
@@ -212,14 +207,21 @@ func handleDBlocks(w http.ResponseWriter, r *http.Request) {
 		handle404(w, r)
 		return
 	}
+	max := height - (page-1)*blocksPerPage
+	min := max - blocksPerPage
+	if min < 0 {
+		min = 0
+	}
+	dBlocks, err := GetDBlocksReverseOrder(c, min, max)
+	if err != nil {
+		Log.Errorf(c, "Error - %v", err)
+		handle404(w, r)
+		return
+	}
+
 	d := dblockPlus{
 		DBlocks:  dBlocks,
 		PageInfo: NewPageState(page, maxPage),
-	}
-	if i, j := blocksPerPAge*(page-1), blocksPerPAge*page; len(dBlocks) > j {
-		d.DBlocks = d.DBlocks[i:j]
-	} else {
-		d.DBlocks = d.DBlocks[i:]
 	}
 
 	tpl.ExecuteTemplate(w, "index.html", d)
@@ -245,7 +247,7 @@ func handleBlock(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := 1
-	maxPage := (len(block.EntryList) / blocksPerPAge) + 1
+	maxPage := (len(block.EntryList) / blocksPerPage) + 1
 	if p := r.FormValue("page"); p != "" {
 		page, err = strconv.Atoi(p)
 		if err != nil {
@@ -266,7 +268,7 @@ func handleBlock(w http.ResponseWriter, r *http.Request) {
 		Count:    len(block.EntryList),
 		PageInfo: NewPageState(page, maxPage),
 	}
-	if i, j := blocksPerPAge*(page-1), blocksPerPAge*page; len(block.EntryList) > j {
+	if i, j := blocksPerPage*(page-1), blocksPerPage*page; len(block.EntryList) > j {
 		e.Block.EntryList = e.Block.EntryList[i:j]
 	} else {
 		e.Block.EntryList = e.Block.EntryList[i:]
