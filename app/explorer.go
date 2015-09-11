@@ -196,15 +196,8 @@ func handleDBlocks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d := dblockPlus{
-		DBlocks: dBlocks,
-		PageInfo: &PageState{
-			Current: 1,
-			Max:     (len(dBlocks) / 50) + 1,
-		},
-	}
-
 	page := 1
+	maxPage := (len(dBlocks) / 50) + 1
 	if p := r.FormValue("page"); p != "" {
 		page, err = strconv.Atoi(p)
 		if err != nil {
@@ -212,11 +205,15 @@ func handleDBlocks(w http.ResponseWriter, r *http.Request) {
 			handle404(w, r)
 			return
 		}
-		d.PageInfo.Current = page
 	}
-	if page > d.PageInfo.Max {
+
+	if page > maxPage {
 		handle404(w, r)
 		return
+	}
+	d := dblockPlus{
+		DBlocks:  dBlocks,
+		PageInfo: NewPageState(page, maxPage),
 	}
 	if i, j := 50*(page-1), 50*page; len(dBlocks) > j {
 		d.DBlocks = d.DBlocks[i:j]
@@ -246,17 +243,8 @@ func handleBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	e := blockPlus{
-		Block: block,
-		Hash:  mr,
-		Count: len(block.EntryList),
-		PageInfo: &PageState{
-			Current: 1,
-			Max:     (len(block.EntryList) / 50) + 1,
-		},
-	}
-
 	page := 1
+	maxPage := (len(block.EntryList) / 50) + 1
 	if p := r.FormValue("page"); p != "" {
 		page, err = strconv.Atoi(p)
 		if err != nil {
@@ -265,12 +253,17 @@ func handleBlock(w http.ResponseWriter, r *http.Request) {
 			handle404(w, r)
 			return
 		}
-		e.PageInfo.Current = page
 	}
-	if page > e.PageInfo.Max {
+	if page > maxPage {
 		log.Printf("handleEBlock - e.PageInfo.Max\n")
 		handle404(w, r)
 		return
+	}
+	e := blockPlus{
+		Block:    block,
+		Hash:     mr,
+		Count:    len(block.EntryList),
+		PageInfo: NewPageState(page, maxPage),
 	}
 	if i, j := 50*(page-1), 50*page; len(block.EntryList) > j {
 		e.Block.EntryList = e.Block.EntryList[i:j]
@@ -314,24 +307,47 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 }
 
 type PageState struct {
-	Current int
-	Max     int
+	Current  int
+	Max      int
+	Previous int
+	Next     int
+
+	//For display purposes:
+	// <LeftMostBatch ... LeftBatch Current RightBatch ... RightmostBatch >
+	LeftmostBatch  []int
+	LeftBatch      []int
+	RightBatch     []int
+	RightmostBatch []int
 }
 
-func (p *PageState) Next() int {
-	return p.Current + 1
-}
+func NewPageState(current int, max int) *PageState {
+	ps := new(PageState)
+	ps.Current = current
+	ps.Max = max
 
-func (p *PageState) Next1() int {
-	return p.Current + 2
-}
+	ps.Previous = current - 1
+	ps.Next = current + 1
 
-func (p *PageState) Next2() int {
-	return p.Current + 3
-}
+	if current > 6 {
+		ps.LeftmostBatch = []int{1, 2}
+		ps.LeftBatch = []int{current - 2, current - 1}
+	} else {
+		ps.LeftBatch = make([]int, current-1)
+		for i := 1; i < current; i++ {
+			ps.LeftBatch[i-1] = i
+		}
+	}
 
-func (p *PageState) Prev() int {
-	return p.Current - 1
+	if current < max-5 {
+		ps.RightBatch = []int{current + 1, current + 2}
+		ps.RightmostBatch = []int{max - 1, max}
+	} else {
+		ps.RightBatch = make([]int, max-current)
+		for i := 0; i < max-current; i++ {
+			ps.RightBatch[i] = current + i + 1
+		}
+	}
+	return ps
 }
 
 func hextotext(h string) string {

@@ -48,30 +48,30 @@ type ListEntry struct {
 type DBlock struct {
 	DBHash string
 
-	PrevBlockKeyMR string
-	NextBlockKeyMR string
+	PrevBlockKeyMR string `datastore:",noindex"`
+	NextBlockKeyMR string `datastore:",noindex"`
 	Timestamp      int64
 	SequenceNumber int
 
-	EntryBlockList   []ListEntry
-	AdminBlock       ListEntry
-	FactoidBlock     ListEntry
-	EntryCreditBlock ListEntry
+	EntryBlockList   []ListEntry `datastore:",noindex"`
+	AdminBlock       ListEntry   `datastore:",noindex"`
+	FactoidBlock     ListEntry   `datastore:",noindex"`
+	EntryCreditBlock ListEntry   `datastore:",noindex"`
 
 	BlockTimeStr string
 	KeyMR        string
 
-	AnchoredInTransaction string
-	AnchorRecord          string
+	AnchoredInTransaction string `datastore:",noindex"`
+	AnchorRecord          string `datastore:",noindex"`
 
 	Blocks int
 
-	AdminEntries       int
-	EntryCreditEntries int
-	FactoidEntries     int
-	EntryEntries       int
+	AdminEntries       int `datastore:",noindex"`
+	EntryCreditEntries int `datastore:",noindex"`
+	FactoidEntries     int `datastore:",noindex"`
+	EntryEntries       int `datastore:",noindex"`
 
-	FactoidTally string
+	FactoidTally string `datastore:",noindex"`
 }
 
 func (e *DBlock) JSON() (string, error) {
@@ -104,26 +104,26 @@ type Block struct {
 	FullHash    string //KeyMR
 	PartialHash string
 
-	PrevBlockHash string
-	NextBlockHash string
+	PrevBlockHash string `datastore:",noindex"`
+	NextBlockHash string `datastore:",noindex"`
 
-	EntryCount int
+	EntryCount int `datastore:",noindex"`
 
-	EntryIDList []string
+	EntryIDList []string `datastore:",noindex"`
 	EntryList   []*Entry `datastore:"-"`
 
-	IsAdminBlock       bool
-	IsFactoidBlock     bool
-	IsEntryCreditBlock bool
-	IsEntryBlock       bool
+	IsAdminBlock       bool `datastore:",noindex"`
+	IsFactoidBlock     bool `datastore:",noindex"`
+	IsEntryCreditBlock bool `datastore:",noindex"`
+	IsEntryBlock       bool `datastore:",noindex"`
 
-	TotalIns   string
-	TotalOuts  string
-	TotalECs   string
-	TotalDelta string
+	TotalIns   string `datastore:",noindex"`
+	TotalOuts  string `datastore:",noindex"`
+	TotalECs   string `datastore:",noindex"`
+	TotalDelta string `datastore:",noindex"`
 
-	Created   string
-	Destroyed string
+	Created   string `datastore:",noindex"`
+	Destroyed string `datastore:",noindex"`
 }
 
 func (e *Block) JSON() (string, error) {
@@ -144,9 +144,9 @@ type Entry struct {
 	ShortEntry string //a way to replace the entry with a short string
 
 	ExternalIDs []DecodedString
-	Content     DecodedString
+	Content     DecodedString `datastore:",noindex"`
 
-	MinuteMarker string
+	MinuteMarker string `datastore:",noindex"`
 
 	//Marshallable blocks
 	Hash string
@@ -154,11 +154,11 @@ type Entry struct {
 	//Anchor chain-specific data
 	AnchorRecord *AnchorRecord `datastore:"-"`
 
-	TotalIns  string
-	TotalOuts string
-	TotalECs  string
+	TotalIns  string `datastore:",noindex"`
+	TotalOuts string `datastore:",noindex"`
+	TotalECs  string `datastore:",noindex"`
 
-	Delta string
+	Delta string `datastore:",noindex"`
 }
 
 type AnchorRecord struct {
@@ -187,7 +187,7 @@ func (e *Entry) Spew() string {
 type Chain struct {
 	ChainID      string
 	Names        []DecodedString
-	FirstEntryID string
+	FirstEntryID string `datastore:",noindex"`
 
 	//Not saved
 	FirstEntry *Entry   `datastore:"-"`

@@ -18,7 +18,7 @@ type Response struct {
 	Success  bool
 }
 
-var server string = "localhost:8088"
+var server string = "52.18.72.212:8088/"
 
 func FactomdFactoidBalance(c appengine.Context, adr string) (int64, error) {
 	str := fmt.Sprintf("http://%s/v1/factoid-balance/%s", server, adr)
@@ -150,25 +150,24 @@ func FactomdGetDBlock(c appengine.Context, keymr string) (*FactomdDBlock, error)
 }
 
 func FactomdGetDBlockHead(c appengine.Context) (*FactomdDBlockHead, error) {
-	/*	resp, err := Call(c, fmt.Sprintf("http://%s/v1/directory-block-head/", server))
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		if resp.StatusCode != 200 {
-			return nil, fmt.Errorf(string(body))
-		}
-
-		d := new(FactomdDBlockHead)
-		json.Unmarshal(body, d)
-	*/
+	resp, err := Call(c, fmt.Sprintf("http://%s/v1/directory-block-head/", server))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf(string(body))
+	}
 
 	d := new(FactomdDBlockHead)
-	d.KeyMR = "3a5ec711a1dc1c6e463b0c0344560f830eb0b56e42def141cb423b0d8487a1dc"
+	json.Unmarshal(body, d)
+
+	/*d := new(FactomdDBlockHead)
+	d.KeyMR = "3a5ec711a1dc1c6e463b0c0344560f830eb0b56e42def141cb423b0d8487a1dc"*/
 	return d, nil
 }
 

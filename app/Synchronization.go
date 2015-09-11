@@ -630,7 +630,7 @@ func ParseEntryBlock(c appengine.Context, chainID, hash string, rawBlock []byte,
 		return nil, err
 	}
 
-	Log.Errorf(c, "Block - %v", answer.JSONString)
+	Log.Debugf(c, "Block - %v", answer.JSONString)
 	lastMinuteMarkedEntry := 0
 	for _, v := range eBlock.Body.EBEntries {
 		if IsMinuteMarker(v.String()) {
