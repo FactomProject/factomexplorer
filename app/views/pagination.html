@@ -13,7 +13,7 @@
     	{{range .LeftmostBatch}}
  	   		<li><a href="?page={{.}}" class="withripple">{{.}}</a></li>
     	{{end}}
-    	<li>...</li>
+        <li><a class="withripple">...</a></li>
     {{end}}
 
     {{if .LeftBatch}}
@@ -31,7 +31,7 @@
     {{end}}
 
     {{if .RightmostBatch}}
-    	<li>...</li>
+        <li><a class="withripple">...</a></li>
     	{{range .RightmostBatch}}
  	   		<li><a href="?page={{.}}" class="withripple">{{.}}</a></li>
     	{{end}}

@@ -19,6 +19,7 @@ import (
 var (
 	tpl = new(template.Template)
 )
+var blocksPerPAge int = 50
 
 func init() {
 	tpl = template.Must(template.New("main").Funcs(template.FuncMap{
@@ -197,7 +198,7 @@ func handleDBlocks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := 1
-	maxPage := (len(dBlocks) / 50) + 1
+	maxPage := (len(dBlocks) / blocksPerPAge) + 1
 	if p := r.FormValue("page"); p != "" {
 		page, err = strconv.Atoi(p)
 		if err != nil {
@@ -215,7 +216,7 @@ func handleDBlocks(w http.ResponseWriter, r *http.Request) {
 		DBlocks:  dBlocks,
 		PageInfo: NewPageState(page, maxPage),
 	}
-	if i, j := 50*(page-1), 50*page; len(dBlocks) > j {
+	if i, j := blocksPerPAge*(page-1), blocksPerPAge*page; len(dBlocks) > j {
 		d.DBlocks = d.DBlocks[i:j]
 	} else {
 		d.DBlocks = d.DBlocks[i:]
@@ -244,7 +245,7 @@ func handleBlock(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := 1
-	maxPage := (len(block.EntryList) / 50) + 1
+	maxPage := (len(block.EntryList) / blocksPerPAge) + 1
 	if p := r.FormValue("page"); p != "" {
 		page, err = strconv.Atoi(p)
 		if err != nil {
@@ -265,7 +266,7 @@ func handleBlock(w http.ResponseWriter, r *http.Request) {
 		Count:    len(block.EntryList),
 		PageInfo: NewPageState(page, maxPage),
 	}
-	if i, j := 50*(page-1), 50*page; len(block.EntryList) > j {
+	if i, j := blocksPerPAge*(page-1), blocksPerPAge*page; len(block.EntryList) > j {
 		e.Block.EntryList = e.Block.EntryList[i:j]
 	} else {
 		e.Block.EntryList = e.Block.EntryList[i:]
