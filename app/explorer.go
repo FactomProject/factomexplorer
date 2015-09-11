@@ -47,6 +47,7 @@ func init() {
 	http.HandleFunc(`/chain/`, handleChain)
 	http.HandleFunc(`/dblocks/`, handleDBlocks)
 	http.HandleFunc(`/dblock/`, handleDBlock)
+	http.HandleFunc(`/block/`, handleBlock)
 	http.HandleFunc(`/eblock/`, handleBlock)
 	http.HandleFunc(`/ablock/`, handleBlock)
 	http.HandleFunc(`/ecblock/`, handleBlock)
@@ -106,8 +107,6 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	switch searchType := r.FormValue("searchType"); searchType {
 	case "entry":
 		handleEntry(w, r)
-	case "eblock":
-		handleBlock(w, r)
 	case "block":
 		handleBlock(w, r)
 	case "dblock":
