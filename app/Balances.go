@@ -150,7 +150,7 @@ func FactomdGetDBlock(c appengine.Context, keymr string) (*FactomdDBlock, error)
 }
 
 func FactomdGetDBlockHead(c appengine.Context) (*FactomdDBlockHead, error) {
-	/*resp, err := Call(c, fmt.Sprintf("http://%s/v1/directory-block-head/", server))
+	resp, err := Call(c, fmt.Sprintf("http://%s/v1/directory-block-head/", server))
 	if err != nil {
 		return nil, err
 	}
@@ -164,10 +164,10 @@ func FactomdGetDBlockHead(c appengine.Context) (*FactomdDBlockHead, error) {
 	}
 
 	d := new(FactomdDBlockHead)
-	json.Unmarshal(body, d)*/
+	json.Unmarshal(body, d)
 
-	d := new(FactomdDBlockHead)
-	d.KeyMR = "66aba2dc4553405c3806d390e9ed8cc4a81b263dc649b5a45bd98e5619e0eb2b"
+	/*d := new(FactomdDBlockHead)
+	d.KeyMR = "9c83bab565fd625f1f575dd8fe6545b354c970e29ce31dbe5f75470b717d168d"*/
 	return d, nil
 }
 
