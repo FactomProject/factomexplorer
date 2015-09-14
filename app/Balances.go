@@ -21,19 +21,21 @@ type Response struct {
 var server string = "52.18.72.212:8088/"
 
 func FactomdFactoidBalance(c appengine.Context, adr string) (int64, error) {
-	str := fmt.Sprintf("http://%s/v1/factoid-balance/%s", server, adr)
-	resp, err := http.Get(str)
+	resp, err := Call(c, fmt.Sprintf("http://%s/v1/factoid-balance/%s", server, adr))
 	if err != nil {
+		Log.Errorf(c, "FactomdFactoidBalance - %v", err)
 		return 0, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		Log.Errorf(c, "FactomdFactoidBalance - %v", err)
 		return 0, err
 	}
 	resp.Body.Close()
 
 	b := new(Response)
 	if err := json.Unmarshal(body, b); err != nil {
+		Log.Errorf(c, "FactomdFactoidBalance - %v", err)
 		return 0, err
 	}
 
@@ -43,6 +45,7 @@ func FactomdFactoidBalance(c appengine.Context, adr string) (int64, error) {
 
 	v, err := strconv.ParseInt(b.Response, 10, 64)
 	if err != nil {
+		Log.Errorf(c, "FactomdFactoidBalance - %v", err)
 		return 0, err
 	}
 
@@ -51,19 +54,21 @@ func FactomdFactoidBalance(c appengine.Context, adr string) (int64, error) {
 }
 
 func FactomdECBalance(c appengine.Context, adr string) (int64, error) {
-	str := fmt.Sprintf("http://%s/v1/entry-credit-balance/%s", server, adr)
-	resp, err := http.Get(str)
+	resp, err := Call(c, fmt.Sprintf("http://%s/v1/entry-credit-balance/%s", server, adr))
 	if err != nil {
+		Log.Errorf(c, "FactomdECBalance - %v", err)
 		return 0, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		Log.Errorf(c, "FactomdECBalance - %v", err)
 		return 0, err
 	}
 	resp.Body.Close()
 
 	b := new(Response)
 	if err := json.Unmarshal(body, b); err != nil {
+		Log.Errorf(c, "FactomdECBalance - %v", err)
 		return 0, err
 	}
 
@@ -73,6 +78,7 @@ func FactomdECBalance(c appengine.Context, adr string) (int64, error) {
 
 	v, err := strconv.ParseInt(b.Response, 10, 64)
 	if err != nil {
+		Log.Errorf(c, "FactomdECBalance - %v", err)
 		return 0, err
 	}
 
@@ -86,11 +92,13 @@ type Data struct {
 func FactomdGetRaw(c appengine.Context, keymr string) ([]byte, error) {
 	resp, err := Call(c, fmt.Sprintf("http://%s/v1/get-raw-data/%s", server, keymr))
 	if err != nil {
+		Log.Errorf(c, "FactomdGetRaw - %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		Log.Errorf(c, "FactomdGetRaw - %v", err)
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
@@ -99,11 +107,13 @@ func FactomdGetRaw(c appengine.Context, keymr string) ([]byte, error) {
 
 	d := new(Data)
 	if err := json.Unmarshal(body, d); err != nil {
+		Log.Errorf(c, "FactomdGetRaw - %v", err)
 		return nil, err
 	}
 
 	raw, err := hex.DecodeString(d.Data)
 	if err != nil {
+		Log.Errorf(c, "FactomdGetRaw - %v", err)
 		return nil, err
 	}
 
@@ -130,11 +140,13 @@ type FactomdDBlockHead struct {
 func FactomdGetDBlock(c appengine.Context, keymr string) (*FactomdDBlock, error) {
 	resp, err := Call(c, fmt.Sprintf("http://%s/v1/directory-block-by-keymr/%s", server, keymr))
 	if err != nil {
+		Log.Errorf(c, "FactomdGetDBlock - %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		Log.Errorf(c, "FactomdGetDBlock - %v", err)
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
@@ -152,11 +164,13 @@ func FactomdGetDBlock(c appengine.Context, keymr string) (*FactomdDBlock, error)
 func FactomdGetDBlockHead(c appengine.Context) (*FactomdDBlockHead, error) {
 	resp, err := Call(c, fmt.Sprintf("http://%s/v1/directory-block-head/", server))
 	if err != nil {
+		Log.Errorf(c, "FactomdGetDBlockHead - %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		Log.Errorf(c, "FactomdGetDBlockHead - %v", err)
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
