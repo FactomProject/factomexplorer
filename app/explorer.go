@@ -84,6 +84,8 @@ func getIndexParameter(r *http.Request) string {
 func test(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	c.Debugf("Test")
+	exIDs, err := ListExternalIDs(c)
+	Log.Debugf(c, "test - %v, %v", exIDs, err)
 }
 
 func EncodeJSONString(data interface{}) (string, error) {

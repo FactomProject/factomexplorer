@@ -792,10 +792,33 @@ func ParseAdminBlock(c appengine.Context, chainID, hash string, rawBlock []byte,
 }
 
 func GetEntriesByExtID(c appengine.Context, eid string) ([]*Entry, error) {
-	chain, err := GetChainByName(c, eid)
+	ids, err := ListExternalIDs(c)
 	if err != nil {
-		Log.Errorf(c, "Error - %v", err)
+		Log.Errorf(c, "GetEntriesByExtID - %v", err)
 		return nil, err
 	}
-	return chain.Entries, nil
+	entriesToLoad := map[string]string{}
+
+	eid = strings.ToLower(eid)
+
+	for k, v := range ids {
+		if strings.Contains(strings.ToLower(k), eid) {
+			for _, id := range v {
+				entriesToLoad[id] = id
+			}
+		}
+	}
+
+	answer := []*Entry{}
+
+	for _, v := range entriesToLoad {
+		entry, err := LoadEntry(c, v)
+		if err != nil {
+			Log.Errorf(c, "GetEntriesByExtID - %v", err)
+			return nil, err
+		}
+		answer = append(answer, entry)
+	}
+
+	return answer, nil
 }

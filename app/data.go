@@ -711,3 +711,51 @@ func GetAllChainEntries(c appengine.Context, chainID string) ([]*Entry, error) {
 	}
 	return answer, nil
 }
+
+func ListExternalIDs(c appengine.Context) (map[string][]string, error) {
+	tmp := []Entry{}
+	keys := Datastore.QueryGetAllKeysWithFilter(c, EntriesBucket, "ExternalIDs.Encoded>", "", tmp)
+	answer := map[string][]string{}
+	for _, v := range keys {
+		entry, err := LoadEntry(c, v.StringID())
+		if err != nil {
+			Log.Errorf(c, "ListExternalIDs - %v", err)
+			return nil, err
+		}
+		for _, exID := range entry.ExternalIDs {
+			list, ok := answer[exID.Decoded]
+			if ok == false {
+				list = []string{}
+			}
+			found := false
+			for i := range list {
+				if list[i] == entry.Hash {
+					found = true
+					break
+				}
+			}
+			if found == false {
+				list = append(list, entry.Hash)
+				answer[exID.Decoded] = list
+			}
+
+			list, ok = answer[exID.Encoded]
+			if ok == false {
+				list = []string{}
+			}
+			found = false
+			for i := range list {
+				if list[i] == entry.Hash {
+					found = true
+					break
+				}
+			}
+			if found == false {
+				list = append(list, entry.Hash)
+				answer[exID.Encoded] = list
+			}
+		}
+	}
+
+	return answer, nil
+}

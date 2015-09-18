@@ -33,8 +33,8 @@ echo "
 *       missing, will checkout the master branch.
 *
 *********************************************************"
-branch=Explorer
-default=master
+branch=GAE
+default=Explorer
 else
 echo "
 *********************************************************
