@@ -77,8 +77,9 @@ func getIndexParameter(r *http.Request) string {
 		return searchText
 	}
 	params := strings.Split(r.URL.String(), "/")
-	Log.Debugf(c, "params[len(params)-1] - %v", params[len(params)-1])
-	return params[len(params)-1]
+	params = strings.Split(params[len(params)-1], "?")
+
+	return params[0]
 }
 
 func test(w http.ResponseWriter, r *http.Request) {
@@ -139,14 +140,47 @@ func handleAddress(w http.ResponseWriter, r *http.Request) {
 func handleChain(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	hash := getIndexParameter(r)
-	chain, err := GetChainByName(c, hash)
+
+	page := 1
+	if p := r.FormValue("page"); p != "" {
+		var err error
+		page, err = strconv.Atoi(p)
+		if err != nil {
+			Log.Errorf(c, "Error - %v", err)
+			handle404(w, r)
+			return
+		}
+	}
+
+	min := (page - 1) * blocksPerPage
+	if min < 0 {
+		min = 0
+	}
+
+	chain, err := GetChainByName(c, hash, min, blocksPerPage)
 	if err != nil {
 		Log.Errorf(c, "Error - %v", err)
 		handle404(w, r)
 		return
 	}
 
-	tpl.ExecuteTemplate(w, "chain.html", chain)
+	type chainPlus struct {
+		Chain    *Chain
+		PageInfo *PageState
+	}
+
+	pi := new(PageState)
+	pi.Current = page
+	if len(chain.Entries) == blocksPerPage {
+		pi.Next = page + 1
+	}
+	if page > 0 {
+		pi.Previous = page - 1
+	}
+
+	cp := chainPlus{Chain: chain, PageInfo: pi}
+
+	tpl.ExecuteTemplate(w, "chain.html", cp)
 }
 
 func handleChains(w http.ResponseWriter, r *http.Request) {

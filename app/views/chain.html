@@ -17,72 +17,75 @@
 
 	{{template "cheader.html"}}
 
-  <div class="mask"></div>
+  {{with .Chain}}
+    <div class="mask"></div>
 
-  <div class="main">
+    <div class="main">
 
-    <h1 class="screen-title">Chain</h1>
+      <h1 class="screen-title">Chain</h1>
 
-    <div class="card">
-      <dl class="blockinfo">
-        <div>
-          <dt>Chain Names:</dt>
-          <dd class="chain-name">[{{range .Names}} { {{.Encoded}}, {{.Decoded}} } {{end}}]</dd>
-        </div>
-        <div>
-          <dt>Chain ID:</dt>
-          <dd>{{.ChainID}}</dd>
-        </div>
-      </dl>
-    </div>
-  </div>
-
-	{{with .FirstEntry}}
-    <h1 class="screen-title">First Entry</h1>
-     <div class="card entry-block-list">
-      <dl class="blockinfo">
-        <div>
-          <dt>Chain:</dt>
-          <dd>{{.ChainID}}</dd>
-        </div>
-        {{range .ExternalIDs}}
-          {{with .}}
+      <div class="card">
+        <dl class="blockinfo">
           <div>
-            <dt>External ID:</dt>
-            <dd>
-              <span>{{.Encoded}}, {{.Decoded}}</span>
-            </dd>
+            <dt>Chain Names:</dt>
+            <dd class="chain-name">[{{range .Names}} { {{.Encoded}}, {{.Decoded}} } {{end}}]</dd>
           </div>
-     	   {{end}}
-   	   {{end}}
-        <div>
-          <dt>Content:</dt>
-          <dd>{{.Content.Encoded}}, {{.Content.Decoded}}</dd>
-        </div>
-      </dl>
+          <div>
+            <dt>Chain ID:</dt>
+            <dd>{{.ChainID}}</dd>
+          </div>
+        </dl>
+      </div>
     </div>
-   {{end}}
 
-    <h1 class="screen-title">Entries:</h1>
-     <div class="card">
-      <table class="table table-hover standard-table clickable-rows">
-        <thead>
-            <tr class="first">
-                <th class="date-time">Created</th>
-                <th class="hidden-xs ">Hash</th>
-            </tr>
-        </thead>
-        <tbody>
-          {{range .Entries}}
-            <tr class="clickableRow" href="/entry/{{hashfilter .Hash}}">
-                <td>{{.Timestamp}}</td>
-                <td class="hidden-xs">{{hashfilter .Hash}}</td>
-            </tr>
-          {{end}}
-        </tbody>
-      </table>
+  	{{with .FirstEntry}}
+      <h1 class="screen-title">First Entry</h1>
+       <div class="card entry-block-list">
+        <dl class="blockinfo">
+          <div>
+            <dt>Chain:</dt>
+            <dd>{{.ChainID}}</dd>
+          </div>
+          {{range .ExternalIDs}}
+            {{with .}}
+            <div>
+              <dt>External ID:</dt>
+              <dd>
+                <span>{{.Encoded}}, {{.Decoded}}</span>
+              </dd>
+            </div>
+       	   {{end}}
+     	   {{end}}
+          <div>
+            <dt>Content:</dt>
+            <dd>{{.Content.Encoded}}, {{.Content.Decoded}}</dd>
+          </div>
+        </dl>
+      </div>
+     {{end}}
+
+      <h1 class="screen-title">Entries:</h1>
+       <div class="card">
+        <table class="table table-hover standard-table clickable-rows">
+          <thead>
+              <tr class="first">
+                  <th class="date-time">Created</th>
+                  <th class="hidden-xs ">Hash</th>
+              </tr>
+          </thead>
+          <tbody>
+            {{range .Entries}}
+              <tr class="clickableRow" href="/entry/{{hashfilter .Hash}}">
+                  <td>{{.Timestamp}}</td>
+                  <td class="hidden-xs">{{hashfilter .Hash}}</td>
+              </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+  {{end}}
+  {{template "pagination.html" .PageInfo}}
     </div>
-  </div>
 
   </div>
 </div>

@@ -647,7 +647,8 @@ func GetChains(c appengine.Context) ([]Chain, error) {
 	return answer, nil
 }
 
-func GetChain(c appengine.Context, hash string) (*Chain, error) {
+func GetChain(c appengine.Context, hash string, startFrom, amountToFetch int) (*Chain, error) {
+	Log.Debugf(c, "GetChain - %v, %v, %v", hash, startFrom, amountToFetch)
 	hash = strings.ToLower(hash)
 	chain, err := LoadChain(c, hash)
 	if err != nil {
@@ -668,7 +669,7 @@ func GetChain(c appengine.Context, hash string) (*Chain, error) {
 	}
 	chain.FirstEntry = entry
 
-	entries, err := GetAllChainEntries(c, chain.ChainID)
+	entries, err := GetChainEntries(c, chain.ChainID, startFrom, amountToFetch)
 	if err != nil {
 		Log.Errorf(c, "Error - %v", err)
 		return nil, err
@@ -678,26 +679,27 @@ func GetChain(c appengine.Context, hash string) (*Chain, error) {
 	return chain, nil
 }
 
-func GetChainByName(c appengine.Context, name string) (*Chain, error) {
+func GetChainByName(c appengine.Context, name string, startFrom, amountToFetch int) (*Chain, error) {
+	Log.Debugf(c, "GetChainByName - %v, %v, %v", name, startFrom, amountToFetch)
 	id, err := LoadChainIDByName(c, name)
 	if err != nil {
 		Log.Errorf(c, "Error - %v", err)
 		return nil, err
 	}
 	if id != "" {
-		return GetChain(c, id)
+		return GetChain(c, id, startFrom, amountToFetch)
 	}
 
-	return GetChain(c, name)
+	return GetChain(c, name, startFrom, amountToFetch)
 }
 
 type EBlock struct {
 	factom.EBlock
 }
 
-func GetAllChainEntries(c appengine.Context, chainID string) ([]*Entry, error) {
+func GetChainEntries(c appengine.Context, chainID string, startFrom, amountToFetch int) ([]*Entry, error) {
 	tmp := []Entry{}
-	keys, err := Datastore.QueryGetAllKeysWithFilterAndOrder(c, EntriesBucket, "ChainID=", chainID, "Timestamp", &tmp)
+	keys, err := Datastore.QueryGetAllKeysWithFilterLimitOffsetAndOrder(c, EntriesBucket, "ChainID=", chainID, amountToFetch, startFrom, "Timestamp", &tmp)
 	if err != nil {
 		return nil, err
 	}
