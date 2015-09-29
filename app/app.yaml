@@ -1,5 +1,5 @@
 application: factomexplorer
-version:     factomexplorer-2015-09-18
+version:     factomexplorer-2015-09-29
 runtime:     go
 api_version: go1
 
@@ -18,7 +18,7 @@ handlers:
   static_dir: scss
 - url: /.*
   script: _go_app
-  secure: always
+  secure: optional
 - url: /Admin
   script: _go_app
   secure: always

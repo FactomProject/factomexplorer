@@ -1,18 +1,5 @@
   <header>
-	<script type="text/javascript">
-	var searchTimeout; // declare variable to hold the timer
-	 
-	function Search()  // this function gets called on KeyUp from your input text field
-	{
-	    clearTimeout(searchTimeout); // this may be a subsequent key press, so user may be still typing, reset timer if it had previously been set and is currently counting down 
-	    searchTimeout = setTimeout(function () { PostData(); }, 500); // set new timer to call function that POSTs data. If no other key is pressed within 500ms, we assume the user is done typing and we call the function. Tweak this value to suit your needs
-	}
-	 
-	function PostData()
-	{
-	    document.forms['searchform'].submit();
-	}	
-	</script>  
+
 <form id="searchform" method="post" action="/search">       
       <span class="logo"></span>
       <div class="searchrow container-fluid">
