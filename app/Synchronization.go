@@ -3,9 +3,12 @@ package app
 import (
 	"appengine"
 	"fmt"
-	"github.com/FactomProject/FactomCode/common"
-	"github.com/FactomProject/factoid"
-	"github.com/FactomProject/factoid/block"
+	"github.com/FactomProject/factomd/common/AdminBlock"
+	"github.com/FactomProject/factomd/common/EntryBlock"
+	"github.com/FactomProject/factomd/common/EntryCreditBlock"
+	"github.com/FactomProject/factomd/common/factoid/block"
+	. "github.com/FactomProject/factomd/common/interfaces"
+	. "github.com/FactomProject/factomd/common/primitives"
 	"github.com/ThePiachu/Go/Log"
 	"log"
 	"strconv"
@@ -69,7 +72,7 @@ func GetAddressInformationFromFactom(c appengine.Context, address string) (*Addr
 	} else {
 		answer.AddressType = "Factoid Address"
 		if fctBalance > 0 {
-			answer.Balance = factoid.ConvertDecimalToString(uint64(fctBalance))
+			answer.Balance = ConvertDecimalToString(uint64(fctBalance))
 			return answer, nil
 		}
 	}
@@ -419,7 +422,7 @@ func FetchBlock(c appengine.Context, chainID, hash, blockTime string) (*Block, e
 func ParseEntryCreditBlock(c appengine.Context, chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
 	answer := new(Block)
 
-	ecBlock := common.NewECBlock()
+	ecBlock := EntryCreditBlock.NewECBlock()
 	_, err := ecBlock.UnmarshalBinaryData(rawBlock)
 	if err != nil {
 		return nil, err
@@ -537,11 +540,11 @@ func ParseFactoidBlock(c appengine.Context, chainID, hash string, rawBlock []byt
 		}
 
 		ec := uint64(float64(totalEcs) / exchangeRate)
-		entry.TotalIns = factoid.ConvertDecimalToString(uint64(in))
-		entry.TotalOuts = factoid.ConvertDecimalToString(uint64(out))
+		entry.TotalIns = ConvertDecimalToString(uint64(in))
+		entry.TotalOuts = ConvertDecimalToString(uint64(out))
 		entry.TotalECs = fmt.Sprintf("%d", ec)
 
-		entry.Delta = fmt.Sprintf("%.8f", factoid.ConvertDecimalToFloat(out)-factoid.ConvertDecimalToFloat(in))
+		entry.Delta = fmt.Sprintf("%.8f", ConvertDecimalToFloat(out)-ConvertDecimalToFloat(in))
 
 		answer.EntryList[i] = entry
 
@@ -593,7 +596,7 @@ func ParseEntryBlock(c appengine.Context, chainID, hash string, rawBlock []byte,
 	Log.Infof(c, "ParseEntryBlock - %x", rawBlock)
 	answer := new(Block)
 
-	eBlock := common.NewEBlock()
+	eBlock := EntryBlock.NewEBlock()
 	_, err := eBlock.UnmarshalBinaryData(rawBlock)
 	if err != nil {
 		Log.Errorf(c, "Error - %v", err)
@@ -659,7 +662,7 @@ func IsHashZeroes(hash string) bool {
 }
 
 func IsMinuteMarker(hash string) bool {
-	h, err := common.HexToHash(hash)
+	h, err := HexToHash(hash)
 	if err != nil {
 		panic(err)
 	}
@@ -674,7 +677,7 @@ func FetchAndParseEntry(c appengine.Context, hash, blockTime string, isFirstEntr
 		return nil, err
 	}
 
-	entry := new(common.Entry)
+	entry := new(EntryBlock.Entry)
 	_, err = entry.UnmarshalBinaryData(raw)
 	if err != nil {
 		Log.Errorf(c, "Error unmarshalling data - %v, %x - %v", hash, err, raw)
@@ -738,7 +741,7 @@ func ByteSliceToDecodedString(b []byte) DecodedString {
 func ParseAdminBlock(c appengine.Context, chainID, hash string, rawBlock []byte, blockTime string) (*Block, error) {
 	answer := new(Block)
 
-	aBlock := new(common.AdminBlock)
+	aBlock := new(AdminBlock.AdminBlock)
 	_, err := aBlock.UnmarshalBinaryData(rawBlock)
 	if err != nil {
 		return nil, err
@@ -756,7 +759,7 @@ func ParseAdminBlock(c appengine.Context, chainID, hash string, rawBlock []byte,
 	}
 	answer.PartialHash = partialHash.String()
 	answer.EntryCount = len(aBlock.ABEntries)
-	answer.PrevBlockHash = fmt.Sprintf("%x", aBlock.Header.PrevLedgerKeyMR.GetBytes())
+	answer.PrevBlockHash = fmt.Sprintf("%x", aBlock.Header.PrevLedgerKeyMR.Bytes())
 	answer.EntryList = make([]*Entry, answer.EntryCount)
 	answer.BinaryString = fmt.Sprintf("%x", rawBlock)
 	for i, v := range aBlock.ABEntries {

@@ -7,7 +7,6 @@ package app
 import (
 	"appengine"
 	"encoding/hex"
-	"encoding/json"
 	"github.com/ThePiachu/Go/Log"
 	"html/template"
 	"log"
@@ -89,13 +88,14 @@ func test(w http.ResponseWriter, r *http.Request) {
 	Log.Debugf(c, "test - %v, %v", exIDs, err)
 }
 
+/*
 func EncodeJSONString(data interface{}) (string, error) {
 	encoded, err := json.Marshal(data)
 	if err != nil {
 		return "", err
 	}
 	return string(encoded), err
-}
+}*/
 
 func handle404(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "404.html", nil)

@@ -6,8 +6,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/FactomProject/FactomCode/common"
 	"github.com/FactomProject/factom"
+	. "github.com/FactomProject/factomd/common/interfaces"
 	"github.com/ThePiachu/Go/Datastore"
 	"github.com/ThePiachu/Go/Log"
 	"strings"
@@ -75,11 +75,11 @@ type DBlock struct {
 }
 
 func (e *DBlock) JSON() (string, error) {
-	return common.EncodeJSONString(e)
+	return EncodeJSONString(e)
 }
 
 func (e *DBlock) Spew() string {
-	return common.Spew(e)
+	return Spew(e)
 }
 
 type Common struct {
@@ -91,11 +91,11 @@ type Common struct {
 }
 
 func (e *Common) JSON() (string, error) {
-	return common.EncodeJSONString(e)
+	return EncodeJSONString(e)
 }
 
 func (e *Common) Spew() string {
-	return common.Spew(e)
+	return Spew(e)
 }
 
 type Block struct {
@@ -127,15 +127,15 @@ type Block struct {
 }
 
 func (e *Block) JSON() (string, error) {
-	return common.EncodeJSONString(e)
+	return EncodeJSONString(e)
 }
 
 func (e *Block) JSONBuffer(b *bytes.Buffer) error {
-	return common.EncodeJSONToBuffer(e, b)
+	return EncodeJSONToBuffer(e, b)
 }
 
 func (e *Block) Spew() string {
-	return common.Spew(e)
+	return Spew(e)
 }
 
 type Entry struct {
@@ -177,11 +177,11 @@ type AnchorRecord struct {
 }
 
 func (e *Entry) JSON() (string, error) {
-	return common.EncodeJSONString(e)
+	return EncodeJSONString(e)
 }
 
 func (e *Entry) Spew() string {
-	return common.Spew(e)
+	return Spew(e)
 }
 
 type Chain struct {
@@ -448,7 +448,7 @@ func ParseAnchorChainData(c appengine.Context, data string) (*AnchorRecord, erro
 	tmp := data[:len(data)-128]
 	ar := new(AnchorRecord)
 
-	err := common.DecodeJSONString(tmp, ar)
+	err := DecodeJSONString(tmp, ar)
 	if err != nil {
 		Log.Infof(c, "ParseAnchorChainData - %v", err)
 		return nil, err
