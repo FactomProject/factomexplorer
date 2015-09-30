@@ -18,6 +18,7 @@ type Response struct {
 	Success  bool
 }
 
+//var server string = "localhost:8088/"
 var server string = "52.18.72.212:8088/"
 
 func FactomdFactoidBalance(c appengine.Context, adr string) (int64, error) {

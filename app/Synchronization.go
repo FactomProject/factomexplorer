@@ -48,7 +48,7 @@ func GetAddressInformationFromFactom(c appengine.Context, address string) (*Addr
 	ecBalance, err := FactomdECBalance(c, address)
 	Log.Debugf(c, "ECBalance - %v, %v\n\n", ecBalance, err)
 	if err != nil {
-		if !strings.Contains(err.Error(), "Invalid name or address") && !strings.Contains(err.Error(), "encoding/hex") {
+		if !strings.Contains(err.Error(), "Invalid") && !strings.Contains(err.Error(), "encoding/hex") {
 			return nil, err
 		}
 		invalid++
@@ -62,7 +62,7 @@ func GetAddressInformationFromFactom(c appengine.Context, address string) (*Addr
 	fctBalance, err := FactomdFactoidBalance(c, address)
 	Log.Debugf(c, "FactoidBalance - %v, %v\n\n", fctBalance, err)
 	if err != nil {
-		if !strings.Contains(err.Error(), "Invalid name or address") {
+		if !strings.Contains(err.Error(), "Invalid") {
 			return nil, err
 		}
 		invalid++
