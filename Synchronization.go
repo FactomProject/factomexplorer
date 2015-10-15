@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/FactomProject/FactomCode/common"
-	"github.com/FactomProject/factoid"
 	"github.com/FactomProject/factoid/block"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/fctwallet/Wallet"
@@ -59,7 +58,7 @@ func GetAddressInformationFromFactom(address string) (*Address, error) {
 	} else {
 		answer.AddressType = "Factoid Address"
 		if fctBalance > 0 {
-			answer.Balance = factoid.ConvertDecimalToString(uint64(fctBalance))
+			answer.Balance = string(uint64(fctBalance))
 			return answer, nil
 		}
 	}
