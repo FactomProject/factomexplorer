@@ -6020,7 +6020,7 @@ header {
     background-image: url("../images/factomlogo.png"); }
     @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min--moz-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 2 / 1), only screen and (min-device-pixel-ratio: 2), only screen and (min-resolution: 192dpi), only screen and (min-resolution: 2dppx) {
       header .logo {
-        background-image: url("../images/logo-sm@2x.png");
+        background-image: url("../images/factomlogo@2x.png");
         background-size: 128px 30px; } }
     @media (max-width: 767px) {
       header .logo {
