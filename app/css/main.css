@@ -6017,11 +6017,15 @@ header {
     z-index: 1;
     height: 26px;
     background-size: 150px 26px;
-    background-image: url("../images/factomlogo.png"); }
+    background-image: url("../images/factomlogo.png");
+    background-repeat: no-repeat;
+    background-position: center center; }
     @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min--moz-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 2 / 1), only screen and (min-device-pixel-ratio: 2), only screen and (min-resolution: 192dpi), only screen and (min-resolution: 2dppx) {
       header .logo {
         background-image: url("../images/factomlogo@2x.png");
-        background-size: 128px 30px; } }
+        background-size: 128px 30px; 
+        background-repeat: no-repeat;
+        background-position: center center; } }
     @media (max-width: 767px) {
       header .logo {
         position: relative;
