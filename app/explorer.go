@@ -31,7 +31,6 @@ func init() {
 		"views/404.html",
 		"views/chain.html",
 		"views/chains.html",
-		"views/cheader.html",
 		"views/dblock.html",
 		"views/eblock.html",
 		"views/block.html",
