@@ -39,7 +39,7 @@ type Test struct {
 	Test string
 }
 
-func testMemcache(t *testing.T) {
+func TestMemcache(t *testing.T) {
 	hexStr := "ca81e518e9a5519b7b218b85b13d73447f65c48c9c6f1b67db55a54ab48fc1de"
 	hex := mymath.Str2Hex(hexStr)
 	str := mymath.Hex2ASCII(hex)
@@ -60,13 +60,15 @@ func testMemcache(t *testing.T) {
 		t.Error(err)
 	}
 
+	str = SanitizeKey(str)
+
 	_, err = Datastore.PutInDatastoreSimpleAndMemcache(c, "test", str, str, toPut)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestUFT8(t *testing.T) {
+func testUFT8(t *testing.T) {
 	hexStr := "ca81e518e9a5519b7b218b85b13d73447f65c48c9c6f1b67db55a54ab48fc1de"
 	hex := mymath.Str2Hex(hexStr)
 	str := mymath.Hex2ASCII(hex)
