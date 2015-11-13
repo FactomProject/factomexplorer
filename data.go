@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/FactomProject/FactomCode/common"
 	"github.com/FactomProject/factom"
+	"github.com/couchbase/gocb"
+	"github.com/mitchellh/mapstructure"
 	"log"
 	"strings"
 )
@@ -244,7 +246,7 @@ func LoadDBlockKeyMRBySequence(sequence int) (string, error) {
 	if found == true {
 		return keyMR, nil
 	}
-
+    /*
 	key := new(string)
 	key2, err := LoadData(DBlockKeyMRsBySequenceBucket, seq, key)
 	if err != nil {
@@ -253,8 +255,33 @@ func LoadDBlockKeyMRBySequence(sequence int) (string, error) {
 	if key2 == nil {
 		return "", nil
 	}
-	DBlockKeyMRsBySequence[seq] = *key
-	return *key, nil
+	*/
+	newKey := new(string)
+	
+
+    //var mapResults map[string]interface{}
+	query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE META(default).id = \"" + seq + "\" AND DataType=\"" + DBlockKeyMRsBySequenceBucket + "\";")
+    rows, qryErr := myBucket.ExecuteN1qlQuery(query, nil)
+    if qryErr != nil {
+        fmt.Printf("QUERY ERROR: ", qryErr)
+    }
+    var row interface{}
+    for rows.Next(&row) {
+        //mapResults = row.(map[string]interface{})["DataContent"].(map[string]interface{})
+        
+        //err = mapstructure.Decode(mapResults, &newKey)
+        //if err != nil {
+        //    panic(err)
+        //}
+        
+        *newKey = row.(map[string]interface{})["DataContent"].(string)
+        
+    }
+    rows.Close()
+    
+	//fmt.Printf("\n\nKKKKKKKKKKKKKKKKKKKKEY : %+v \n\n KKKKKKKKKKKKKEYNEW: %+v\n\n", *key, *newKey)
+	DBlockKeyMRsBySequence[seq] = *newKey
+	return *newKey, nil
 }
 
 func SaveDBlockKeyMRBySequence(keyMR string, sequence int) error {
@@ -288,7 +315,7 @@ func LoadDBlock(hash string) (*DBlock, error) {
 	if ok == true {
 		return block, nil
 	}
-
+    /*
 	block = new(DBlock)
 	block2, err := LoadData(DBlocksBucket, hash, block)
 	if err != nil {
@@ -297,8 +324,32 @@ func LoadDBlock(hash string) (*DBlock, error) {
 	if block2 == nil {
 		return nil, nil
 	}
-	DBlocks[hash] = block
-	return block, nil
+	*/
+
+
+	newBlock := new(DBlock)
+    var mapResults map[string]interface{}
+	query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE META(default).id = \"" + hash + "\" AND DataType=\"" + DBlocksBucket + "\";")
+    rows, qryErr := myBucket.ExecuteN1qlQuery(query, nil)
+    if qryErr != nil {
+        fmt.Printf("QUERY ERROR: ", qryErr)
+    }
+    var row interface{}
+    for rows.Next(&row) {
+        mapResults = row.(map[string]interface{})["DataContent"].(map[string]interface{})
+        
+        err := mapstructure.Decode(mapResults, &newBlock)
+        if err != nil {
+            panic(err)
+        }
+        
+    }
+    rows.Close()
+    
+    
+	
+	DBlocks[hash] = newBlock
+	return newBlock, nil
 }
 
 func LoadDBlockBySequence(sequence int) (*DBlock, error) {
@@ -326,7 +377,7 @@ func LoadBlockIndex(hash string) (string, error) {
 	if found == true {
 		return index, nil
 	}
-
+    /*
 	ind := new(string)
 	ind2, err := LoadData(BlockIndexesBucket, hash, ind)
 	if err != nil {
@@ -335,8 +386,46 @@ func LoadBlockIndex(hash string) (string, error) {
 	if ind2 == nil {
 		return "", nil
 	}
-	BlockIndexes[hash] = *ind
-	return *ind, nil
+    */
+
+    blockIdx := new(string)
+    var row interface{}
+    var tempRow interface{}
+	query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE META(default).id = \"" + hash + "\" AND DataType=\"" + BlockIndexesBucket + "\";")
+    rows, qryErr := myBucket.ExecuteN1qlQuery(query, nil)
+    if qryErr != nil {
+        fmt.Printf("QUERY ERROR: ", qryErr)
+    }    
+    if !rows.Next(&tempRow) {
+        //fmt.Println("NIIIIIIIIIIIIIIIIIIIIIILL : ", rows)
+        query = gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE DataContent = \"" + hash + "\" AND DataType=\"" + BlockIndexesBucket + "\";")
+        rows, qryErr = myBucket.ExecuteN1qlQuery(query, nil)
+        if qryErr != nil {
+            fmt.Printf("QUERY ERROR: ", qryErr)
+        }
+        if !rows.Next(&row) {
+            fmt.Printf("BlockIndexesBucket doesn't contain any references to ", hash)
+        }
+    } else {
+        row = tempRow
+    }
+    //fmt.Println("HERE WE GO : ", hash, " .................. ", rows)
+
+
+        //fmt.Println("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL")
+        *blockIdx = row.(map[string]interface{})["DataContent"].(string)
+
+    rows.Close()
+
+
+
+    //fmt.Printf("Iiiiiiiiiiiiiiiiiiiiiiiiind: %+v \n Iiiiiiiiiiiiiiiiiblockidx: %+v \n\n", *ind, *blockIdx)
+
+
+    BlockIndexes[hash] = *blockIdx
+	//BlockIndexes[hash] = *ind
+	//return *ind, nil
+	return *blockIdx, nil
 }
 
 func SaveBlock(b *Block) error {
@@ -378,17 +467,46 @@ func LoadBlock(hash string) (*Block, error) {
 		return block, nil
 	}
 
-	block = new(Block)
-	block2, err := LoadData(BlocksBucket, key, block)
-	if err != nil {
-		return nil, err
-	}
-	if block2 == nil {
-		return nil, nil
-	}
-	Blocks[key] = block
-	Blocks[hash] = block
-	return block, nil
+	//block = new(Block)
+	newBlock := new(Block)
+	newCommon := new(Common)
+	//block2, err := LoadData(BlocksBucket, key, block)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//if block2 == nil {
+	//	return nil, nil
+	//}
+	var mapResults map[string]interface{}
+	//var nb map[string]interface{}
+	query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE META(default).id = \"" + key + "\" AND DataType=\"" + BlocksBucket + "\";")
+    rows, qryErr := myBucket.ExecuteN1qlQuery(query, nil)
+    if qryErr != nil {
+        fmt.Printf("QUERY ERROR: ", qryErr)
+    }
+    var row interface{}
+    for rows.Next(&row) {
+        mapResults = row.(map[string]interface{})["DataContent"].(map[string]interface{})
+        err = mapstructure.Decode(mapResults, &newCommon)
+        if err != nil {
+            panic(err)
+        }
+        
+        err = mapstructure.Decode(mapResults, &newBlock)
+        if err != nil {
+            panic(err)
+        }
+        
+        newBlock.Common = *newCommon
+    }
+    rows.Close()
+    
+    
+    //fmt.Printf("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!OLDBLOCK : %+v \n !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!NEWBLOCK : %+v \n\n", block, newBlock)
+    //fmt.Printf("\n\nmapResults : %+v \n", mapResults)
+	Blocks[key] = newBlock
+	Blocks[hash] = newBlock
+	return newBlock, nil
 }
 
 func SaveEntry(e *Entry) error {
@@ -405,7 +523,7 @@ func LoadEntry(hash string) (*Entry, error) {
 	if found == true {
 		return entry, nil
 	}
-
+    /*
 	entry = new(Entry)
 	entry2, err := LoadData(EntriesBucket, hash, entry)
 	if err != nil {
@@ -414,8 +532,38 @@ func LoadEntry(hash string) (*Entry, error) {
 	if entry2 == nil {
 		return nil, nil
 	}
-	Entries[hash] = entry
-	return entry, nil
+	*/
+	newEntry := new(Entry)
+	newCommon := new(Common)
+
+	var mapResults map[string]interface{}
+	//var nb map[string]interface{}
+	query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE META(default).id = \"" + hash + "\" AND DataType=\"" + EntriesBucket + "\";")
+    rows, qryErr := myBucket.ExecuteN1qlQuery(query, nil)
+    if qryErr != nil {
+        fmt.Printf("QUERY ERROR: ", qryErr)
+    }
+    var row interface{}
+    for rows.Next(&row) {
+        mapResults = row.(map[string]interface{})["DataContent"].(map[string]interface{})
+        err := mapstructure.Decode(mapResults, &newCommon)
+        if err != nil {
+            panic(err)
+        }
+        
+        err = mapstructure.Decode(mapResults, &newEntry)
+        if err != nil {
+            panic(err)
+        }
+        
+        newEntry.Common = *newCommon
+    }
+    rows.Close()
+    
+    //fmt.Printf("\n\nEEEEEEEEEEEEEEEEEEEENTRY: %+v\n\nEEEEEEEEEEEEEEEEENTRYNEW: %+v\n\n", entry, newEntry)
+	
+	Entries[hash] = newEntry
+	return newEntry, nil
 }
 
 func SaveChainIDsByName(chainID, decodedName, encodedName string) error {
@@ -447,6 +595,13 @@ func LoadChainIDByName(name string) (string, error) {
 		ChainIDsByDecodedName[name] = *entry
 		return *entry, nil
 	}
+	
+	
+	
+	
+	
+	
+	
 
 	id, found = ChainIDsByEncodedName[name]
 	if found == true {
@@ -462,6 +617,14 @@ func LoadChainIDByName(name string) (string, error) {
 		ChainIDsByEncodedName[name] = *entry
 		return *entry, nil
 	}
+	
+	
+	
+	
+	
+	
+	
+	
 
 	return "", nil
 }
@@ -488,15 +651,38 @@ func LoadChain(hash string) (*Chain, error) {
 	if found == true {
 		return chain, nil
 	}
-
+    /*
 	chain = new(Chain)
 	var err error
 	_, err = LoadData(ChainsBucket, hash, chain)
 	if err != nil {
 		return nil, err
 	}
-	Chains[hash] = chain
-	return chain, nil
+	*/
+	newChain := new(Chain)
+	
+    var mapResults map[string]interface{}
+	query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE META(default).id = \"" + hash + "\" AND DataType=\"" + ChainsBucket + "\";")
+    rows, qryErr := myBucket.ExecuteN1qlQuery(query, nil)
+    if qryErr != nil {
+        fmt.Printf("QUERY ERROR: ", qryErr)
+    }
+    var row interface{}
+    for rows.Next(&row) {
+        mapResults = row.(map[string]interface{})["DataContent"].(map[string]interface{})
+        
+        err := mapstructure.Decode(mapResults, &newChain)
+        if err != nil {
+            panic(err)
+        }
+        
+    }
+    rows.Close()
+    
+    //fmt.Printf("\n\nCHHHHHHHHHAAAAAAAAAAAAAAAAAAIIIIIIIINNNNNNNNN: %+v\n\nCHHHHHHHHHAAAAAAAAAAAAAAAAAAIIIIIIIINNNNNNNNNNNNNNNNEW: %+v\n\n", chain, newChain)
+	
+	Chains[hash] = newChain
+	return newChain, nil
 }
 
 func SaveDataStatus(ds *DataStatusStruct) error {
@@ -512,9 +698,9 @@ func LoadDataStatus() *DataStatusStruct {
 	if DataStatus != nil {
 		return DataStatus
 	}
-	ds := new(DataStatusStruct)
+	//ds := new(DataStatusStruct)
 	var err error
-	ds2, err := LoadData(DataStatusBucket, DataStatusBucket, ds)
+	/*ds2, err := LoadData(DataStatusBucket, DataStatusBucket, ds)
 	if err != nil {
 		panic(err)
 	}
@@ -524,8 +710,38 @@ func LoadDataStatus() *DataStatusStruct {
 		ds.LastProcessedBlock = "0000000000000000000000000000000000000000000000000000000000000000"
 	}
 	DataStatus = ds
-	log.Printf("LoadDataStatus DS - %v, %v", ds, ds2)
-	return ds
+	//log.Printf("LoadDataStatus DS - %v, %v", ds, ds2)
+	*/
+
+	couchDS := new(DataStatusStruct)
+    var mapResults map[string]interface{}
+	query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE META(default).id = \"DataStatus\";")
+    rows, qryErr := myBucket.ExecuteN1qlQuery(query, nil)
+    if qryErr != nil {
+        fmt.Printf("QUERY ERROR: ", qryErr)
+    }
+    var row interface{}
+    for rows.Next(&row) {
+        mapResults = row.(map[string]interface{})["DataContent"].(map[string]interface{})
+        
+        err = mapstructure.Decode(mapResults, &couchDS)
+        if err != nil {
+            panic(err)
+        }
+        
+    }
+    rows.Close()
+
+	if couchDS == nil {
+		couchDS = new(DataStatusStruct)
+		couchDS.LastKnownBlock = "0000000000000000000000000000000000000000000000000000000000000000"
+		couchDS.LastProcessedBlock = "0000000000000000000000000000000000000000000000000000000000000000"
+	}
+    
+	//log.Printf("LoadCOUCHDataStatus DS - %v, %v", couchDS, ds2)
+	log.Printf("LoadCOUCHDataStatus DS - %v", couchDS)
+	
+	return couchDS
 }
 
 //Getters

@@ -7,7 +7,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/couchbase/gocb"
 	"log"
-    "encoding/json"
+    //"encoding/json"
 )
 
 const DatabaseFile string = "FactomExplorer.db"
@@ -23,14 +23,14 @@ type fullEntry struct {
 
 func Init(filePath string) {
 	var err error
-	myCluster, _ = gocb.Connect("couchbase://localhost")
-	//if clusterErr != nil {
-	//	log.Printf("Error loading myCluster : ", clusterErr)
-	//}
-	myBucket, _ = myCluster.OpenBucket("default", "")
-	//if bucketErr != nil {
-	//	log.Printf("Error loading myBucket : ", bucketErr)
-	//}
+	myCluster, err = gocb.Connect("couchbase://localhost")
+	if err != nil {
+		log.Printf("Error loading myCluster : %+v\n\n", err)
+	}
+	myBucket, err = myCluster.OpenBucket("default", "")
+	if err != nil {
+		log.Printf("Error loading myBucket : %+v\n\n", err)
+	}
 	db, err = bolt.Open(filePath+DatabaseFile, 0600, nil)
 	if err != nil {
 		panic("Database was not found, and could not be created - " + err.Error())
@@ -77,22 +77,22 @@ func LoadData(bucket, key string, dst interface{}) (interface{}, error) {
 	
 	//fmt.Printf("sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssSSS: ", v)
 	
-	query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE META(default).id = \"" + key + "\" AND DataType=\"" + bucket + "\";")
-    rows, qryErr := myBucket.ExecuteN1qlQuery(query, nil)
-    if qryErr != nil {
-        fmt.Printf("rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr: ", qryErr)
-    }
-    var row interface{}
-    for rows.Next(&row) {
-        jRow, _ := json.Marshal(row)
+	//query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE META(default).id = \"" + key + "\" AND DataType=\"" + bucket + "\";")
+    //rows, qryErr := myBucket.ExecuteN1qlQuery(query, nil)
+    //if qryErr != nil {
+    //    fmt.Printf("QUERY ERROR: ", qryErr)
+    //}
+    //var row interface{}
+    //for rows.Next(&row) {
+        //jRow, _ := json.Marshal(row)
         //fmt.Printf("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU: %+v\n", jRow)
-        fmt.Printf("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRow: %+v\n", row)
+        //fmt.Printf("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRow: %+v\n", row)
 
-        var dat map[string]interface{}
-            if err := json.Unmarshal(jRow, &dat); err != nil {
-                panic(err)
-            }
-            fmt.Println(dat["default"])
+        //var dat map[string]interface{}
+            //if err := json.Unmarshal(jRow, &dat); err != nil {
+            //    panic(err)
+            //}
+            //fmt.Println(dat["default"])
 
         //dst1 := row.(map[string]interface{})["default"]
         //dType := dst1.(map[string]interface{})["DataType"]
@@ -104,16 +104,17 @@ func LoadData(bucket, key string, dst interface{}) (interface{}, error) {
         //fmt.Printf("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH: %+v\n fffffffffffffffffffffffffffffffffffffffffffffffffffffffff %+v\n f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1 %+v\n jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj %+v \n", dst1, dType, dContent, dStuff)
         //dd := dContent.(map[string]string)
         //fmt.Println("ADMIN ENTRIES: %+v ........ EntryEntries: %+v ............... Timestamp: %+v", dd["AdminEntries"], dd["EntryEntries"], dd["Timestamp"])
-    }
-    rows.Close()
+    //}
+    //rows.Close()
 
+    //fmt.Printf("AAJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ: %+v", v)
 	dec := gob.NewDecoder(bytes.NewBuffer(v))
 	err = dec.Decode(dst)
 	if err != nil {
 		log.Printf("Error decoding %v of %v", bucket, key)
 		return nil, err
 	}
-	fmt.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa: ", dst)
+	//fmt.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa: ", dst)
 	
 	return dst, nil
 }
