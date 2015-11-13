@@ -6013,12 +6013,14 @@ header {
     position: absolute;
     top: 46px;
     left: 32px;
-    width: 128px;
-    height: 30px;
-    background-image: url("../images/logo-sm.png"); }
+    width: 150px;
+    z-index: 1;
+    height: 26px;
+    background-size: 150px 26px;
+    background-image: url("../images/factomlogo.png"); }
     @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min--moz-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 2 / 1), only screen and (min-device-pixel-ratio: 2), only screen and (min-resolution: 192dpi), only screen and (min-resolution: 2dppx) {
       header .logo {
-        background-image: url("../images/logo-sm@2x.png");
+        background-image: url("../images/factomlogo@2x.png");
         background-size: 128px 30px; } }
     @media (max-width: 767px) {
       header .logo {
@@ -6187,6 +6189,11 @@ header {
     @media (min-width: 767px) {
       header .side-menu-toggle {
         display: none; } }
+    
+   .input-group-addon.icon-prepend {
+        position: relative;
+        z-index: 20;
+   }
 
 .dropdown-menu {
   margin: 0;
@@ -6341,7 +6348,7 @@ header {
     left: -8px;
     margin-right: 2px; }
   .standard-table .chain-id, .standard-table .block-id {
-    width: 122px; }
+    width: 72px; }
   .standard-table .date-time {
     width: 192px; }
 
@@ -6461,3 +6468,4 @@ dl.blockinfo {
     text-decoration: underline; }
 
 /*# sourceMappingURL=main.css.map */
+
