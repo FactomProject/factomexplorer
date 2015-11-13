@@ -1,24 +1,43 @@
 <nav class="nav-pagination">
   <ul class="pagination">
-  	{{if .Prev}}
+
+  	{{if .Previous}}
 	    <li>
-	      <a href="?page={{.Prev}}" class="previous">
+	      <a href="?page={{.Previous}}" class="previous">
 	        <span class="icon-ic_chevron_left_48px withripple"></span>
 	      </a>
 	    </li>
- 	   <li><a href="?page={{.Prev}}" class="withripple">{{.Prev}}</a></li>
     {{end}}
+
+    {{if .LeftmostBatch}}
+    	{{range .LeftmostBatch}}
+ 	   		<li><a href="?page={{.}}" class="withripple">{{.}}</a></li>
+    	{{end}}
+        <li><a class="withripple">...</a></li>
+    {{end}}
+
+    {{if .LeftBatch}}
+    	{{range .LeftBatch}}
+ 	   		<li><a href="?page={{.}}" class="withripple">{{.}}</a></li>
+    	{{end}}
+    {{end}}
+
     <li><a href="?page={{.Current}}" class="current withripple">{{.Current}}</a></li>
-    {{if le .Next .Max}}
- 	   <li><a href="?page={{.Next}}" class="withripple">{{.Next}}</a></li>
- 	{{end}}
-	{{if le .Next1 .Max}}
-	    <li><a href="?page={{.Next1}}" class="withripple">{{.Next1}}</a></li>
- 	{{end}}
-	{{if le .Next2 .Max}}
- 	   <li><a href="?page={{.Next2}}" class="withripple">{{.Next2}}</a></li>
- 	{{end}}
-	{{if le .Next .Max}}
+
+    {{if .RightBatch}}
+    	{{range .RightBatch}}
+ 	   		<li><a href="?page={{.}}" class="withripple">{{.}}</a></li>
+    	{{end}}
+    {{end}}
+
+    {{if .RightmostBatch}}
+        <li><a class="withripple">...</a></li>
+    	{{range .RightmostBatch}}
+ 	   		<li><a href="?page={{.}}" class="withripple">{{.}}</a></li>
+    	{{end}}
+    {{end}}
+
+	{{if .Next}}
 	    <li>
 	      <a href="?page={{.Next}}" class="next">
 	        <span class="icon-ic_chevron_right_48px withripple"></span>
