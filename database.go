@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
-	"github.com/boltdb/bolt"
+	//"fmt"
+	//"github.com/boltdb/bolt"
 	"github.com/couchbase/gocb"
 	"log"
     //"encoding/json"
@@ -12,7 +12,7 @@ import (
 
 const DatabaseFile string = "FactomExplorer.db"
 
-var db *bolt.DB
+//var db *bolt.DB
 
 var myCluster *gocb.Cluster
 var myBucket *gocb.Bucket
@@ -31,7 +31,7 @@ func Init(filePath string) {
 	if err != nil {
 		log.Printf("Error loading myBucket : %+v\n\n", err)
 	}
-	db, err = bolt.Open(filePath+DatabaseFile, 0600, nil)
+	/*db, err = bolt.Open(filePath+DatabaseFile, 0600, nil)
 	if err != nil {
 		panic("Database was not found, and could not be created - " + err.Error())
 	}
@@ -47,7 +47,7 @@ func Init(filePath string) {
 		if err != nil {
 			panic(err)
 		}
-	}
+	}*/
 }
 
 func LoadData(bucket, key string, dst interface{}) (interface{}, error) {
@@ -55,7 +55,7 @@ func LoadData(bucket, key string, dst interface{}) (interface{}, error) {
 	if cfg.UseDatabase == false {
 		return nil, nil
 	}
-
+    /*
 	var v []byte
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
@@ -74,7 +74,7 @@ func LoadData(bucket, key string, dst interface{}) (interface{}, error) {
 	if v == nil {
 		return nil, nil
 	}
-	
+	*/
 	//fmt.Printf("sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssSSS: ", v)
 	
 	//query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE META(default).id = \"" + key + "\" AND DataType=\"" + bucket + "\";")
@@ -108,14 +108,13 @@ func LoadData(bucket, key string, dst interface{}) (interface{}, error) {
     //rows.Close()
 
     //fmt.Printf("AAJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ: %+v", v)
-	dec := gob.NewDecoder(bytes.NewBuffer(v))
+	/*dec := gob.NewDecoder(bytes.NewBuffer(v))
 	err = dec.Decode(dst)
 	if err != nil {
 		log.Printf("Error decoding %v of %v", bucket, key)
 		return nil, err
-	}
+	}*/
 	//fmt.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa: ", dst)
-	
 	return dst, nil
 }
 
@@ -124,7 +123,6 @@ func SaveData(bucket, key string, toStore interface{}) error {
 	if cfg.UseDatabase == false {
 		return nil
 	}
-
 	var data bytes.Buffer
 
 	enc := gob.NewEncoder(&data)
@@ -139,7 +137,7 @@ func SaveData(bucket, key string, toStore interface{}) error {
             DataContent: toStore,
         }
         
-	err = db.Update(func(tx *bolt.Tx) error {
+	/*err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		err := b.Put([]byte(key), data.Bytes())
 		return err
@@ -147,11 +145,13 @@ func SaveData(bucket, key string, toStore interface{}) error {
 	if err != nil {
 		log.Printf("Error saving %v of %v - %v", bucket, key, toStore)
 		return err
-	}
+	}*/
     var value interface{}
     cas, buckErr := myBucket.Get(key, &value)
     if buckErr != nil {
-        log.Printf("buckErr::::::::::: ", buckErr)
+        if buckErr.Error() != "Key not found." {
+            log.Printf("buckErr::::::::::: ", buckErr)
+        }
     } else {
         toStoreFull = fullEntry{
             DataType: bucket,
