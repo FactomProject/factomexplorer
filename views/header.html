@@ -1,7 +1,20 @@
   <header>
-
+	<script type="text/javascript">
+	var searchTimeout; // declare variable to hold the timer
+	 
+	function Search()  // this function gets called on KeyUp from your input text field
+	{
+	    clearTimeout(searchTimeout); // this may be a subsequent key press, so user may be still typing, reset timer if it had previously been set and is currently counting down 
+	    searchTimeout = setTimeout(function () { PostData(); }, 500); // set new timer to call function that POSTs data. If no other key is pressed within 500ms, we assume the user is done typing and we call the function. Tweak this value to suit your needs
+	}
+	 
+	function PostData()
+	{
+	    document.forms['searchform'].submit();
+	}	
+	</script>  
 <form id="searchform" method="post" action="/search">       
-      <a href="http://explorer.factom.org"><span class="logo"></span></a>
+      <span class="logo"></span>
       <div class="searchrow container-fluid">
         <div class="row">
           <div class="input-group search">
@@ -20,6 +33,8 @@
                   class="search-type withripple">Entry Hash</a></li>
                 <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='block';document.getElementById('dropdownlabel1').innerHTML='Block Hash';"
                   class="search-type withripple">Block Hash</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='eblock';document.getElementById('dropdownlabel1').innerHTML='Entry Block Hash';"
+                  class="search-type withripple">Entry Block Hash</a></li>
                 <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='dblock';document.getElementById('dropdownlabel1').innerHTML='Directory Block Hash';"
                   class="search-type withripple">Directory Block Hash</a></li>
               </ul>               

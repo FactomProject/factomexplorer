@@ -10,7 +10,6 @@
     <title>{{$pageTitle}}</title>
     <meta name="description" content={{$pageDescription}}>
     <link href="/css/main.css" rel="stylesheet" />
-    <link rel="shortcut icon" type="image/png" href="../images/favicon.png">
 </head>
 
 <body class={{$bodyClass}}>
@@ -51,28 +50,6 @@
           <dt>Created:</dt>
           <dd>{{.Block.Timestamp}}</dd>
         </div>
-        {{if .Block.TotalIns}}
-          <div>
-            <dt>TotalIns:</dt>
-            <div>{{.Block.TotalIns}}</div>
-          </div>
-          <div>
-            <dt>TotalOuts:</dt>
-            <div>{{.Block.TotalOuts}}</div>
-          </div>
-          <div>
-            <dt>TotalECs:</dt>
-            <div>{{.Block.TotalECs}}</div>
-          </div>
-          <div>
-            <dt>Created:</dt>
-            <div>{{.Block.Created}}</div>
-          </div>
-          <div>
-            <dt>Destroyed:</dt>
-            <div>{{.Block.Destroyed}}</div>
-          </div>
-        {{end}}
         <div>
           <dt>Raw binary:</dt>
           <div>{{.Block.BinaryString}}</div>
@@ -80,6 +57,10 @@
         <div>
           <dt>JSON Data:</dt>
           <div>{{.Block.JSONString}}</div>
+        </div>
+        <div>
+          <dt>Spew Data:</dt>
+          <div>{{.Block.SpewString}}</div>
         </div>
       </dl>
     </div>
@@ -93,12 +74,6 @@
                   <tr class="first">
                       <th class="date-time">Created</th>
                       <th class="hidden-xs ">Hash</th>
-                      {{if .Block.IsFactoidBlock}}
-                        <th>TotalIns</th>
-                        <th>TotalOuts</th>
-                        <th>TotalECs</th>
-                        <th>Delta</th>
-                      {{end}}
                   </tr>
               </thead>
               <tbody>
@@ -112,12 +87,6 @@
                     <tr class="clickableRow"href="/entry/{{hashfilter .Hash}}">
                         <td>{{.Timestamp}}</td>
                         <td class="hidden-xs">{{hashfilter .Hash}}</td>
-                      {{if .TotalIns}}
-                        <td>{{.TotalIns}}</td>
-                        <td>{{.TotalOuts}}</td>
-                        <td>{{.TotalECs}}</td>
-                        <td>{{.Delta}}</td>
-                      {{end}}
                     </tr>
                   {{end}}
               {{end}}

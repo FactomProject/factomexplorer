@@ -10,7 +10,6 @@
     <title>{{$pageTitle}}</title>
     <meta name="description" content={{$pageDescription}}>
     <link href="../css/main.css" rel="stylesheet" />
-    <link rel="shortcut icon" type="image/png" href="../images/favicon.png">
 </head>
 
 <body class={{$bodyClass}}>
@@ -31,7 +30,7 @@
         </div>
         <div>
           <dt>Chain:</dt>
-          <dd><a href="/chain/{{.ChainID}}">{{.ChainID}}</a></dd>
+          <dd>{{.ChainID}}</dd>
         </div>
         <div>
           <dt>Timestamp:</dt>
@@ -50,6 +49,10 @@
           <dt>JSON Data:</dt>
           <div>{{.JSONString}}</div>
         </div>
+        <div>
+          <dt>Spew Data:</dt>
+          <div>{{.SpewString}}</div>
+        </div>
         {{if .Content}}
           <div>
             <dt>Content:</dt>
@@ -62,24 +65,6 @@
             <div>{{.AnchorRecord}}</div>
           </div>
         {{end}}
-        {{if .TotalIns}}
-          <div>
-            <dt>TotalIns:</dt>
-            <div>{{.TotalIns}}</div>
-          </div>
-          <div>
-            <dt>TotalOuts:</dt>
-            <div>{{.TotalOuts}}</div>
-          </div>
-          <div>
-            <dt>TotalECs:</dt>
-            <div>{{.TotalECs}}</div>
-          </div>
-          <div>
-            <dt>Delta:</dt>
-            <div>{{.Delta}}</div>
-          </div>
-          {{end}}
       </dl>
     </div>
 

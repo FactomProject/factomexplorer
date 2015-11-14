@@ -10,7 +10,6 @@
     <title>{{$pageTitle}}</title>
     <meta name="description" content={{$pageDescription}}>
     <link href="../css/main.css" rel="stylesheet" />
-    <link rel="shortcut icon" type="image/png" href="../images/favicon.png">
 </head>
 
 <body class={{$bodyClass}}>
@@ -23,25 +22,38 @@
 
   <h1 class="screen-title">Entries</h1>
 
-     <div class="card">
-      <table class="table table-hover standard-table clickable-rows">
-        <thead>
-            <tr class="first">
-                <th class="date-time">ChainID</th>
-                <th class="hidden-xs ">Hash</th>
-            </tr>
-        </thead>
-        <tbody>
-          {{range .}}
-            <tr class="clickableRow" href="/entry/{{hashfilter .Hash}}">
-                <td>{{.ChainID}}</td>
-                <td class="hidden-xs">{{hashfilter .Hash}}</td>
-            </tr>
-          {{end}}
-        </tbody>
-      </table>
-    </div>
+	{{range .}}
+	{{with .}}
+	     <div class="card entry-block-list">
+	      <dl class="blockinfo">
+	        <div>
+	          <dt>Chain:</dt>
+	          <dd>{{.ChainID}}</dd>
+	        </div>
+	        {{range .ExtIDs}}
+	          {{with .}}
+		        <div>
+		          <dt>External ID:</dt>
+		          <dd>
+		            <span>{{hextotext .}}</span>
+		          </dd>
+		        </div>
+		      {{end}}
+		    {{end}}
+		    
+	        <div>
+	          <dt>Entry Data:</dt>
+	          <dd>{{hextotext .Data}}</dd>
+	        </div>
+	      </dl>
+	      </div>
+	{{end}}
+	{{end}}
 
+  </div>
+
+
+    </div>
   </div>
 
 </div>

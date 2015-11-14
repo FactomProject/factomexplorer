@@ -10,7 +10,6 @@
     <title>{{$pageTitle}}</title>
     <meta name="description" content={{$pageDescription}}>
     <link href="/css/main.css" rel="stylesheet" />
-    <link rel="shortcut icon" type="image/png" href="../images/favicon.png">
 </head>
 
 <body class={{$bodyClass}}>
@@ -36,28 +35,13 @@
           <dt>Created:</dt>
           <dd>{{.DBlock.BlockTimeStr}}</dd>
         </div>
-        {{if .DBlock.AnchoredInTransaction}}
-          <div>
-            <dt>BTC Transaction:</dt>
-            <dd><a href='https://blockchain.info/tx/{{.DBlock.AnchoredInTransaction}}' target="_blank">{{.DBlock.AnchoredInTransaction}} <span class="icon-ic_open_in_new_48px"></span></a></dd>
-          </div>
-          <div>
-            <dt>Anchor entry:</dt>
-            <dd><a href='/entry/{{.DBlock.AnchorRecord}}' target="_blank">{{.DBlock.AnchorRecord}} <span class="icon-ic_open_in_new_48px"></span></a></dd>
-          </div>
-        {{else}}
-          <div>
-            <dt>BTC Transaction:</dt>
-            <dd>Not yet anchored</dd>
-          </div>
-          <div>
-            <dt>Anchor entry:</dt>
-            <dd>Not yet anchored</dd>
-          </div>
-        {{end}}
         <div>
-          <dt>Total Factoids:</dt>
-          <dd>{{.DBlock.FactoidTally}}</dd>
+          <dt>BTC Transaction:</dt>
+          <dd><a href='https://www.blocktrail.com/tBTC/tx/{{.DBlock.AnchoredInTransaction}}' target="_blank">{{.DBlock.AnchoredInTransaction}} <span class="icon-ic_open_in_new_48px"></span></a></dd>
+        </div>
+        <div>
+          <dt>Anchor entry:</dt>
+          <dd><a href='/entry/{{.DBlock.AnchorRecord}}' target="_blank">{{.DBlock.AnchorRecord}} <span class="icon-ic_open_in_new_48px"></span></a></dd>
         </div>
       </dl>
     </div>
