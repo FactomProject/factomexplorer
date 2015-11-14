@@ -215,17 +215,16 @@ func Synchronize() error {
 		Log("Error - %v", err)
 		return err
 	}
+
 	previousKeyMR := head.KeyMR
 	dataStatus := LoadDataStatus()
 	maxHeight := dataStatus.DBlockHeight
 	for {
-
 		block, err := LoadDBlock(previousKeyMR)
 		if err != nil {
 			Log("Error - %v", err)
 			return err
 		}
-
 		if block != nil {
 			if maxHeight < block.SequenceNumber {
 				maxHeight = block.SequenceNumber
@@ -244,7 +243,6 @@ func Synchronize() error {
 			Log("Error - %v", err)
 			return err
 		}
-
 		log.Printf("\n\nProcessing dblock number %v\n", body.SequenceNumber)
 
 		str, err := EncodeJSONString(body)
@@ -295,7 +293,6 @@ func Synchronize() error {
 			dataStatus.DBlockHeight = maxHeight
 			break
 		}
-
 	}
 	err = SaveDataStatus(dataStatus)
 	if err != nil {
