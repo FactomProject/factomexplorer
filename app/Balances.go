@@ -1,16 +1,12 @@
-package app
+package main
 
 import (
-	"appengine"
-	"appengine/urlfetch"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/ThePiachu/Go/Log"
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type Response struct {
@@ -18,25 +14,24 @@ type Response struct {
 	Success  bool
 }
 
-//var server string = "localhost:8088/"
-var server string = "52.18.72.212:8088/"
+var server string = "localhost:8088/" //"52.18.72.212:8088/"
 
-func FactomdFactoidBalance(c appengine.Context, adr string) (int64, error) {
-	resp, err := Call(c, fmt.Sprintf("http://%s/v1/factoid-balance/%s", server, adr))
+func FactomdFactoidBalance(adr string) (int64, error) {
+	resp, err := Call(fmt.Sprintf("http://%s/v1/factoid-balance/%s", server, adr))
 	if err != nil {
-		Log.Errorf(c, "FactomdFactoidBalance - %v", err)
+		fmt.Errorf("FactomdFactoidBalance - %v", err)
 		return 0, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		Log.Errorf(c, "FactomdFactoidBalance - %v", err)
+		fmt.Errorf("FactomdFactoidBalance - %v", err)
 		return 0, err
 	}
 	resp.Body.Close()
 
 	b := new(Response)
 	if err := json.Unmarshal(body, b); err != nil {
-		Log.Errorf(c, "FactomdFactoidBalance - %v", err)
+		fmt.Errorf("FactomdFactoidBalance - %v", err)
 		return 0, err
 	}
 
@@ -46,7 +41,7 @@ func FactomdFactoidBalance(c appengine.Context, adr string) (int64, error) {
 
 	v, err := strconv.ParseInt(b.Response, 10, 64)
 	if err != nil {
-		Log.Errorf(c, "FactomdFactoidBalance - %v", err)
+		fmt.Errorf("FactomdFactoidBalance - %v", err)
 		return 0, err
 	}
 
@@ -54,22 +49,22 @@ func FactomdFactoidBalance(c appengine.Context, adr string) (int64, error) {
 
 }
 
-func FactomdECBalance(c appengine.Context, adr string) (int64, error) {
-	resp, err := Call(c, fmt.Sprintf("http://%s/v1/entry-credit-balance/%s", server, adr))
+func FactomdECBalance(adr string) (int64, error) {
+	resp, err := Call(fmt.Sprintf("http://%s/v1/entry-credit-balance/%s", server, adr))
 	if err != nil {
-		Log.Errorf(c, "FactomdECBalance - %v", err)
+		fmt.Errorf("FactomdECBalance - %v", err)
 		return 0, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		Log.Errorf(c, "FactomdECBalance - %v", err)
+		fmt.Errorf("FactomdECBalance - %v", err)
 		return 0, err
 	}
 	resp.Body.Close()
 
 	b := new(Response)
 	if err := json.Unmarshal(body, b); err != nil {
-		Log.Errorf(c, "FactomdECBalance - %v", err)
+		fmt.Errorf("FactomdECBalance - %v", err)
 		return 0, err
 	}
 
@@ -79,7 +74,7 @@ func FactomdECBalance(c appengine.Context, adr string) (int64, error) {
 
 	v, err := strconv.ParseInt(b.Response, 10, 64)
 	if err != nil {
-		Log.Errorf(c, "FactomdECBalance - %v", err)
+		fmt.Errorf("FactomdECBalance - %v", err)
 		return 0, err
 	}
 
@@ -90,16 +85,16 @@ type Data struct {
 	Data string
 }
 
-func FactomdGetRaw(c appengine.Context, keymr string) ([]byte, error) {
-	resp, err := Call(c, fmt.Sprintf("http://%s/v1/get-raw-data/%s", server, keymr))
+func FactomdGetRaw(keymr string) ([]byte, error) {
+	resp, err := Call(fmt.Sprintf("http://%s/v1/get-raw-data/%s", server, keymr))
 	if err != nil {
-		Log.Errorf(c, "FactomdGetRaw - %v", err)
+		fmt.Errorf("FactomdGetRaw - %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		Log.Errorf(c, "FactomdGetRaw - %v", err)
+		fmt.Errorf("FactomdGetRaw - %v", err)
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
@@ -108,13 +103,13 @@ func FactomdGetRaw(c appengine.Context, keymr string) ([]byte, error) {
 
 	d := new(Data)
 	if err := json.Unmarshal(body, d); err != nil {
-		Log.Errorf(c, "FactomdGetRaw - %v", err)
+		fmt.Errorf("FactomdGetRaw - %v", err)
 		return nil, err
 	}
 
 	raw, err := hex.DecodeString(d.Data)
 	if err != nil {
-		Log.Errorf(c, "FactomdGetRaw - %v", err)
+		fmt.Errorf("FactomdGetRaw - %v", err)
 		return nil, err
 	}
 
@@ -138,16 +133,16 @@ type FactomdDBlockHead struct {
 	KeyMR string
 }
 
-func FactomdGetDBlock(c appengine.Context, keymr string) (*FactomdDBlock, error) {
-	resp, err := Call(c, fmt.Sprintf("http://%s/v1/directory-block-by-keymr/%s", server, keymr))
+func FactomdGetDBlock(keymr string) (*FactomdDBlock, error) {
+	resp, err := Call(fmt.Sprintf("http://%s/v1/directory-block-by-keymr/%s", server, keymr))
 	if err != nil {
-		Log.Errorf(c, "FactomdGetDBlock - %v", err)
+		fmt.Errorf("FactomdGetDBlock - %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		Log.Errorf(c, "FactomdGetDBlock - %v", err)
+		fmt.Errorf("FactomdGetDBlock - %v", err)
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
@@ -162,16 +157,16 @@ func FactomdGetDBlock(c appengine.Context, keymr string) (*FactomdDBlock, error)
 	return d, nil
 }
 
-func FactomdGetDBlockHead(c appengine.Context) (*FactomdDBlockHead, error) {
-	resp, err := Call(c, fmt.Sprintf("http://%s/v1/directory-block-head/", server))
+func FactomdGetDBlockHead() (*FactomdDBlockHead, error) {
+	resp, err := Call(fmt.Sprintf("http://%s/v1/directory-block-head/", server))
 	if err != nil {
-		Log.Errorf(c, "FactomdGetDBlockHead - %v", err)
+		fmt.Errorf("FactomdGetDBlockHead - %v", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		Log.Errorf(c, "FactomdGetDBlockHead - %v", err)
+		fmt.Errorf("FactomdGetDBlockHead - %v", err)
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
@@ -180,21 +175,22 @@ func FactomdGetDBlockHead(c appengine.Context) (*FactomdDBlockHead, error) {
 
 	d := new(FactomdDBlockHead)
 	json.Unmarshal(body, d)
-
+	
 	/*d := new(FactomdDBlockHead)
 	d.KeyMR = "9c83bab565fd625f1f575dd8fe6545b354c970e29ce31dbe5f75470b717d168d"*/
 	return d, nil
 }
 
-func Call(c appengine.Context, url string) (*http.Response, error) {
-	TimeoutDuration, err := time.ParseDuration("60s")
+func Call(url string) (*http.Response, error) {
+	/*TimeoutDuration, err := time.ParseDuration("60s")
 	if err != nil {
-		Log.Errorf(c, "CallJSON - %v", err)
+		fmt.Errorf("CallJSON - %v", err)
 		return nil, err
 	}
 	tr := urlfetch.Transport{Context: c, Deadline: TimeoutDuration}
 	client := http.Client{Transport: &tr}
-
+    */
+    client := http.Client{}
 	//sending request
 	resp, err := client.Get(url)
 	return resp, err
