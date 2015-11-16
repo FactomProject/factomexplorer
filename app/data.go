@@ -222,6 +222,20 @@ type Address struct {
 //-------------------------------------Save, load, etc.------------------------------------------
 //-----------------------------------------------------------------------------------------------
 
+func init() {
+	DBlocks = map[string]*DBlock{}
+	DBlockKeyMRsBySequence = map[string]string{}
+	Blocks = map[string]*Block{}
+	Entries = map[string]*Entry{}
+	BlockIndexes = map[string]string{}
+	Chains = map[string]*Chain{}
+	ChainIDsByEncodedName = map[string]string{}
+	ChainIDsByDecodedName = map[string]string{}
+
+	//DataStatus.LastKnownBlock = "0000000000000000000000000000000000000000000000000000000000000000"
+}
+
+
 func RecordChain(block *Block) error {
 	fmt.Errorf("RecordChain")
 	if block.PrevBlockHash != ZeroID {
@@ -286,6 +300,9 @@ func LoadDBlockKeyMRBySequence(sequence int) (string, error) {
         
     }
     rows.Close()
+
+	DBlockKeyMRsBySequence[seq] = *newKey
+
     
 	return *newKey, nil
 }
@@ -299,6 +316,8 @@ func SaveDBlockKeyMRBySequence(keyMR string, sequence int) error {
 		fmt.Errorf("SaveDBlockKeyMRBySequence - %v", err)
 		return err
 	}
+	DBlockKeyMRsBySequence[seq] = keyMR
+
 	return nil
 }
 
@@ -309,6 +328,8 @@ func SaveDBlock(b *DBlock) error {
 		fmt.Errorf("SaveDBlock - %v", err)
 		return err
 	}
+
+	DBlocks[b.KeyMR] = b
 
 	err = SaveDBlockKeyMRBySequence(b.KeyMR, b.SequenceNumber)
 	if err != nil {
@@ -372,6 +393,7 @@ func SaveBlockIndex(index, hash string) error {
 		fmt.Errorf("SaveBlockIndex - %v", err)
 		return err
 	}
+	BlockIndexes[index] = hash
 
 	return nil
 }
@@ -438,6 +460,9 @@ func SaveBlock(b *Block) error {
 		return err
 	}
 
+	Blocks[b.PartialHash] = b
+
+
 	if b.IsEntryBlock {
 		err = RecordChain(b)
 		if err != nil {
@@ -493,6 +518,10 @@ func LoadBlock(hash string) (*Block, error) {
 	if err != nil {
 		fmt.Errorf("LoadBlock - %v", err)
 	}
+	
+
+	Blocks[key] = newBlock
+	Blocks[hash] = newBlock
     
 	return newBlock, nil
 }
@@ -519,6 +548,8 @@ func SaveEntry(e *Entry) error {
 	if err != nil {
 		return err
 	}
+	Entries[e.Hash] = e
+
 
 	return nil
 }
@@ -565,6 +596,8 @@ func LoadEntry(hash string) (*Entry, error) {
 		entry.AnchorRecord = ar
 	}
 	
+	Entries[hash] = newEntry
+	
 	return newEntry, nil
 }
 
@@ -589,12 +622,17 @@ func SaveChainIDsByName(chainID, decodedName, encodedName string) error {
 		fmt.Errorf("SaveChainIDsByName - %v", err)
 		return err
 	}
+	
+	ChainIDsByDecodedName[decodedName] = chainID
+
 
 	err = SaveData(ChainIDsByEncodedNameBucket, encodedName, &BlockIndex{BlockIndex: chainID})
 	if err != nil {
 		fmt.Errorf("SaveChainIDsByName - %v", err)
 		return err
 	}
+	
+	ChainIDsByEncodedName[encodedName] = chainID
 
 	return nil
 }
@@ -656,6 +694,8 @@ func SaveChain(chain *Chain) error {
 		fmt.Errorf("SaveChain - %v", err)
 		return err
 	}
+	
+	Chains[chain.ChainID] = chain
 
 	for _, v := range chain.Names {
 		err = SaveChainIDsByName(chain.ChainID, v.Decoded, v.Encoded)
@@ -693,6 +733,9 @@ func LoadChain(hash string) (*Chain, error) {
         
     }
     rows.Close()
+
+	Chains[hash] = newChain
+
 	
 	return newChain, nil
 }
