@@ -1,4 +1,0 @@
-cron:
-- description: upkeep
-  url: /Admin/upkeep
-  schedule: every 1 minutes
