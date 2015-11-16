@@ -120,7 +120,6 @@ func TimestampToString(timestamp uint64) string {
 }
 
 func TallyBalances() error {
-	fmt.Println("TallyBalances()")
 	dataStatus := LoadDataStatus()
 	if dataStatus.LastTalliedBlockNumber == dataStatus.DBlockHeight {
 		return nil
@@ -309,14 +308,13 @@ func Synchronize() error {
 			return err
 		}
 
-		fmt.Println("Processing dblock number %v", body.SequenceNumber)
+		fmt.Printf("Processing dblock number %v\n", body.SequenceNumber)
 
 		str, err := EncodeJSONString(body)
 		if err != nil {
 			fmt.Errorf("Error - %v", err)
 			return err
 		}
-		fmt.Println("%v", str)
 
 		for _, v := range body.EntryBlockList {
 			fetchedBlock, err := FetchBlock(v.ChainID, v.KeyMR, body.BlockTimeStr)

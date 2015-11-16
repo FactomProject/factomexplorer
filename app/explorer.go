@@ -368,7 +368,6 @@ func handleEntryEid(ctx *web.Context, eid string) {
 }
 
 func handleHome(ctx *web.Context) {
-	fmt.Println("handleHome")
 	handleDBlocks(ctx)
 }
 

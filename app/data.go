@@ -351,7 +351,6 @@ func LoadDBlock(hash string) (*DBlock, error) {
 }
 
 func LoadDBlockBySequence(sequence int) (*DBlock, error) {
-    fmt.Println("LOADDBBS")
 	key, err := LoadDBlockKeyMRBySequence(sequence)
 	if err != nil {
 		return nil, err
