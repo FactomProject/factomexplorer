@@ -315,6 +315,7 @@ func Synchronize() error {
 			fmt.Errorf("Error - %v", err)
 			return err
 		}
+		fmt.Printf("%v\n", str)
 
 		for _, v := range body.EntryBlockList {
 			fetchedBlock, err := FetchBlock(v.ChainID, v.KeyMR, body.BlockTimeStr)
