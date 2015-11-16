@@ -220,7 +220,7 @@ func ProcessBlock(keyMR string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("chain - %v", previousBlock.ChainID)
+	log.Printf("prevBlock - %v \nchain - %v", previousBlock.FullHash, previousBlock.ChainID)
 
 	for {
 		block := previousBlock

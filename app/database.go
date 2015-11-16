@@ -54,32 +54,35 @@ func SaveData(bucket, key string, toStore interface{}) error {
             DataContent: toStore,
         }
 
-    var value interface{}
+    //var value interface{}
+    _, couchErr := myBucket.Upsert(key, toStoreFull, 0)
+    if couchErr != nil {
+        log.Printf("COUCH ERR::::::", couchErr)
+		return couchErr
+    }
+    /*
+    cas, buckErr := myBucket.Get(key, &value)
+    if buckErr != nil {
+        if buckErr.Error() != "Key not found." {
+            log.Printf("buckErr::::::::::: ", buckErr)
+        }
+    } else {
+        toStoreFull = fullEntry{
+            DataType: bucket,
+            DataContent: toStore,
+        }
+        _, delErr := myBucket.Remove(key, cas)
+        if delErr != nil {
+            log.Printf("delErr :::::::::::::::: ", delErr)
+        }
+    }
 	
 	_, err = myBucket.Insert(key, toStoreFull, 0)
 	if err != nil {
-        cas, buckErr := myBucket.Get(key, &value)
-        if buckErr != nil {
-            if buckErr.Error() != "Key not found." {
-                log.Printf("buckErr::::::::::: ", buckErr)
-            }
-        } else {
-            toStoreFull = fullEntry{
-                DataType: bucket,
-                DataContent: toStore,
-            }
-            _, delErr := myBucket.Remove(key, cas)
-            if delErr != nil {
-                log.Printf("delErr :::::::::::::::: ", delErr)
-            }
-        }
-	    _, err = myBucket.Insert(key, toStoreFull, 0)
-	    if err != nil {
-		    log.Printf("Error in couchbase saving %v of %v - %v", bucket, key, toStore)
-		    return err
-        }
+		log.Printf("Error in couchbase saving %v of %v - %v", bucket, key, toStore)
+		return err
 	}
-
+    */
 
 	return nil
 }
