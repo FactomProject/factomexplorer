@@ -1,0 +1,164 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "block"}}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="/css/main.css" rel="stylesheet" />
+    <link rel="shortcut icon" type="image/png" href="../images/favicon.png">
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+	{{template "header.html"}}
+
+  <div class="mask"></div>
+
+  <div class="main">
+      <h1 class="screen-title">{{chainNamePrefixFilter .Block.ChainID}} Block</h1>
+
+    <div class="card">
+      <dl class="blockinfo">
+        <div>
+          <dt>Partial Hash:</dt>
+          <dd>{{hashfilter .Block.PartialHash}}</dd>
+        </div>
+        <div>
+          <dt>Full Hash:</dt>
+          <dd>{{.Block.FullHash}}</dd>
+        </div>
+        {{if .Block.IsEntryBlock}}
+          <div>
+            <dt>ChainID:</dt>
+            <dd><a href="/chain/{{.Block.ChainID}}">{{.Block.ChainID}}</a></dd>
+          </div>
+        {{end}}
+        <div>
+          <dt>Entries:</dt>
+          <dd>{{.Count}}</dd>
+        </div>
+        <div>
+          <dt>Previous Block:</dt>
+          <dd><a href="/{{blockPrefixFilter .Block.ChainID}}/{{hashfilter .Block.PrevBlockHash}}">{{hashfilter .Block.PrevBlockHash}}</a></dd>
+        </div>
+        <div>
+          <dt>Created:</dt>
+          <dd>{{.Block.Timestamp}}</dd>
+        </div>
+        {{if .Block.TotalIns}}
+          <div>
+            <dt>TotalIns:</dt>
+            <div>{{.Block.TotalIns}}</div>
+          </div>
+          <div>
+            <dt>TotalOuts:</dt>
+            <div>{{.Block.TotalOuts}}</div>
+          </div>
+          <div>
+            <dt>TotalECs:</dt>
+            <div>{{.Block.TotalECs}}</div>
+          </div>
+          <div>
+            <dt>Created:</dt>
+            <div>{{.Block.Created}}</div>
+          </div>
+          <div>
+            <dt>Destroyed:</dt>
+            <div>{{.Block.Destroyed}}</div>
+          </div>
+        {{end}}
+        <div>
+          <dt>Raw binary:</dt>
+          <div id="rRawBinary"></div>
+        </div>
+        <div>
+          <dt>JSON Data:</dt>
+          <div id="rJSON"></div>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <h1 class="screen-title">Entries <span class='screen-title-sub'>included in this entry block</span></h1>
+
+     <div class="card">
+      <table class="table table-hover standard-table clickable-rows">
+              <thead>
+                  <tr class="first">
+                      <th class="date-time">Created</th>
+                      <th class="hidden-xs ">Hash</th>
+                      {{if .Block.IsFactoidBlock}}
+                        <th>TotalIns</th>
+                        <th>TotalOuts</th>
+                        <th>TotalECs</th>
+                        <th>Delta</th>
+                      {{end}}
+                  </tr>
+              </thead>
+              <tbody>
+              {{range .Block.EntryList}}
+                {{if .ShortEntry}}
+                  <tr>
+                      <td>{{.Timestamp}}</td>
+                      <td class="hidden-xs">{{.ShortEntry}}</td>
+                  </tr>
+                {{else}}
+                    <tr class="clickableRow"href="/entry/{{hashfilter .Hash}}">
+                        <td>{{.Timestamp}}</td>
+                        <td class="hidden-xs">{{hashfilter .Hash}}</td>
+                      {{if .TotalIns}}
+                        <td>{{.TotalIns}}</td>
+                        <td>{{.TotalOuts}}</td>
+                        <td>{{.TotalECs}}</td>
+                        <td>{{.Delta}}</td>
+                      {{end}}
+                    </tr>
+                  {{end}}
+              {{end}}
+
+              </tbody>
+          </table>
+
+    </div>
+	{{template "pagination.html" .PageInfo}}
+  </div>
+
+</div>
+
+<script type="text/javascript">
+    document.getElementById("rJSON").innerHTML=("<pre class='hasicon'>" + JSON.stringify(JSON.parse({{.Block.JSONString}}), null, 2) + "<span>&#8964;</span></pre>");
+    document.getElementById("rRawBinary").innerHTML=("<pre class='hasicon'>" + {{.Block.BinaryString}} + "<span>&#8964;</span></pre>");
+</script>
+<script src="/scripts/min/scripts-min.js"></script>
+<!--<script src="../scripts/clickrow.js"></script>-->
+<script type="text/javascript">
+$(document).ready(function(){
+        $('.hasicon > span').on('click', function() {
+            expandCell = $(this).closest('pre');
+            isExpanded = expandCell.attr("data-expanded");
+            if(isExpanded === "true"){
+                expandCell.attr("data-expanded", "false");
+                expandCell.css({
+                    "height": "5em",
+                    "overflow": "hidden"
+                });
+            } else {
+                expandCell.attr("data-expanded", "true");
+                expandCell.css({
+                    "height": "auto",
+                    "border": "1px solid #ccc"
+                });
+            }
+        });
+            
+});
+</script>
+
+</body>
+</html>

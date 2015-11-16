@@ -1,0 +1,51 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "address"}}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="/css/main.css" rel="stylesheet" />
+    <link rel="shortcut icon" type="image/png" href="../images/favicon.png">
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+	{{template "header.html"}}
+
+  <div class="mask"></div>
+
+  <div class="main">
+      <h1 class="screen-title">Address</h1>
+
+    <div class="card">
+      <dl class="blockinfo">
+        <div>
+          <dt>Address:</dt>
+          <dd>{{.Address}}</dd>
+        </div>
+        <div>
+          <dt>Address type:</dt>
+          <dd>{{.AddressType}}</dd>
+        </div>
+        <div>
+          <dt>Balance:</dt>
+          <dd>{{.Balance}}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+	{{template "pagination.html" .PageInfo}}
+  </div>
+
+</div>
+<script src="/scripts/min/scripts-min.js"></script>
+
+</body>
+</html>

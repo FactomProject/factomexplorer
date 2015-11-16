@@ -1,0 +1,66 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "explorer"}}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+
+    <link href="/css/main.css" rel="stylesheet" />
+    <link rel="shortcut icon" type="image/png" href="../images/favicon.png">
+
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+	{{template "header.html"}}
+
+  <div class="mask"></div>
+
+  <div class="main">
+
+    <h1 class="screen-title">Directory Blocks</h1>
+
+    <div class="card">
+      <table class="table table-hover standard-table clickable-rows">
+              <thead>
+                  <tr class="first">
+                      <th class="block-id">ID</th>
+                      <th class="date-time">Block Time</th>
+                      <th class="hidden-xs ">KeyMR</th>
+                      <th>Admin Entries</th>
+                      <th>EC Entries</th>
+                      <th>Factoid Entries</th>
+                      <th>Entries</th>
+                  </tr>
+              </thead>
+              <tbody>
+		{{range .DBlocks}}
+		{{with .}}
+			<tr class="clickableRow" href="/dblock/{{.KeyMR}}">
+				<td><span>{{.SequenceNumber}}</span></td>
+				<td>{{.BlockTimeStr}}</td>
+				<td class="hidden-xs">{{.KeyMR}}</td>
+        <td>{{.AdminEntries}}</td>
+        <td>{{.EntryCreditEntries}}</td>
+        <td>{{.FactoidEntries}}</td>
+        <td>{{.EntryEntries}}</td>
+ 		   </tr>
+		{{end}}
+		{{end}}
+              </tbody>
+          </table>
+    </div>
+    {{template "pagination.html" .PageInfo}}
+  </div>
+
+</div>
+<script src="../scripts/min/scripts-min.js"></script>
+
+</body>
+</html>

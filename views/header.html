@@ -1,0 +1,60 @@
+  <header>
+
+<form id="searchform" method="post" action="/search">       
+      <a href="http://explorer.factom.org"><span class="logo"></span></a>
+      <div class="searchrow container-fluid">
+        <div class="row">
+          <div class="input-group search">
+            <div class="input-group-addon icon-prepend"><span class="icon-ic_search_48px"></span></div>
+            <div class="form-control-wrapper"><input type="text" name="searchText" placeholder="Search" class="form-control search-field empty" onkeyup="Search()"></div>
+            <div class="input-group-addon clear-search"><a href="#" onclick="document.forms['searchform'].elements['searchText'].value=''"><span class="icon-ic_clear_48px"></span></a></div>
+            <div class="input-group-btn search-type-picker">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false" name="button1"> <label id="dropdownlabel1">Address</label> <span class="caret"></span></button>
+              <ul class="dropdown-menu dropdown-menu-right" role="menu">
+				<input type="hidden" name="searchType" value="address">
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='address';document.getElementById('dropdownlabel1').innerHTML='Address';"
+                  class="search-type withripple">Address</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='extID';document.getElementById('dropdownlabel1').innerHTML='External ID';"
+                  class="search-type withripple">Entry External ID</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='entry';document.getElementById('dropdownlabel1').innerHTML='Entry Hash';"
+                  class="search-type withripple">Entry Hash</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='block';document.getElementById('dropdownlabel1').innerHTML='Block Hash';"
+                  class="search-type withripple">Block Hash</a></li>
+                <li><a href="#" onclick="document.forms['searchform'].elements['searchType'].value='dblock';document.getElementById('dropdownlabel1').innerHTML='Directory Block Hash';"
+                  class="search-type withripple">Directory Block Hash</a></li>
+              </ul>               
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="tabs">
+                <a href="/"class="tab withrippleoff selected">Explorer</a><a href="/chains/"class="tab withrippleoff">Chains</a>
+            </div>
+        </div>
+      </div>
+      <!-- Sidr - navigation & menu -->
+      <a id="sidr-toggle" href="#sidr-main" class="side-menu-toggle"><span class="icon-ic_menu_36px"></span></a>
+      <img class="bg-header" src="/images/bg-header.png">
+       <div id="side-navigation" class="side-navigation">
+    <nav class="nav">
+        <ul>
+            <li><a href="/" class="selected">Explorer</a></li>
+            <li><a href="/chains/">Chains</a></li>
+            <li><a href="https://github.com/FactomProject/FactomDocs" target="_blank">Github <span class="icon-ic_open_in_new_48px"></span></a></li>
+        </ul>
+    </nav>
+</div>  
+</form>  
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-57655045-3', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</header>  <span id="back-top">
+    <a href="#top"><span class="icon-ic_keyboard_arrow_up_48px"></span></a>
+  </span>

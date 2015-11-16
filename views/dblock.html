@@ -1,0 +1,124 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "dblock"}}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="/css/main.css" rel="stylesheet" />
+    <link rel="shortcut icon" type="image/png" href="../images/favicon.png">
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+	{{template "header.html"}}
+  <div class="mask"></div>
+
+  <div class="main">
+
+    <h1 class="screen-title">Directory Block</h1>
+    <div class="card">
+      <dl class="blockinfo">
+        <div>
+          <dt>Block KeyMR:</dt>
+          <dd>{{.DBlock.KeyMR}}</dd>
+        </div>
+        <div>
+          <dt>Previous Block KeyMR:</dt>
+          <dd><a href='/dblock/{{hashfilter .DBlock.PrevBlockKeyMR}}'>{{hashfilter .DBlock.PrevBlockKeyMR}}</a></dd>
+        </div>
+        <div>
+          <dt>Created:</dt>
+          <dd>{{.DBlock.BlockTimeStr}}</dd>
+        </div>
+        {{if .DBlock.AnchoredInTransaction}}
+          <div>
+            <dt>BTC Transaction:</dt>
+            <dd><a href='https://blockchain.info/tx/{{.DBlock.AnchoredInTransaction}}' target="_blank">{{.DBlock.AnchoredInTransaction}} <span class="icon-ic_open_in_new_48px"></span></a></dd>
+          </div>
+          <div>
+            <dt>Anchor entry:</dt>
+            <dd><a href='/entry/{{.DBlock.AnchorRecord}}' target="_blank">{{.DBlock.AnchorRecord}} <span class="icon-ic_open_in_new_48px"></span></a></dd>
+          </div>
+        {{else}}
+          <div>
+            <dt>BTC Transaction:</dt>
+            <dd>Not yet anchored</dd>
+          </div>
+          <div>
+            <dt>Anchor entry:</dt>
+            <dd>Not yet anchored</dd>
+          </div>
+        {{end}}
+        <div>
+          <dt>Total Factoids:</dt>
+          <dd>{{.DBlock.FactoidTally}}</dd>
+        </div>
+      </dl>
+    </div>
+  <h1 class="screen-title">Entry Blocks <span class='screen-title-sub'>included in this directory block</span></h1>
+
+    <div class="card entry-block-list">
+            <dl class="blockinfo">
+              <div>
+                <dt>Admin Block:</dt>
+                <dd>
+                  <span class="large primary"><a href="/ablock/{{.DBlock.AdminBlock.KeyMR}}">{{.DBlock.AdminBlock.KeyMR}}</a></span>
+                </dd>
+              </div>
+            </dl>
+            <dl class="blockinfo">
+              <div>
+                <dt>Entry Credit Block:</dt>
+                <dd>
+                  <span class="large primary"><a href="/ecblock/{{.DBlock.EntryCreditBlock.KeyMR}}">{{.DBlock.EntryCreditBlock.KeyMR}}</a></span>
+                </dd>
+              </div>
+            </dl>
+            <dl class="blockinfo">
+              <div>
+                <dt>Factoid Block:</dt>
+                <dd>
+                  <span class="large primary"><a href="/fblock/{{.DBlock.FactoidBlock.KeyMR}}">{{.DBlock.FactoidBlock.KeyMR}}</a></span>
+                </dd>
+              </div>
+            </dl>
+    	{{range .DBlock.EntryBlockList}}
+    		{{with .}}
+    			{{if ne .ChainID "0000000000000000000000000000000000000000000000000000000000000000"}}
+    			{{if ne .ChainID "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}}
+    			{{if ne .ChainID "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}}
+			      <dl class="blockinfo">
+			        <div>
+			          <dt>Entry Block:</dt>
+			          <dd>
+			            <span class="large primary"><a href="/eblock/{{.KeyMR}}">{{.KeyMR}}</a></span>
+			          </dd>
+			        </div>
+			        <div>
+			          <dt>Chain:</dt>
+			          <dd>
+			            <span class="large secondary"><a href="/chain/{{hashfilter .ChainID}}">{{hashfilter .ChainID}}</a></span>
+			          </dd>
+			        </div>
+			      </dl>
+			  {{end}}
+			  {{end}}
+			  {{end}}
+    		{{end}}
+    	{{end}}
+      </div>
+  </div>
+
+  </div>
+
+</div>
+<script src="../scripts/min/scripts-min.js"></script>
+
+</body>
+</html>

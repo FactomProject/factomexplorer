@@ -1,0 +1,56 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "chains"}}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="../css/main.css" rel="stylesheet" />
+    <link rel="shortcut icon" type="image/png" href="../images/favicon.png">
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+	{{template "cheader.html"}}
+
+  <div class="mask"></div>
+
+  <div class="main">
+
+    <h1 class="screen-title">Chains</h1>
+
+    <div class="card">
+      <table class="table table-hover standard-table clickable-rows">
+              <thead>
+                  <tr class="first">
+                      <th class="hidden-xs ">ChainID</th>
+                     <th class="hidden-xs ">Chain Names</th>
+                  </tr>
+              </thead>
+              <tbody>
+		{{range .}}
+		{{with .}}
+			<tr class="clickableRow" href="/chain/{{.ChainID}}">
+				<td><span>{{.ChainID}}</span></td>
+        <td class="hidden-xs">[{{range .Names}}
+				  { {{.Encoded}}, {{.Decoded}} }
+        {{end}}]</td>
+ 		    	</tr>
+		{{end}}
+		{{end}}
+              </tbody>
+          </table>
+    </div>
+    {{/*template pagination*/}}
+  </div>
+
+</div>
+<script src="../scripts/min/scripts-min.js"></script>
+
+</body>
+</html>

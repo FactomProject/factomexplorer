@@ -1,0 +1,78 @@
+{{$pageTitle := "Factom Explorer"}}
+{{$pageDescription := "Alpha release of the Factom Explorer. Search for data secured by Factom."}}
+{{$bodyClass := "eblock"}}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{$pageTitle}}</title>
+    <meta name="description" content={{$pageDescription}}>
+    <link href="/css/main.css" rel="stylesheet" />
+    <link rel="shortcut icon" type="image/png" href="../images/favicon.png">
+</head>
+
+<body class={{$bodyClass}}>
+  <div class="full-view-wrap">
+
+	{{template "header.html"}}
+
+  <div class="mask"></div>
+
+  <div class="main">
+
+    <h1 class="screen-title">Entry Block</h1>
+
+    <div class="card">
+      <dl class="blockinfo">
+        <div>
+          <dt>Entry Block Hash:</dt>
+          <dd>{{hashfilter .Hash}}</dd>
+        </div>
+        <div>
+          <dt>Entries:</dt>
+          <dd>{{.Count}}</dd>
+        </div>
+        <div>
+          <dt>Previous Block:</dt>
+          <dd><a href="/eblock/{{hashfilter .Block.PrevBlockHash}}">{{hashfilter .Block.PrevBlockHash}}</a></dd>
+        </div>
+        <div>
+          <dt>Created:</dt>
+          <dd>{{.Block.Timestamp}}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <h1 class="screen-title">Entries <span class='screen-title-sub'>included in this entry block</span></h1>
+
+     <div class="card">
+      <table class="table table-hover standard-table clickable-rows">
+              <thead>
+                  <tr class="first">
+                      <th class="date-time">Created</th>
+                      <th class="hidden-xs ">Hash</th>
+                  </tr>
+              </thead>
+              <tbody>
+              {{range .Block.EntryList}}
+                  <tr class="clickableRow"href="/sentry/{{hashfilter .Hash}}">
+                      <td>{{.Timestamp}}</td>
+                      <td class="hidden-xs">{{hashfilter .BinaryString}}</td>
+                  </tr>
+              {{end}}
+
+              </tbody>
+          </table>
+
+    </div>
+	{{template "pagination.html" .PageInfo}}
+  </div>
+
+</div>
+<script src="/scripts/min/scripts-min.js"></script>
+<script src="../scripts/clickrow.js"></script>
+</body>
+</html>
