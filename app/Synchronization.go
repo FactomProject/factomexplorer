@@ -290,6 +290,15 @@ func Synchronize() error {
 		}
 
 		if block != nil {
+		
+		    if block.SequenceNumber % 20 == 0 {
+            	err = SaveDataStatus(dataStatus)
+	            if err != nil {
+		            fmt.Errorf("Error - %v", err)
+		            return err
+	            }
+            }
+		
 			if maxHeight < block.SequenceNumber {
 				maxHeight = block.SequenceNumber
 			}
