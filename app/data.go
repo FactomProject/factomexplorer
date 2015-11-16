@@ -756,7 +756,7 @@ func LoadDataStatus() *DataStatusStruct {
 	var err error
 	couchDS := new(DataStatusStruct)
     var mapResults map[string]interface{}
-	query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE META(default).id = \"DataStatus\";")
+	query := gocb.NewN1qlQuery("SELECT DataContent FROM `default` WHERE DataType = \"DataStatus\";")
     rows, qryErr := myBucket.ExecuteN1qlQuery(query, nil)
     if qryErr != nil {
         fmt.Printf("QUERY ERROR: ", qryErr)
