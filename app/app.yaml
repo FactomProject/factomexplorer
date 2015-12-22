@@ -1,4 +1,5 @@
 application: factomexplorer
+#application: factomtestnetexplorer
 version:     factomexplorer-2015-10-19-2
 runtime:     go
 api_version: go1

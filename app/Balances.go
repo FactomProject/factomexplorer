@@ -18,8 +18,9 @@ type Response struct {
 	Success  bool
 }
 
-//var server string = "localhost:8088/"
-var server string = "52.18.72.212:8088/"
+//var server string = "localhost:8088/" //Localhost
+//var server string = "54.194.254.200:8088/" //TestNet
+var server string = "52.18.72.212:8088/" //MainNet
 
 func FactomdFactoidBalance(c appengine.Context, adr string) (int64, error) {
 	resp, err := Call(c, fmt.Sprintf("http://%s/v1/factoid-balance/%s", server, adr))
