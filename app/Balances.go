@@ -19,7 +19,7 @@ type Response struct {
 }
 
 //var server string = "localhost:8088/" //Localhost
-//var server string = "54.194.254.200:8088/" //TestNet
+//var server string = "52.17.183.121:8088/" //TestNet
 var server string = "52.18.72.212:8088/" //MainNet
 
 func FactomdFactoidBalance(c appengine.Context, adr string) (int64, error) {
