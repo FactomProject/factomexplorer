@@ -38,6 +38,31 @@ const ChainIDsByDecodedNameBucket string = "ChainIDsByDecodedName"
 const BlockIndexesBucket string = "BlockIndexes"
 const DataStatusBucket string = "DataStatus"
 
+func NukeDatabase(c appengine.Context) error {
+	toDelete := []string{
+		DBlocksBucket,
+		DBlockKeyMRsBySequenceBucket,
+		BlocksBucket,
+		EntriesBucket,
+		ChainsBucket,
+		ChainIDsByEncodedNameBucket,
+		ChainIDsByDecodedNameBucket,
+		BlockIndexesBucket,
+		DataStatusBucket,
+	}
+	for _, v := range toDelete {
+		err := Datastore.ClearNamespace(c, v)
+		if err != nil {
+			return err
+		}
+	}
+	err := Datastore.FlushMemcache(c)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 var BucketList []string = []string{DBlocksBucket, DBlockKeyMRsBySequenceBucket, BlocksBucket, EntriesBucket, ChainsBucket, ChainIDsByEncodedNameBucket, ChainIDsByDecodedNameBucket, BlockIndexesBucket, DataStatusBucket}
 
 type ListEntry struct {

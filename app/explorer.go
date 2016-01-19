@@ -6,8 +6,10 @@ package app
 
 import (
 	"appengine"
+	"appengine/user"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"github.com/ThePiachu/Go/Log"
 	"html/template"
 	"log"
@@ -43,6 +45,7 @@ func init() {
 	))
 
 	http.HandleFunc(`/Admin/upkeep`, Upkeep)
+	http.HandleFunc(`/Admin/nuke`, Nuke)
 	http.HandleFunc(`/chains/`, handleChains)
 	http.HandleFunc(`/chain/`, handleChain)
 	http.HandleFunc(`/dblocks/`, handleDBlocks)
@@ -66,6 +69,26 @@ func init() {
 func Upkeep(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	SynchronizationGoroutine(c)
+}
+
+func Nuke(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	if user.IsAdmin(c) == false {
+		url, err := user.LoginURL(c, r.URL.String())
+		if err != nil {
+			fmt.Fprintf(w, "Error: "+err.Error())
+			return
+		}
+		fmt.Fprintf(w, "<a href=\"%v\">Login</a>", url)
+		return
+	}
+	err := NukeDatabase(c)
+	if err != nil {
+		fmt.Fprintf(w, "Error: "+err.Error())
+		return
+	}
+	fmt.Fprintf(w, "Nuked!")
+	return
 }
 
 func getIndexParameter(r *http.Request) string {
