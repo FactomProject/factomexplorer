@@ -220,8 +220,36 @@ type Chain struct {
 }
 
 type DecodedString struct {
-	Encoded string
-	Decoded string
+	Encoded    string
+	Decoded    string
+	NonIndexed []byte `datastore:",noindex"`
+}
+
+func (ds *DecodedString) Load(c <-chan datastore.Property) error {
+	if err := datastore.LoadStruct(ds, c); err != nil {
+		return err
+	}
+	if len(ds.NonIndexed) > 0 {
+		ds.Encoded = fmt.Sprintf("%x", ds.NonIndexed)
+		ds.Decoded = string(ds.NonIndexed)
+		if appengine.IsDevAppServer() {
+			ds.Decoded = SanitizeKey(ds.Decoded)
+		}
+	}
+	return nil
+}
+
+func (ds *DecodedString) Save(c chan<- datastore.Property) error {
+	defer close(c)
+	if len(ds.Encoded) > 1500 {
+		ds.Encoded = ds.Encoded[:1500]
+		ds.NonIndexed = []byte(ds.Decoded)
+	}
+	if len(ds.Decoded) > 1500 {
+		ds.Decoded = ds.Decoded[:1500]
+		ds.NonIndexed = []byte(ds.Decoded)
+	}
+	return datastore.SaveStruct(ds, c)
 }
 
 type Address struct {

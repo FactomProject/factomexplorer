@@ -728,6 +728,7 @@ func ByteSliceToDecodedStringPointer(b []byte) *DecodedString {
 	ds := new(DecodedString)
 	ds.Encoded = fmt.Sprintf("%x", b)
 	ds.Decoded = string(b)
+
 	if appengine.IsDevAppServer() {
 		ds.Decoded = SanitizeKey(ds.Decoded)
 	}
