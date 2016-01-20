@@ -262,12 +262,12 @@ func (ds *DecodedString) LoadStrings() {
 func (ds *DecodedString) Trim() {
 	max:=1500
 	if len(ds.Encoded) > max {
-		ds.Encoded = ds.Encoded[:max]
 		ds.NonIndexed = []byte(ds.Decoded)
+		ds.Encoded = ds.Encoded[:max]
 	}
 	if len(ds.Decoded) > max {
-		ds.Decoded = ds.Decoded[:max]
 		ds.NonIndexed = []byte(ds.Decoded)
+		ds.Decoded = ds.Decoded[:max]
 	}
 }
 
