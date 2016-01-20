@@ -186,6 +186,18 @@ type Entry struct {
 	Delta string `datastore:",noindex"`
 }
 
+func (e *Entry) LoadStrings() {
+	for i:=range(e.ExternalIDs) {
+		e.ExternalIDs[i].LoadStrings()
+	}
+}
+
+func (e *Entry) Trim() {
+	for i:=range(e.ExternalIDs) {
+		e.ExternalIDs[i].Trim()
+	}
+}
+
 type AnchorRecord struct {
 	AnchorRecordVer int
 	DBHeight        uint32
@@ -219,16 +231,25 @@ type Chain struct {
 	Entries    []*Entry `datastore:"-"`
 }
 
+func (e *Chain) LoadStrings() {
+	for i:=range(e.Names) {
+		e.Names[i].LoadStrings()
+	}
+}
+
+func (e *Chain) Trim() {
+	for i:=range(e.Names) {
+		e.Names[i].Trim()
+	}
+}
+
 type DecodedString struct {
 	Encoded    string
 	Decoded    string
 	NonIndexed []byte `datastore:",noindex"`
 }
 
-func (ds *DecodedString) Load(c <-chan datastore.Property) error {
-	if err := datastore.LoadStruct(ds, c); err != nil {
-		return err
-	}
+func (ds *DecodedString) LoadStrings() {
 	if len(ds.NonIndexed) > 0 {
 		ds.Encoded = fmt.Sprintf("%x", ds.NonIndexed)
 		ds.Decoded = string(ds.NonIndexed)
@@ -236,20 +257,32 @@ func (ds *DecodedString) Load(c <-chan datastore.Property) error {
 			ds.Decoded = SanitizeKey(ds.Decoded)
 		}
 	}
-	return nil
+}
+
+func (ds *DecodedString) Trim() {
+	max:=1500
+	if len(ds.Encoded) > max {
+		ds.Encoded = ds.Encoded[:max]
+		ds.NonIndexed = []byte(ds.Decoded)
+	}
+	if len(ds.Decoded) > max {
+		ds.Decoded = ds.Decoded[:max]
+		ds.NonIndexed = []byte(ds.Decoded)
+	}
 }
 
 func (ds *DecodedString) Save(c chan<- datastore.Property) error {
 	defer close(c)
-	if len(ds.Encoded) > 1500 {
-		ds.Encoded = ds.Encoded[:1500]
-		ds.NonIndexed = []byte(ds.Decoded)
-	}
-	if len(ds.Decoded) > 1500 {
-		ds.Decoded = ds.Decoded[:1500]
-		ds.NonIndexed = []byte(ds.Decoded)
-	}
+	ds.Trim()
 	return datastore.SaveStruct(ds, c)
+}
+
+func (ds *DecodedString) Load(c <-chan datastore.Property) error {
+	if err := datastore.LoadStruct(ds, c); err != nil {
+		return err
+	}
+	ds.LoadStrings()
+	return nil
 }
 
 type Address struct {
@@ -465,6 +498,7 @@ func LoadBlockEntries(c appengine.Context, block *Block) error {
 }
 
 func SaveEntry(c appengine.Context, e *Entry) error {
+	e.Trim()
 	err := SaveData(c, EntriesBucket, e.Hash, e)
 	if err != nil {
 		return err
@@ -490,6 +524,7 @@ func LoadEntry(c appengine.Context, hash string) (*Entry, error) {
 		}
 		entry.AnchorRecord = ar
 	}
+	entry.LoadStrings()
 
 	return entry, nil
 }
@@ -550,6 +585,7 @@ func LoadChainIDByName(c appengine.Context, name string) (string, error) {
 }
 
 func SaveChain(c appengine.Context, chain *Chain) error {
+	chain.Trim()
 	err := SaveData(c, ChainsBucket, chain.ChainID, chain)
 	if err != nil {
 		Log.Errorf(c, "SaveChain - %v", err)
@@ -574,6 +610,7 @@ func LoadChain(c appengine.Context, hash string) (*Chain, error) {
 	if err != nil {
 		return nil, err
 	}
+	chain.LoadStrings()
 
 	return chain, nil
 }
