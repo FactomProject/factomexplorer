@@ -187,13 +187,13 @@ type Entry struct {
 }
 
 func (e *Entry) LoadStrings() {
-	for i:=range(e.ExternalIDs) {
+	for i := range e.ExternalIDs {
 		e.ExternalIDs[i].LoadStrings()
 	}
 }
 
 func (e *Entry) Trim() {
-	for i:=range(e.ExternalIDs) {
+	for i := range e.ExternalIDs {
 		e.ExternalIDs[i].Trim()
 	}
 }
@@ -232,13 +232,13 @@ type Chain struct {
 }
 
 func (e *Chain) LoadStrings() {
-	for i:=range(e.Names) {
+	for i := range e.Names {
 		e.Names[i].LoadStrings()
 	}
 }
 
 func (e *Chain) Trim() {
-	for i:=range(e.Names) {
+	for i := range e.Names {
 		e.Names[i].Trim()
 	}
 }
@@ -260,7 +260,7 @@ func (ds *DecodedString) LoadStrings() {
 }
 
 func (ds *DecodedString) Trim() {
-	max:=1500
+	max := 1500
 	if len(ds.Encoded) > max {
 		ds.NonIndexed = []byte(ds.Decoded)
 		ds.Encoded = ds.Encoded[:max]

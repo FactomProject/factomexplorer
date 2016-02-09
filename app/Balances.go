@@ -175,6 +175,7 @@ func FactomdGetDBlockHead(c appengine.Context) (*FactomdDBlockHead, error) {
 		Log.Errorf(c, "FactomdGetDBlockHead - %v", err)
 		return nil, err
 	}
+	Log.Debugf(c, "FactomdGetDBlockHead - %v", string(body))
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf(string(body))
 	}

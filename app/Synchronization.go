@@ -129,12 +129,22 @@ func TallyBalances(c appengine.Context) error {
 	Log.Debugf(c, "Tallying block %v\n", block.SequenceNumber)
 	var previousTally float64 = 0
 	if dataStatus.LastTalliedBlockNumber > -1 {
-		oldBlock, err := LoadDBlockBySequence(c, dataStatus.LastTalliedBlockNumber)
-		tally, err := strconv.ParseFloat(oldBlock.FactoidTally, 64)
-		if err != nil {
-			panic(err)
+		for {
+			oldBlock, err := LoadDBlockBySequence(c, dataStatus.LastTalliedBlockNumber)
+			if err != nil {
+				panic(err)
+			}
+			if oldBlock.FactoidTally == "" {
+				dataStatus.LastTalliedBlockNumber--
+				continue
+			}
+			tally, err := strconv.ParseFloat(oldBlock.FactoidTally, 64)
+			if err != nil {
+				panic(err)
+			}
+			previousTally = tally
+			break
 		}
-		previousTally = tally
 	}
 	for {
 		factoidBlock, err := LoadBlock(c, block.FactoidBlock.KeyMR)
@@ -282,7 +292,7 @@ func Synchronize(c appengine.Context) error {
 	dataStatus := LoadDataStatus(c)
 	maxHeight := dataStatus.DBlockHeight
 	for {
-
+		//Log.Debugf(c, "previousKeyMR - %v", previousKeyMR)
 		block, err := LoadDBlock(c, previousKeyMR)
 		if err != nil {
 			Log.Errorf(c, "Error - %v", err)
@@ -299,12 +309,18 @@ func Synchronize(c appengine.Context) error {
 				break
 			} else {
 				previousKeyMR = block.PrevBlockKeyMR
+				if previousKeyMR == ZeroID {
+					dataStatus.LastKnownBlock = head.KeyMR
+					dataStatus.DBlockHeight = maxHeight
+					break
+				}
 				continue
 			}
 		}
+
 		body, err := GetDBlockFromFactom(c, previousKeyMR)
 		if err != nil {
-			Log.Errorf(c, "Error - %v", err)
+			Log.Errorf(c, "Error for block %v - %v", err)
 			return err
 		}
 
