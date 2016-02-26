@@ -6,11 +6,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/ThePiachu/Go/Log"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/ThePiachu/Go/Log"
 )
 
 type Response struct {
@@ -184,7 +185,8 @@ func FactomdGetDBlockHead(c appengine.Context) (*FactomdDBlockHead, error) {
 	json.Unmarshal(body, d)
 
 	/*d := new(FactomdDBlockHead)
-	d.KeyMR = "9c83bab565fd625f1f575dd8fe6545b354c970e29ce31dbe5f75470b717d168d"*/
+	//d.KeyMR = "9c83bab565fd625f1f575dd8fe6545b354c970e29ce31dbe5f75470b717d168d"//510
+	d.KeyMR = "47ecd1198c7888e2b6236dbbec6a90d36f5ff23c69d46d1369b2d11ef8c74d38"//50*/
 	return d, nil
 }
 

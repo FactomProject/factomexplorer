@@ -6,17 +6,25 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/FactomProject/FactomCode/common"
 	"github.com/FactomProject/factom"
 	"github.com/ThePiachu/Go/Datastore"
 	"github.com/ThePiachu/Go/Log"
-	"strings"
 )
 
 var BlockIndexes map[string]string //used to index blocks by both their full and partial hash
 
 type DataStatusStruct struct {
 	DBlockHeight int
+
+	NextHeight         int
+	NextHead           string
+	ResumeFetchingFrom string
+
+	NextProcessedHead    string
+	ResumeProcessingFrom string
 
 	//Last DBlock we have seen and saved in an uninterrupted chain
 	LastKnownBlock string
@@ -25,8 +33,6 @@ type DataStatusStruct struct {
 	//Last DBlock we tallied balances in
 	LastTalliedBlockNumber int
 }
-
-var DataStatus *DataStatusStruct
 
 const DBlocksBucket string = "DBlocks"
 const DBlockKeyMRsBySequenceBucket string = "DBlockKeyMRsBySequence"
@@ -123,6 +129,12 @@ func (e *Common) Spew() string {
 	return common.Spew(e)
 }
 
+type BlockWithBlobstore struct {
+	Block
+
+	Blobkey appengine.BlobKey
+}
+
 type Block struct {
 	Common
 
@@ -149,6 +161,8 @@ type Block struct {
 
 	Created   string `datastore:",noindex"`
 	Destroyed string `datastore:",noindex"`
+
+	InBlobstore bool `datastore:",noindex"` //used to indicate that the full block is in Blobstore, not Datastore
 }
 
 func (e *Block) JSON() (string, error) {
@@ -161,6 +175,27 @@ func (e *Block) JSONBuffer(b *bytes.Buffer) error {
 
 func (e *Block) Spew() string {
 	return common.Spew(e)
+}
+
+func (e *Block) TrimData() {
+	e.Timestamp = ""
+
+	e.JSONString = ""
+	e.BinaryString = ""
+
+	e.PrevBlockHash = ""
+	e.NextBlockHash = ""
+
+	e.EntryIDList = nil
+	e.EntryList = nil
+
+	e.TotalIns = ""
+	e.TotalOuts = ""
+	e.TotalECs = ""
+	e.TotalDelta = ""
+
+	e.Created = ""
+	e.Destroyed = ""
 }
 
 type Entry struct {
@@ -297,11 +332,11 @@ type Address struct {
 //-----------------------------------------------------------------------------------------------
 
 func RecordChain(c appengine.Context, block *Block) error {
-	Log.Debugf(c, "RecordChain")
 	if block.PrevBlockHash != ZeroID {
-		Log.Debugf(c, "block.PrevBlockHash != ZeroID")
 		return nil
 	}
+	Log.Debugf(c, "RecordChain")
+	Log.Debugf(c, "block.PrevBlockHash == ZeroID")
 
 	chain := new(Chain)
 	chain.ChainID = block.ChainID
@@ -438,7 +473,7 @@ func SaveBlock(c appengine.Context, b *Block) error {
 		return err
 	}
 
-	err = SaveData(c, BlocksBucket, b.PartialHash, b)
+	err = SaveBlockData(c, BlocksBucket, b.PartialHash, b)
 	if err != nil {
 		Log.Errorf(c, "SaveBlock - %v", err)
 		return err
@@ -465,10 +500,30 @@ func LoadBlock(c appengine.Context, hash string) (*Block, error) {
 	}
 
 	block := new(Block)
-	block2, err := LoadData(c, BlocksBucket, key, block)
+	block2, err := LoadBlockData(c, BlocksBucket, key, block)
 	if err != nil {
-		Log.Errorf(c, "LoadBlock - %v", err)
-		return nil, err
+		if strings.Contains(err.Error(), "no such struct field") {
+			b:=new(BlockWithBlobstore)
+			b2, err:=LoadData(c, BlocksBucket, key, b)
+			if err!=nil {
+				Log.Errorf(c, "LoadBlock - %v", err)
+				return nil, err
+			}
+			err = SaveData(c, BlocksBucket, key, &b2.(*BlockWithBlobstore).Block)
+			if err!=nil {
+				Log.Errorf(c, "LoadBlock - %v", err)
+				return nil, err
+			}
+			block2, err = LoadBlockData(c, BlocksBucket, key, block)
+			if err!=nil {
+				Log.Errorf(c, "LoadBlock - %v", err)
+				return nil, err
+			}
+
+		}else {
+			Log.Errorf(c, "LoadBlock - %v", err)
+			return nil, err
+		}
 	}
 	if block2 == nil {
 		return nil, nil
@@ -620,14 +675,10 @@ func SaveDataStatus(c appengine.Context, ds *DataStatusStruct) error {
 	if err != nil {
 		return err
 	}
-	DataStatus = ds
 	return nil
 }
 
 func LoadDataStatus(c appengine.Context) *DataStatusStruct {
-	if DataStatus != nil {
-		return DataStatus
-	}
 	ds := new(DataStatusStruct)
 	var err error
 	ds2, err := LoadData(c, DataStatusBucket, DataStatusBucket, ds)
@@ -642,9 +693,9 @@ func LoadDataStatus(c appengine.Context) *DataStatusStruct {
 		ds = new(DataStatusStruct)
 		ds.LastKnownBlock = ZeroID
 		ds.LastProcessedBlock = ZeroID
+		ds.DBlockHeight = -1
 		ds.LastTalliedBlockNumber = -1
 	}
-	DataStatus = ds
 	Log.Debugf(c, "LoadDataStatus DS - %v, %v", ds, ds2)
 	return ds
 }

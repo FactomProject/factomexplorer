@@ -3,14 +3,15 @@ package app
 import (
 	"appengine"
 	"fmt"
-	"github.com/FactomProject/FactomCode/common"
-	"github.com/FactomProject/factoid"
-	"github.com/FactomProject/factoid/block"
-	"github.com/ThePiachu/Go/Log"
 	"log"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/FactomProject/FactomCode/common"
+	"github.com/FactomProject/factoid"
+	"github.com/FactomProject/factoid/block"
+	"github.com/ThePiachu/Go/Log"
 )
 
 var AnchorBlockID string = "df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604"
@@ -118,6 +119,7 @@ func TimestampToString(timestamp uint64) string {
 func TallyBalances(c appengine.Context) error {
 	Log.Infof(c, "TallyBalances()")
 	dataStatus := LoadDataStatus(c)
+
 	if dataStatus.LastTalliedBlockNumber == dataStatus.DBlockHeight {
 		return nil
 	}
@@ -161,12 +163,14 @@ func TallyBalances(c appengine.Context) error {
 		if err != nil {
 			panic(err)
 		}
+
+		dataStatus.LastTalliedBlockNumber = block.SequenceNumber
+		err = SaveDataStatus(c, dataStatus)
+		if err != nil {
+			panic(err)
+		}
+
 		if block.SequenceNumber == dataStatus.DBlockHeight {
-			dataStatus.LastTalliedBlockNumber = block.SequenceNumber
-			err = SaveDataStatus(c, dataStatus)
-			if err != nil {
-				panic(err)
-			}
 			return nil
 		} else {
 			block, err = LoadDBlockBySequence(c, block.SequenceNumber+1)
@@ -184,6 +188,11 @@ func ProcessBlocks(c appengine.Context) error {
 		return nil
 	}
 	toProcess := dataStatus.LastKnownBlock
+	if dataStatus.ResumeProcessingFrom != "" {
+		toProcess = dataStatus.ResumeProcessingFrom
+	} else {
+		dataStatus.NextProcessedHead = dataStatus.LastKnownBlock
+	}
 	previousBlock, err := LoadDBlock(c, toProcess)
 	if err != nil {
 		return err
@@ -193,7 +202,9 @@ func ProcessBlocks(c appengine.Context) error {
 		log.Printf("Processing dblock %v\n", block.KeyMR)
 		toProcess = block.PrevBlockKeyMR
 		if toProcess == ZeroID || block.KeyMR == dataStatus.LastProcessedBlock {
-			dataStatus.LastProcessedBlock = dataStatus.LastKnownBlock
+			dataStatus.LastProcessedBlock = dataStatus.NextProcessedHead
+			dataStatus.NextProcessedHead = ""
+			dataStatus.ResumeProcessingFrom = ""
 			break
 		}
 		previousBlock, err = LoadDBlock(c, toProcess)
@@ -219,6 +230,19 @@ func ProcessBlocks(c appengine.Context) error {
 		if err != nil {
 			return err
 		}
+
+		dataStatus.ResumeProcessingFrom = block.KeyMR
+		err = SaveDataStatus(c, dataStatus)
+		if err != nil {
+			Log.Errorf(c, "ProcessBlocks - %v", err)
+			return err
+		}
+	}
+
+	err = SaveDataStatus(c, dataStatus)
+	if err != nil {
+		Log.Errorf(c, "ProcessBlocks - %v", err)
+		return err
 	}
 	return nil
 }
@@ -291,11 +315,19 @@ func Synchronize(c appengine.Context) error {
 	previousKeyMR := head.KeyMR
 	dataStatus := LoadDataStatus(c)
 	maxHeight := dataStatus.DBlockHeight
+	if maxHeight < dataStatus.NextHeight {
+		maxHeight = dataStatus.NextHeight
+	}
+	if dataStatus.ResumeFetchingFrom != "" {
+		previousKeyMR = dataStatus.ResumeFetchingFrom
+	} else {
+		dataStatus.NextHead = head.KeyMR
+	}
 	for {
 		//Log.Debugf(c, "previousKeyMR - %v", previousKeyMR)
 		block, err := LoadDBlock(c, previousKeyMR)
 		if err != nil {
-			Log.Errorf(c, "Error - %v", err)
+			Log.Errorf(c, "Synchronize - %v", err)
 			return err
 		}
 
@@ -304,14 +336,20 @@ func Synchronize(c appengine.Context) error {
 				maxHeight = block.SequenceNumber
 			}
 			if previousKeyMR == dataStatus.LastKnownBlock {
-				dataStatus.LastKnownBlock = head.KeyMR
+				dataStatus.LastKnownBlock = dataStatus.NextHead
 				dataStatus.DBlockHeight = maxHeight
+				dataStatus.NextHeight = -1
+				dataStatus.ResumeFetchingFrom = ""
+				dataStatus.NextHead = ""
 				break
 			} else {
 				previousKeyMR = block.PrevBlockKeyMR
 				if previousKeyMR == ZeroID {
-					dataStatus.LastKnownBlock = head.KeyMR
+					dataStatus.LastKnownBlock = dataStatus.NextHead
 					dataStatus.DBlockHeight = maxHeight
+					dataStatus.NextHeight = -1
+					dataStatus.ResumeFetchingFrom = ""
+					dataStatus.NextHead = ""
 					break
 				}
 				continue
@@ -328,7 +366,7 @@ func Synchronize(c appengine.Context) error {
 
 		str, err := EncodeJSONString(body)
 		if err != nil {
-			Log.Errorf(c, "Error - %v", err)
+			Log.Errorf(c, "Synchronize - %v", err)
 			return err
 		}
 		Log.Debugf(c, "%v", str)
@@ -336,7 +374,7 @@ func Synchronize(c appengine.Context) error {
 		for _, v := range body.EntryBlockList {
 			fetchedBlock, err := FetchBlock(c, v.ChainID, v.KeyMR, body.BlockTimeStr)
 			if err != nil {
-				Log.Errorf(c, "Error - %v", err)
+				Log.Errorf(c, "Synchronize - %v", err)
 				return err
 			}
 			switch v.ChainID {
@@ -361,24 +399,35 @@ func Synchronize(c appengine.Context) error {
 
 		err = SaveDBlock(c, body)
 		if err != nil {
-			Log.Errorf(c, "Error - %v", err)
+			Log.Errorf(c, "Synchronize - %v", err)
 			return err
 		}
 
 		if maxHeight < body.SequenceNumber {
 			maxHeight = body.SequenceNumber
 		}
+
+		dataStatus.ResumeFetchingFrom = previousKeyMR
+		dataStatus.NextHeight = maxHeight
+
 		previousKeyMR = body.PrevBlockKeyMR
 		if previousKeyMR == ZeroID {
-			dataStatus.LastKnownBlock = head.KeyMR
+			dataStatus.LastKnownBlock = dataStatus.NextHead
 			dataStatus.DBlockHeight = maxHeight
+			dataStatus.NextHeight = -1
+			dataStatus.ResumeFetchingFrom = ""
 			break
 		}
 
+		err = SaveDataStatus(c, dataStatus)
+		if err != nil {
+			Log.Errorf(c, "Synchronize - %v", err)
+			return err
+		}
 	}
 	err = SaveDataStatus(c, dataStatus)
 	if err != nil {
-		Log.Errorf(c, "Error - %v", err)
+		Log.Errorf(c, "Synchronize - %v", err)
 		return err
 	}
 	return nil

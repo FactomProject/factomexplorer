@@ -1,8 +1,10 @@
 application: factomexplorer
 #application: factomtestnetexplorer
-version:     factomexplorer-2016-02-09
+version:     factomexplorer-2016-02-25
 runtime:     go
 api_version: go1
+instance_class: F1
+#instance_class: F4_1G #Use this for high-performance instance
 
 handlers:
 - url: /static
